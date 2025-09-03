@@ -30,21 +30,17 @@ OUTPUT:
 =======
 - JSON file: financial_transactions.json
 - Contains metadata and array of transaction objects
-- File permissions automatically set to owner-only (600) for security
 - Each transaction includes: date, description, amount, account type, transaction type
 
 SECURITY FEATURES:
 ==================
 - Account numbers masked (shows only last 4 digits: ****1234)
 - Transaction descriptions sanitized (removes phone numbers, emails, reference numbers)
-- Output file has restrictive permissions (owner read/write only)
 - Debug output masks sensitive information
-- Security reminders displayed to user
 
 DEPENDENCIES:
 =============
-Required: pypdf (or PyPDF2), re, json, os, stat, datetime
-Optional: pandas (for enhanced summary statistics)
+Required: pypdf, pandas, re, json, os, datetime
 
 Installation:
 pip install pypdf pandas
@@ -56,33 +52,46 @@ USAGE:
 3. Review output in financial_transactions.json
 4. Delete files when analysis complete
 
-Last Updated: January 2025
+Last Updated: September 2025
 """
 
-# Import required libraries
-import pypdf
+# Import required libraries with proper error handling
+try:
+    import pypdf
+except ImportError:
+    print("Error: pypdf is required but not installed.")
+    print("Please install it with: pip install pypdf")
+    exit(1)
+
+try:
+    import pandas as pd
+except ImportError:
+    print("Error: pandas is required but not installed.")
+    print("Please install it with: pip install pandas")
+    exit(1)
+
 import re
 import json
 import os
-import stat
 from datetime import datetime
-import pandas as pd
+
+# Global debug flag - set to True only when debugging is needed
+DEBUG_MODE = False
+
+def debug_print(message):
+    """Print debug messages only when DEBUG_MODE is enabled"""
+    if DEBUG_MODE:
+        print(message)
 
 def extract_pdf_text(pdf_path):
     """
-    Extract text content from PDF file using pypdf or PyPDF2
+    Extract text content from PDF file using pypdf
     
     Args:
         pdf_path (str): Path to the PDF file
         
     Returns:
         str: Extracted text from all pages, or empty string if extraction fails
-        
-    Notes:
-        - Works with both pypdf and PyPDF2 libraries
-        - Concatenates text from all pages with newlines
-        - Some PDFs may have spacing issues in extracted text
-        - Image-based PDFs will return minimal or no text
     """
     try:
         with open(pdf_path, 'rb') as file:
@@ -92,8 +101,170 @@ def extract_pdf_text(pdf_path):
                 text += page.extract_text() + "\n"
         return text
     except Exception as e:
-        print(f"Error reading PDF {pdf_path}: {e}")
+        debug_print(f"Error reading PDF {pdf_path}: {e}")
         return ""
+
+def extract_statement_period(text):
+    """
+    Extract statement period (start/end dates) from PDF text to determine year context
+    
+    Args:
+        text (str): Full PDF text content
+        
+    Returns:
+        tuple: (start_date, end_date) as datetime objects, or (None, None) if not found
+    """
+    patterns = [
+        # Pattern 1: "July 27 - August 26, 2025" or "July 27, 2024 to August 26, 2024"
+        r'([A-Za-z]+)\s+(\d{1,2})(?:,?\s*(\d{4}))?\s*[-to]+\s*([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})',
+        
+        # Pattern 2: "07/27/2024 to 08/26/2024" or "Statement Period: 01/01/24 - 01/31/24"
+        r'(\d{1,2})/(\d{1,2})/(\d{2,4})\s*[-to]+\s*(\d{1,2})/(\d{1,2})/(\d{2,4})',
+        
+        # Pattern 3: "Account # XXXX July 27 - August 26, 2025" (from header lines)
+        r'Account\s*#.*?([A-Za-z]+)\s+(\d{1,2})\s*-\s*([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})',
+    ]
+    
+    month_names = {
+        'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+        'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
+        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'jun': 6, 'jul': 7, 'aug': 8, 
+        'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+    }
+    
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            try:
+                groups = match.groups()
+                
+                if len(groups) == 6:  # Month name pattern
+                    start_month = month_names.get(groups[0].lower())
+                    start_day = int(groups[1])
+                    start_year = int(groups[2]) if groups[2] else None
+                    end_month = month_names.get(groups[3].lower())
+                    end_day = int(groups[4])
+                    end_year = int(groups[5])
+                    
+                    # If start year not specified, use end year (handle cross-year periods)
+                    if not start_year:
+                        start_year = end_year if start_month <= end_month else end_year - 1
+                    
+                    start_date = datetime(start_year, start_month, start_day)
+                    end_date = datetime(end_year, end_month, end_day)
+                    
+                elif len(groups) >= 6:  # Numeric date pattern
+                    start_month, start_day, start_year = int(groups[0]), int(groups[1]), int(groups[2])
+                    end_month, end_day, end_year = int(groups[3]), int(groups[4]), int(groups[5])
+                    
+                    # Handle 2-digit years
+                    if start_year < 100:
+                        start_year += 2000
+                    if end_year < 100:
+                        end_year += 2000
+                    
+                    start_date = datetime(start_year, start_month, start_day)
+                    end_date = datetime(end_year, end_month, end_day)
+                
+                elif len(groups) == 5:  # Account header pattern
+                    start_month = month_names.get(groups[0].lower())
+                    start_day = int(groups[1])
+                    end_month = month_names.get(groups[2].lower())
+                    end_day = int(groups[3])
+                    year = int(groups[4])
+                    
+                    start_year = year if start_month <= end_month else year - 1
+                    
+                    start_date = datetime(start_year, start_month, start_day)
+                    end_date = datetime(year, end_month, end_day)
+                
+                else:
+                    continue
+                
+                # Validate the date range makes sense
+                if (start_date.year >= 2020 and end_date.year <= 2030 and 
+                    start_date <= end_date and 
+                    (end_date - start_date).days <= 40):
+                    
+                    return start_date, end_date
+                    
+            except (ValueError, KeyError, TypeError):
+                continue
+    
+    return None, None
+
+def standardize_date(date_str, statement_start=None, statement_end=None):
+    """
+    Convert various date formats to standardized YYYY-MM-DD format using statement context
+    
+    Args:
+        date_str (str): Date in various formats (MM/DD/YY, MM/DD/YYYY, MM/DD)
+        statement_start (datetime): Start date of statement period for year context
+        statement_end (datetime): End date of statement period for year context
+        
+    Returns:
+        str: Date in YYYY-MM-DD format, or original string if conversion fails
+    """
+    try:
+        if '/' in date_str:
+            parts = date_str.split('/')
+            if len(parts) == 3:
+                # Full date with year
+                month, day, year = parts
+                if len(year) == 2:
+                    year = '20' + year
+                return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+            elif len(parts) == 2 and statement_start and statement_end:
+                # Month/day only - use statement period for year context
+                month, day = int(parts[0]), int(parts[1])
+                
+                # For cross-year periods, determine year based on which part of statement period the month falls in
+                if statement_start.year != statement_end.year:
+                    # Cross-year period - determine year by month proximity to statement dates
+                    
+                    # Try statement start year first
+                    try:
+                        candidate_start_year = datetime(statement_start.year, month, day)
+                        if statement_start <= candidate_start_year <= statement_end:
+                            return f"{statement_start.year}-{month:02d}-{day:02d}"
+                    except ValueError:
+                        pass
+                    
+                    # Try statement end year
+                    try:
+                        candidate_end_year = datetime(statement_end.year, month, day)
+                        if statement_start <= candidate_end_year <= statement_end:
+                            return f"{statement_end.year}-{month:02d}-{day:02d}"
+                    except ValueError:
+                        pass
+                    
+                    # If neither works exactly, use logic based on month proximity
+                    # If month is closer to statement start month, use start year
+                    if abs(month - statement_start.month) <= abs(month - statement_end.month):
+                        return f"{statement_start.year}-{month:02d}-{day:02d}"
+                    else:
+                        return f"{statement_end.year}-{month:02d}-{day:02d}"
+                
+                else:
+                    # Same year period - straightforward
+                    try:
+                        candidate_date = datetime(statement_start.year, month, day)
+                        if statement_start <= candidate_date <= statement_end:
+                            return f"{statement_start.year}-{month:02d}-{day:02d}"
+                    except ValueError:
+                        pass
+                    
+                    # Default to statement year
+                    return f"{statement_start.year}-{month:02d}-{day:02d}"
+            
+            elif len(parts) == 2:
+                # Fallback to current year if no statement context
+                month, day = parts
+                year = str(datetime.now().year)
+                return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+    except:
+        pass
+    return date_str
 
 def mask_account_number(account_number):
     """
@@ -104,24 +275,16 @@ def mask_account_number(account_number):
         
     Returns:
         str: Masked account number (e.g., "************1234")
-        
-    Examples:
-        "1234567890123456" -> "************3456"
-        "1234 5678 9012" -> "********9012"
-        "123" -> "***"
     """
     if not account_number:
         return ""
     
-    # Remove any spaces or formatting characters
     clean_number = re.sub(r'\s+', '', account_number)
     
     if len(clean_number) >= 4:
-        # Show last 4 digits with asterisks for the rest
         masked = '*' * (len(clean_number) - 4) + clean_number[-4:]
         return masked
     else:
-        # If less than 4 digits, mask completely for security
         return '*' * len(clean_number)
 
 def mask_sensitive_data(text):
@@ -133,15 +296,8 @@ def mask_sensitive_data(text):
         
     Returns:
         str: Text with sensitive patterns replaced with placeholders
-        
-    Masks:
-        - Account numbers (16, 12, or 9 digit patterns)
-        - SSN patterns (XXX-XX-XXXX or 9 consecutive digits)
-        - Bank routing numbers (9 digits starting with 0-1)
-        
-    Used for: Safe debug output without exposing sensitive data
     """
-    # Mask potential account numbers in debug output
+    # Mask potential account numbers
     text = re.sub(r'\b\d{4}\s*\d{4}\s*\d{4}\s*\d{4}\b', '****-****-****-****', text)
     text = re.sub(r'\b\d{4}\s*\d{4}\s*\d{4}\b', '****-****-****', text)
     
@@ -149,29 +305,10 @@ def mask_sensitive_data(text):
     text = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', '***-**-****', text)
     text = re.sub(r'\b\d{9}\b', '*********', text)
     
-    # Mask potential routing numbers (9 digits starting with 0-1)
+    # Mask potential routing numbers
     text = re.sub(r'\b[01]\d{8}\b', '*********', text)
     
     return text
-
-def secure_file_permissions(filepath):
-    """
-    Set restrictive file permissions on output files for security
-    
-    Args:
-        filepath (str): Path to file that needs secure permissions
-        
-    Sets permissions to 600 (owner read/write only) on Unix-like systems
-    Prints warning if permission setting fails (e.g., on Windows)
-    
-    Security rationale: Financial data should only be accessible to the file owner
-    """
-    try:
-        # Set file permissions to owner read/write only (600)
-        os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR)
-        print(f"  Set secure permissions on {filepath}")
-    except Exception as e:
-        print(f"  Warning: Could not set secure permissions on {filepath}: {e}")
 
 def sanitize_description(description):
     """
@@ -182,39 +319,53 @@ def sanitize_description(description):
         
     Returns:
         str: Cleaned description with sensitive data replaced by placeholders
-        
-    Sanitization process:
-        1. Convert to lowercase for consistency
-        2. Replace account numbers with [ACCOUNT]
-        3. Replace long reference numbers with [REF#]
-        4. Replace phone numbers with [PHONE]
-        5. Replace email addresses with [EMAIL]
-        6. Clean up extra whitespace
-        
-    Examples:
-        "PAYPAL 555-123-4567 REF#12345678" -> "paypal [PHONE] [REF#]"
-        "Transfer to 1234-5678-9012" -> "transfer to [ACCOUNT]"
     """
-    # Convert to lowercase first for consistent formatting
     description = description.lower().strip()
     
-    # Remove potential account numbers from descriptions
+    # Remove potential account numbers
     description = re.sub(r'\b\d{4}\s*\d{4}\s*\d{4}\s*\d{4}\b', '[ACCOUNT]', description)
     description = re.sub(r'\b\d{4}\s*\d{4}\s*\d{4}\b', '[ACCOUNT]', description)
     
-    # Remove potential confirmation numbers (8+ consecutive digits)
+    # Remove potential confirmation numbers
     description = re.sub(r'\b\d{8,}\b', '[REF#]', description)
     
-    # Remove potential phone numbers (various formats)
+    # Remove potential phone numbers
     description = re.sub(r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b', '[PHONE]', description)
     
     # Remove potential email patterns
     description = re.sub(r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b', '[EMAIL]', description)
     
-    # Clean up multiple spaces created by replacements
+    # Clean up multiple spaces
     description = re.sub(r'\s+', ' ', description).strip()
     
     return description
+
+def extract_account_number(text, statement_type):
+    """
+    Extract and mask account number from statement text
+    
+    Args:
+        text (str): Full PDF text content
+        statement_type (str): "checking", "savings", or "credit"
+        
+    Returns:
+        str: Masked account number showing only last 4 digits
+    """
+    patterns = {
+        'checking': r'Account #\s*(\d{4}\s+\d{4}\s+\d{4})',
+        'savings': r'Account #\s*(\d{4}\s+\d{4}\s+\d{4})',
+        'credit': r'Account #\s*(\d{4}\s+\d{4}\s+\d{4}\s+\d{4})'
+    }
+    
+    pattern = patterns.get(statement_type, '')
+    if not pattern:
+        return ""
+    
+    match = re.search(pattern, text)
+    if match:
+        full_number = match.group(1).replace(' ', '')
+        return mask_account_number(full_number)
+    return ""
 
 def extract_checking_transactions(text, account_num=""):
     """
@@ -225,36 +376,19 @@ def extract_checking_transactions(text, account_num=""):
         account_num (str): Masked account number for this statement
         
     Returns:
-        list: List of transaction dictionaries with keys:
-              - date: Transaction date (MM/DD/YYYY format)
-              - description: Sanitized transaction description
-              - amount: Transaction amount (negative for withdrawals, positive for deposits)
-              - account_type: "checking"
-              - account_number: Masked account number
-              - transaction_type: "withdrawal" or "deposit"
-              
-    Regex patterns target Bank of America checking statement format:
-        - Deposits: "MM/DD/YYYY DESCRIPTION AMOUNT"
-        - Withdrawals: "MM/DD/YYYY DESCRIPTION -AMOUNT"
-        
-    Note: Some deposits may be filtered out if they appear near withdrawal amounts
-          to avoid double-counting entries that show both positive and negative amounts
+        list: List of transaction dictionaries
     """
     transactions = []
     
-    # Regex patterns for checking account transactions
-    # Matches: date (MM/DD/YYYY) + description + positive amount
     deposit_pattern = r'(\d{2}/\d{2}/\d{2,4})\s+([^-\d]*?)\s+(\d{1,3}(?:,\d{3})*\.\d{2})(?:\s|$)'
-    # Matches: date (MM/DD/YYYY) + description + negative amount
     withdrawal_pattern = r'(\d{2}/\d{2}/\d{2,4})\s+([^-\d]*?)\s+-(\d{1,3}(?:,\d{3})*\.\d{2})(?:\s|$)'
     
-    # Process withdrawals (negative amounts)
+    # Process withdrawals
     for match in re.finditer(withdrawal_pattern, text, re.MULTILINE):
         date_str = match.group(1)
         description = match.group(2).strip()
-        amount = -float(match.group(3).replace(',', ''))  # Convert to negative
+        amount = -float(match.group(3).replace(',', ''))
         
-        # Clean and sanitize description for security
         description = sanitize_description(description)
         
         transactions.append({
@@ -266,14 +400,13 @@ def extract_checking_transactions(text, account_num=""):
             'transaction_type': 'withdrawal'
         })
     
-    # Process deposits (positive amounts)
+    # Process deposits
     for match in re.finditer(deposit_pattern, text, re.MULTILINE):
         date_str = match.group(1)
         description = match.group(2).strip()
         amount = float(match.group(3).replace(',', ''))
         
-        # Skip if this amount also appears as a withdrawal nearby (avoid duplicates)
-        # This handles cases where statements show both +AMOUNT and -AMOUNT for same transaction
+        # Skip if this amount also appears as a withdrawal nearby
         line = match.group(0)
         if '-' + match.group(3) in text[max(0, match.start()-50):match.end()+50]:
             continue
@@ -300,20 +433,10 @@ def extract_savings_transactions(text, account_num=""):
         account_num (str): Masked account number for this statement
         
     Returns:
-        list: List of transaction dictionaries (same format as checking)
-        
-    Similar to checking account extraction but typically simpler transaction patterns.
-    Savings accounts usually have fewer transaction types:
-        - Interest payments (deposits)
-        - Transfers to/from other accounts
-        - Fees (withdrawals)
-        
-    Uses same regex patterns as checking accounts since Bank of America
-    uses consistent formatting across account types.
+        list: List of transaction dictionaries
     """
     transactions = []
     
-    # Same patterns as checking - Bank of America uses consistent formatting
     withdrawal_pattern = r'(\d{2}/\d{2}/\d{2,4})\s+([^-\d]*?)\s+-(\d{1,3}(?:,\d{3})*\.\d{2})(?:\s|$)'
     deposit_pattern = r'(\d{2}/\d{2}/\d{2,4})\s+([^-\d]*?)\s+(\d{1,3}(?:,\d{3})*\.\d{2})(?:\s|$)'
     
@@ -340,7 +463,7 @@ def extract_savings_transactions(text, account_num=""):
         description = match.group(2).strip()
         amount = float(match.group(3).replace(',', ''))
         
-        # Skip if this is part of a withdrawal (same duplicate avoidance as checking)
+        # Skip if this is part of a withdrawal
         line = match.group(0)
         if '-' + match.group(3) in text[max(0, match.start()-50):match.end()+50]:
             continue
@@ -367,89 +490,60 @@ def extract_credit_transactions(text, account_num=""):
         account_num (str): Masked account number for this statement
         
     Returns:
-        list: List of transaction dictionaries with additional fields:
-              - transaction_date: Original transaction date (for Bank of America format)
-              - date: Posting date (primary date used for sorting)
-              - All other fields same as checking/savings
-              
-    Credit card statements are more complex than bank accounts:
-        - May have two dates per transaction (transaction date vs. posting date)
-        - More varied merchant name formats
-        - Reference numbers embedded in descriptions
-        - Amounts are positive (purchases) rather than negative
-        
-    Extraction Strategy:
-        1. Try multiple regex patterns of increasing flexibility
-        2. Fall back to line-by-line parsing if regex fails
-        3. Bank of America format: "MM/DD MM/DD MERCHANT AMOUNT"
-        4. Generic formats: "MM/DD MERCHANT AMOUNT" or "MM/DD/YYYY MERCHANT AMOUNT"
-        
-    Handles PDF text extraction issues:
-        - Extra spaces between characters
-        - Inconsistent formatting
-        - Multi-line merchant names
+        list: List of transaction dictionaries
     """
     transactions = []
     
-    # Clean up extracted PDF text - removes excessive whitespace that can break parsing
+    # Clean up extracted PDF text
     text = re.sub(r'\s+', ' ', text)
     
-    print("  Trying to extract credit transactions...")
+    debug_print("  Trying to extract credit transactions...")
     
-    # Multiple regex patterns to handle different credit card statement formats
-    # Pattern 1: Bank of America format with transaction and posting dates
-    # Pattern 2: Generic format with full date
-    # Pattern 3: Generic format with month/day only
     patterns = [
         r'(\d{2}/\d{2})\s+(\d{2}/\d{2})\s+([A-Za-z0-9\*\-\'\s\.\,\(\)#]+?)\s+(\d{1,3}(?:,\d{3})*\.\d{2})',
         r'(\d{1,2}/\d{1,2}/\d{2,4})\s+([A-Za-z0-9\*\-\'\s\.\,\(\)#]+?)\s+(\d{1,3}(?:,\d{3})*\.\d{2})',
         r'(\d{1,2}/\d{1,2})\s+(.+?)\s+(\d{1,3}(?:,\d{3})*\.\d{2})'
     ]
     
-    # Try each pattern in order of specificity
     for i, pattern in enumerate(patterns):
-        print(f"  Trying pattern {i+1}...")
+        debug_print(f"  Trying pattern {i+1}...")
         matches = list(re.finditer(pattern, text, re.MULTILINE))
-        print(f"  Pattern {i+1} found {len(matches)} matches")
+        debug_print(f"  Pattern {i+1} found {len(matches)} matches")
         
         if matches and i == 0:
-            # Bank of America format with two dates (transaction date and posting date)
+            # Bank of America format with two dates
             for match in matches:
-                trans_date = match.group(1)    # When transaction occurred
-                post_date = match.group(2)     # When it posted to account
+                trans_date = match.group(1)
+                post_date = match.group(2)
                 description = match.group(3).strip()
                 amount = float(match.group(4).replace(',', ''))
                 
-                # Clean up merchant description
-                # Remove trailing reference numbers (common in credit card statements)
                 description = re.sub(r'\s+\d{4}\s+\d{4}\s*$', '', description)
                 description = sanitize_description(description)
                 
-                # Skip very short descriptions (likely parsing errors)
                 if len(description) < 3:
                     continue
                 
                 transactions.append({
-                    'date': post_date,  # Use posting date as primary date
+                    'date': post_date,
                     'transaction_date': trans_date,
                     'description': description,
-                    'amount': amount,  # Credit card amounts are positive (purchases)
+                    'amount': amount,
                     'account_type': 'credit',
                     'account_number': account_num,
                     'transaction_type': 'purchase'
                 })
         
         elif matches:
-            # Handle other patterns (single date formats)
+            # Other patterns
             for match in matches:
-                if len(match.groups()) == 3:  # Date, description, amount
+                if len(match.groups()) == 3:
                     date_str = match.group(1)
                     description = match.group(2).strip()
                     amount = float(match.group(3).replace(',', ''))
                     
                     description = sanitize_description(description)
                     
-                    # Skip very short descriptions
                     if len(description) < 3:
                         continue
                     
@@ -462,37 +556,31 @@ def extract_credit_transactions(text, account_num=""):
                         'transaction_type': 'purchase'
                     })
         
-        # If we found transactions with this pattern, stop trying other patterns
         if transactions:
-            print(f"  Found {len(transactions)} transactions with pattern {i+1}")
+            debug_print(f"  Found {len(transactions)} transactions with pattern {i+1}")
             break
     
-    # Fallback: Line-by-line parsing if regex patterns failed
-    # This handles PDFs with unusual formatting or spacing issues
+    # Fallback: Line-by-line parsing
     if not transactions:
-        print("  Trying line-by-line parsing...")
+        debug_print("  Trying line-by-line parsing...")
         lines = text.split('\n')
         for line in lines:
             line = line.strip()
             
-            # Look for lines ending with dollar amounts (likely transactions)
             if re.search(r'\d+\.\d{2}\s*$', line):
-                # Try to find date at beginning of line
                 date_match = re.search(r'^(\d{1,2}/\d{1,2}(?:/\d{2,4})?)', line)
-                # Extract dollar amount at end of line
                 amount_match = re.search(r'(\d{1,3}(?:,\d{3})*\.\d{2})\s*$', line)
                 
                 if date_match and amount_match:
                     date_str = date_match.group(1)
                     amount = float(amount_match.group(1).replace(',', ''))
                     
-                    # Extract description (everything between date and amount)
                     desc_start = date_match.end()
                     desc_end = amount_match.start()
                     description = line[desc_start:desc_end].strip()
                     description = sanitize_description(description)
                     
-                    if len(description) > 3:  # Valid description length
+                    if len(description) > 3:
                         transactions.append({
                             'date': date_str,
                             'description': description,
@@ -502,85 +590,11 @@ def extract_credit_transactions(text, account_num=""):
                             'transaction_type': 'purchase'
                         })
                         
-                        # Show first few transactions found for debugging
                         if len(transactions) <= 3:
-                            print(f"    Sample: {date_str} | {description} | ${amount}")
+                            debug_print(f"    Sample: {date_str} | {description} | ${amount}")
     
-    print(f"  Final result: {len(transactions)} transactions")
+    debug_print(f"  Final result: {len(transactions)} transactions")
     return transactions
-
-def standardize_date(date_str):
-    """
-    Convert various date formats to standardized YYYY-MM-DD format
-    
-    Args:
-        date_str (str): Date in various formats (MM/DD/YY, MM/DD/YYYY, MM/DD)
-        
-    Returns:
-        str: Date in YYYY-MM-DD format, or original string if conversion fails
-        
-    Handles common date formats found in financial statements:
-        - "03/25/24" -> "2024-03-25"
-        - "03/25/2024" -> "2024-03-25" 
-        - "03/25" -> "2025-03-25" (assumes current year)
-        
-    Important: 2-digit years are assumed to be 20XX (2000s)
-    This assumption may need updating in the future for older statements
-    """
-    try:
-        if '/' in date_str:
-            parts = date_str.split('/')
-            if len(parts) == 3:
-                # Full date with year
-                month, day, year = parts
-                if len(year) == 2:
-                    # Convert 2-digit year to 4-digit (assumes 2000s)
-                    year = '20' + year
-                return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
-            elif len(parts) == 2:
-                # Month/day only - assume current year
-                month, day = parts
-                year = str(datetime.now().year)
-                return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
-    except:
-        # If any conversion fails, return original string
-        pass
-    return date_str
-
-def extract_account_number(text, statement_type):
-    """
-    Extract and mask account number from statement text
-    
-    Args:
-        text (str): Full PDF text content
-        statement_type (str): "checking", "savings", or "credit"
-        
-    Returns:
-        str: Masked account number showing only last 4 digits
-        
-    Account number patterns by type:
-        - Checking/Savings: "Account # 1234 5678 9012" (12 digits)
-        - Credit: "Account # 1234 5678 9012 3456" (16 digits)
-        
-    Security: Immediately masks the full number after extraction
-    """
-    # Define regex patterns for different account types
-    patterns = {
-        'checking': r'Account #\s*(\d{4}\s+\d{4}\s+\d{4})',      # 12-digit pattern
-        'savings': r'Account #\s*(\d{4}\s+\d{4}\s+\d{4})',       # 12-digit pattern  
-        'credit': r'Account #\s*(\d{4}\s+\d{4}\s+\d{4}\s+\d{4})'  # 16-digit pattern
-    }
-    
-    pattern = patterns.get(statement_type, '')
-    if not pattern:
-        return ""
-    
-    match = re.search(pattern, text)
-    if match:
-        # Extract full number and immediately mask it for security
-        full_number = match.group(1).replace(' ', '')
-        return mask_account_number(full_number)
-    return ""
 
 def process_statements(pdf_directory):
     """
@@ -591,141 +605,103 @@ def process_statements(pdf_directory):
         
     Returns:
         list: Combined list of all transactions from all processed PDFs
-        
-    Processing workflow:
-        1. Scan directory for PDF files
-        2. For each PDF:
-           a. Extract text using pypdf/PyPDF2
-           b. Determine statement type from filename
-           c. Extract account number and mask it
-           d. Run appropriate extraction function
-           e. Standardize dates and add metadata
-        3. Return combined transaction list
-        
-    Statement type detection:
-        - Files containing "checking" or "chk" -> checking account
-        - Files containing "savings" or "sav" -> savings account  
-        - Files containing "credit" -> credit card
-        - Other files are skipped with warning
-        
-    Debug output:
-        - Shows processing progress
-        - Reports character count from PDF extraction
-        - Shows masked text samples if no transactions found
-        - Helps troubleshoot extraction issues
     """
     all_transactions = []
     
-    # Validate directory exists
     if not os.path.exists(pdf_directory):
-        print(f"Directory {pdf_directory} does not exist!")
+        print(f"Error: Directory {pdf_directory} does not exist!")
         return all_transactions
     
-    # Find all PDF files in directory
     pdf_files = [f for f in os.listdir(pdf_directory) if f.lower().endswith('.pdf')]
     
     if not pdf_files:
-        print(f"No PDF files found in {pdf_directory}")
+        print(f"Error: No PDF files found in {pdf_directory}")
         return all_transactions
     
-    # Process each PDF file
+    print(f"Processing {len(pdf_files)} PDF files...")
+    
     for filename in pdf_files:
         file_path = os.path.join(pdf_directory, filename)
-        print(f"Processing: {filename}")
+        debug_print(f"Processing: {filename}")
         
-        # Step 1: Extract text from PDF
         text = extract_pdf_text(file_path)
         if not text:
-            print(f"  Could not extract text from {filename}")
+            debug_print(f"  Could not extract text from {filename}")
             continue
         
-        print(f"  Extracted {len(text)} characters of text")
+        debug_print(f"  Extracted {len(text)} characters of text")
         
-        # Step 2: Determine statement type from filename
+        # Extract statement period for date context
+        statement_start, statement_end = extract_statement_period(text)
+        if statement_start and statement_end:
+            debug_print(f"  Statement period: {statement_start.strftime('%Y-%m-%d')} to {statement_end.strftime('%Y-%m-%d')}")
+        else:
+            debug_print("  Warning: Could not extract statement period")
+        
+        # Determine statement type from filename
         filename_lower = filename.lower()
-        print(f"  Filename (lowercase): {filename_lower}")
+        debug_print(f"  Filename (lowercase): {filename_lower}")
         
-        # Route to appropriate extraction function based on filename
         if 'checking' in filename_lower or 'chk' in filename_lower:
             statement_type = 'checking'
-            print(f"  Detected as: {statement_type}")
+            debug_print(f"  Detected as: {statement_type}")
             account_num = extract_account_number(text, 'checking')
             transactions = extract_checking_transactions(text, account_num)
         elif 'savings' in filename_lower or 'sav' in filename_lower:
             statement_type = 'savings'
-            print(f"  Detected as: {statement_type}")
+            debug_print(f"  Detected as: {statement_type}")
             account_num = extract_account_number(text, 'savings')
             transactions = extract_savings_transactions(text, account_num)
         elif 'credit' in filename_lower:
             statement_type = 'credit'
-            print(f"  Detected as: {statement_type}")
+            debug_print(f"  Detected as: {statement_type}")
             account_num = extract_account_number(text, 'credit')
-            print(f"  Account number found: {account_num}")
+            debug_print(f"  Account number found: {account_num}")
             transactions = extract_credit_transactions(text, account_num)
         else:
-            print(f"  Unknown statement type for {filename}, skipping...")
+            debug_print(f"  Unknown statement type for {filename}, skipping...")
             continue
         
-        # Step 3: Show debug info if no transactions found
         if not transactions:
-            print("  Text sample (first 500 chars, sensitive data masked):")
-            masked_sample = mask_sensitive_data(text[:500])
-            print("  " + repr(masked_sample))
+            debug_print("  No transactions found")
+            if DEBUG_MODE:
+                masked_sample = mask_sensitive_data(text[:500])
+                debug_print("  Text sample (masked): " + repr(masked_sample))
         
-        # Step 4: Post-process transactions
+        # Post-process transactions with proper date context
         for transaction in transactions:
-            # Standardize date format
-            transaction['date'] = standardize_date(transaction['date'])
-            # Add source file for traceability
+            transaction['date'] = standardize_date(transaction['date'], statement_start, statement_end)
+            
+            if 'transaction_date' in transaction:
+                transaction['transaction_date'] = standardize_date(transaction['transaction_date'], statement_start, statement_end)
+            
             transaction['source_file'] = filename
+            
+            if DEBUG_MODE and statement_start and statement_end:
+                transaction['statement_period'] = {
+                    'start': statement_start.strftime('%Y-%m-%d'),
+                    'end': statement_end.strftime('%Y-%m-%d')
+                }
         
-        # Add to master list
         all_transactions.extend(transactions)
-        print(f"  Extracted {len(transactions)} transactions")
+        debug_print(f"  Extracted {len(transactions)} transactions")
     
     return all_transactions
 
 def save_to_json(transactions, output_file='financial_transactions.json'):
     """
-    Save extracted transactions to JSON file with security features
+    Save extracted transactions to JSON file
     
     Args:
         transactions (list): List of transaction dictionaries
-        output_file (str): Output filename (default: financial_transactions.json)
-        
-    JSON Structure:
-        {
-            "metadata": {
-                "total_transactions": int,
-                "date_range": {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"},
-                "generated_at": "ISO timestamp",
-                "account_types": ["checking", "savings", "credit"],
-                "accounts": ["****1234", "****5678"],
-                "security_notice": "Account numbers masked...",
-                "data_privacy": "Handle securely..."
-            },
-            "transactions": [...]
-        }
-        
-    Security Features:
-        - Sets file permissions to owner-only (600)
-        - Includes security notices in metadata
-        - Reminds user about data handling best practices
-        
-    The JSON format makes it easy to:
-        - Load into Python: json.load()
-        - Import to pandas: pd.DataFrame(data['transactions'])
-        - Query with JavaScript/Node.js
-        - Import to Excel/Google Sheets
+        output_file (str): Output filename
     """
     if not transactions:
         print("No transactions to save!")
         return
     
-    # Sort transactions chronologically for better usability
     sorted_transactions = sorted(transactions, key=lambda x: x['date'])
     
-    # Build comprehensive metadata
     output_data = {
         'metadata': {
             'total_transactions': len(sorted_transactions),
@@ -742,15 +718,10 @@ def save_to_json(transactions, output_file='financial_transactions.json'):
         'transactions': sorted_transactions
     }
     
-    # Write JSON file with proper formatting
     with open(output_file, 'w', encoding='utf-8') as jsonfile:
         json.dump(output_data, jsonfile, indent=2, ensure_ascii=False)
     
-    # Apply secure file permissions (Unix/Linux/macOS)
-    secure_file_permissions(output_file)
-    
     print(f"Saved {len(transactions)} transactions to {output_file}")
-    print("  File permissions set to owner-only access for security")
 
 def create_summary(transactions):
     """
@@ -758,16 +729,6 @@ def create_summary(transactions):
     
     Args:
         transactions (list): List of transaction dictionaries
-        
-    Displays:
-        - Total transaction count
-        - Date range covered
-        - Breakdown by account type (checking/savings/credit)
-        - Breakdown by transaction type (deposit/withdrawal/purchase)
-        - Amount statistics (total, average, min, max)
-        
-    Used for: Quick validation that extraction worked correctly and
-              overview of the financial data for analysis planning
     """
     if not transactions:
         return
@@ -775,28 +736,22 @@ def create_summary(transactions):
     print("\n=== TRANSACTION SUMMARY ===")
     print(f"Total transactions: {len(transactions)}")
     
-    # Calculate date range manually (works without pandas)
     dates = [t['date'] for t in transactions]
     print(f"Date range: {min(dates)} to {max(dates)}")
     
-    # Count transactions by category
     account_types = {}
     transaction_types = {}
     amounts = []
     
     for t in transactions:
-        # Count by account type
         acc_type = t['account_type']
         account_types[acc_type] = account_types.get(acc_type, 0) + 1
         
-        # Count by transaction type
         trans_type = t.get('transaction_type', 'unknown')
         transaction_types[trans_type] = transaction_types.get(trans_type, 0) + 1
         
-        # Collect amounts for statistics
         amounts.append(t['amount'])
     
-    # Display breakdowns
     print("\nBy Account Type:")
     for acc_type, count in account_types.items():
         print(f"  {acc_type}: {count}")
@@ -805,7 +760,6 @@ def create_summary(transactions):
     for trans_type, count in transaction_types.items():
         print(f"  {trans_type}: {count}")
     
-    # Calculate and display amount statistics
     print("\nAmount Statistics:")
     total_amount = sum(amounts)
     avg_amount = total_amount / len(amounts) if amounts else 0
@@ -817,154 +771,21 @@ def create_summary(transactions):
     print(f"Largest transaction: ${max_amount:,.2f}")
     print(f"Smallest transaction: ${min_amount:,.2f}")
 
-# ============================================================================
-# MAIN EXECUTION
-# ============================================================================
-
 if __name__ == "__main__":
-    """
-    Main execution block - runs when script is executed directly
-    
-    Configuration:
-        - pdf_directory: Where to look for PDF files (default: current directory)
-        - output_json: Name of output file (default: financial_transactions.json)
-        
-    Execution Flow:
-        1. Display security features and warnings
-        2. Process all PDF statements in directory
-        3. Save results to JSON with secure permissions
-        4. Display summary statistics
-        5. Show security reminders
-        
-    For Production Use:
-        - Consider adding command-line argument parsing
-        - Add configuration file support
-        - Implement logging instead of print statements
-        - Add data validation and error recovery
-    """
-    # Configuration - modify these as needed
-    pdf_directory = "."  # Current directory
+    """Main execution block"""
+    pdf_directory = "."
     output_json = "financial_transactions.json"
     
-    # Display startup information
-    print("Financial Transaction Extractor")
-    print("=" * 40)
-    print("Security Features Enabled:")
-    print("- Account numbers masked (show last 4 digits only)")
-    print("- Sensitive data sanitized from descriptions")
-    print("- Secure file permissions on output")
-    print("- Debug output masked for security")
-    print("=" * 40)
-    
-    # Main processing
     transactions = process_statements(pdf_directory)
     
     if transactions:
-        # Save results
         save_to_json(transactions, output_json)
-        
-        # Show summary
         create_summary(transactions)
-        
-        # Final instructions
         print(f"\nJSON file saved as: {output_json}")
-        print("SECURITY REMINDER:")
-        print("- Output file contains financial data")
-        print("- File permissions set to owner-only")
-        print("- Delete file when analysis is complete")
-        print("- Do not share or commit to version control")
-        
     else:
         print("No transactions extracted. Please check your PDF files.")
-        print("\nTroubleshooting:")
-        print("- Ensure PDF files contain 'checking', 'savings', or 'credit' in filename")
-        print("- Check that PDFs are text-based (not scanned images)")
-        print("- Review debug output above for extraction issues")
-
-# ============================================================================
-# USAGE EXAMPLES AND NEXT STEPS
-# ============================================================================
-
-"""
-USAGE EXAMPLES:
-===============
-
-1. Basic Usage:
-   python3 financial_extractor.py
-
-2. Loading Results in Python:
-   import json
-   with open('financial_transactions.json', 'r') as f:
-       data = json.load(f)
-   
-   transactions = data['transactions']
-   metadata = data['metadata']
-
-3. Converting to Pandas DataFrame:
-   import pandas as pd
-   df = pd.DataFrame(transactions)
-   
-   # Filter by account type
-   credit_txns = df[df['account_type'] == 'credit']
-   
-   # Group by month
-   df['month'] = pd.to_datetime(df['date']).dt.to_period('M')
-   monthly_spending = df.groupby('month')['amount'].sum()
-
-4. Budget Analysis Examples:
-   # Find top spending categories (would need to categorize descriptions first)
-   # Calculate monthly averages
-   # Identify unusual spending patterns
-   # Track spending trends over time
-
-EXTENDING THE SCRIPT:
-=====================
-
-1. Add New Bank Formats:
-   - Create new extraction functions for different banks
-   - Modify account number patterns in extract_account_number()
-   - Update filename detection logic
-
-2. Add Transaction Categorization:
-   - Create categorize_transaction() function
-   - Use keyword matching or ML for category assignment
-   - Add category field to transaction objects
-
-3. Add Data Validation:
-   - Check for duplicate transactions
-   - Validate date ranges
-   - Flag unusual amounts or patterns
-
-4. Add Export Formats:
-   - CSV export function
-   - Excel export with formatting
-   - QIF/OFX formats for financial software
-
-5. Add Configuration:
-   - Config file for bank-specific settings
-   - Command-line arguments for directories
-   - Environment variables for sensitive settings
-
-SECURITY CONSIDERATIONS:
-========================
-
-1. Data Storage:
-   - Consider encrypting output files
-   - Use secure deletion tools when finished
-   - Store files on encrypted drives
-
-2. Processing Environment:
-   - Run in isolated containers or VMs
-   - Use secure, temporary directories
-   - Clear memory after processing
-
-3. Code Security:
-   - Regular dependency updates
-   - Input validation for file paths
-   - Secure error handling (no sensitive data in logs)
-
-4. Compliance:
-   - Consider data retention policies
-   - Log access for audit trails
-   - Follow organizational security policies
-"""
+        if DEBUG_MODE:
+            print("\nTroubleshooting:")
+            print("- Ensure PDF files contain 'checking', 'savings', or 'credit' in filename")
+            print("- Check that PDFs are text-based (not scanned images)")
+            print("- Set DEBUG_MODE = True at top of script for detailed output")
