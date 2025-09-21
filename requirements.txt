@@ -1,0 +1,11 @@
+# Financial Transaction Parser Requirements
+# Install with: pip install -r requirements.txt
+
+# PDF text extraction
+pypdf>=3.0.0
+
+# Data processing (if needed for advanced features)
+pandas>=1.5.0
+
+# Note: Python 3.11+ required for built-in tomllib support
+# For Python < 3.11, add: tomli>=2.0.0

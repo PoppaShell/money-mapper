@@ -1,0 +1,95 @@
+# Public Merchant Mappings
+# Common merchant names and their categorizations using Plaid PFC taxonomy
+
+[gas_stations]
+"shell" = { name = "Shell", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
+"exxon" = { name = "ExxonMobil", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
+"bp" = { name = "BP", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
+"chevron" = { name = "Chevron", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
+"texaco" = { name = "Texaco", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
+"racetrac" = { name = "RaceTrac", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
+"loves travel stops" = { name = "Love's Travel Stops", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
+
+[fast_food]
+"mcdonalds" = { name = "McDonald's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"burger king" = { name = "Burger King", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"taco bell" = { name = "Taco Bell", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"kfc" = { name = "KFC", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"subway" = { name = "Subway", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"chipotle" = { name = "Chipotle", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"chick-fil-a" = { name = "Chick-fil-A", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"sonic" = { name = "Sonic Drive-In", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"braums" = { name = "Braums", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"shipleys donuts" = { name = "Shipleys Donuts", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+
+[coffee_shops]
+"starbucks" = { name = "Starbucks", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
+"dunkin" = { name = "Dunkin'", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
+"boundaries coffee" = { name = "Boundaries Coffee", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
+
+[restaurants]
+"tender smokehouse" = { name = "Tender Smokehouse", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+"nafnaf grill" = { name = "NafNaf Grill", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"ihop" = { name = "IHOP", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+"jakes burgers and beer" = { name = "Jakes Burgers and Beer", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+"pan asian express" = { name = "Pan Asian Express", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+
+[groceries]
+"walmart" = { name = "Walmart", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"target" = { name = "Target", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"h-e-b" = { name = "H-E-B", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"trader joe" = { name = "Trader Joe's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"whole foods" = { name = "Whole Foods Market", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"kroger" = { name = "Kroger", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"costco" = { name = "Costco", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"sams club" = { name = "Sam's Club", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+
+[general_merchandise]
+"amazon" = { name = "Amazon", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
+"etsy" = { name = "Etsy", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
+"best buy" = { name = "Best Buy", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ELECTRONICS" }
+"dicks sporting goods" = { name = "Dick's Sporting Goods", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_SPORTING_GOODS" }
+"home depot" = { name = "Home Depot", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_SUPERSTORES" }
+
+[entertainment]
+"netflix" = { name = "Netflix", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_TV_AND_MOVIES" }
+"spotify" = { name = "Spotify", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_MUSIC_AND_AUDIO" }
+"apple music" = { name = "Apple Music", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_MUSIC_AND_AUDIO" }
+"prime video" = { name = "Prime Video", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_TV_AND_MOVIES" }
+"fandango" = { name = "Fandango", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_MOVIES_AND_DVDS" }
+"florida aquarium" = { name = "Florida Aquarium", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_AMUSEMENT_PARKS" }
+"ark encounter" = { name = "Ark Encounter", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_AMUSEMENT_PARKS" }
+
+[beauty_and_personal_care]
+"cosmoprof" = { name = "CosmoProf", category = "PERSONAL_CARE", subcategory = "PERSONAL_CARE_HAIR_AND_BEAUTY" }
+"sally beauty" = { name = "Sally Beauty", category = "PERSONAL_CARE", subcategory = "PERSONAL_CARE_HAIR_AND_BEAUTY" }
+"warby parker" = { name = "Warby Parker", category = "MEDICAL", subcategory = "MEDICAL_EYE_CARE" }
+"eyebuydirect" = { name = "EyeBuyDirect", category = "MEDICAL", subcategory = "MEDICAL_EYE_CARE" }
+"floyds 99 barbershop" = { name = "Floyd's 99 Barbershop", category = "PERSONAL_CARE", subcategory = "PERSONAL_CARE_HAIR_AND_BEAUTY" }
+
+[medical_and_pharmacy]
+"walgreens" = { name = "Walgreens", category = "MEDICAL", subcategory = "MEDICAL_PHARMACY" }
+"cvs" = { name = "CVS Pharmacy", category = "MEDICAL", subcategory = "MEDICAL_PHARMACY" }
+"rite aid" = { name = "Rite Aid", category = "MEDICAL", subcategory = "MEDICAL_PHARMACY" }
+
+[technology_and_services]
+"apple com" = { name = "Apple", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
+"lastpass.com" = { name = "LastPass", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
+"abcmouse" = { name = "ABCmouse", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
+
+[banking_and_transfers]
+"paypal" = { name = "PayPal", category = "TRANSFER_OUT", subcategory = "TRANSFER_OUT_ACCOUNT_TRANSFER" }
+"zelle" = { name = "Zelle", category = "TRANSFER_IN", subcategory = "TRANSFER_IN_DEPOSIT" }
+"venmo" = { name = "Venmo", category = "TRANSFER_OUT", subcategory = "TRANSFER_OUT_ACCOUNT_TRANSFER" }
+
+[transportation]
+"uber" = { name = "Uber", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES" }
+"lyft" = { name = "Lyft", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES" }
+
+# Common banking description patterns
+[banking_patterns]
+"mobile deposit" = { name = "Mobile Deposit", category = "TRANSFER_IN", subcategory = "TRANSFER_IN_DEPOSIT" }
+"interest earned" = { name = "Interest Earned", category = "INCOME", subcategory = "INCOME_INTEREST_EARNED" }
+"overdraft fee" = { name = "Overdraft Fee", category = "BANK_FEES", subcategory = "BANK_FEES_OVERDRAFT_FEES" }
+"maintenance fee" = { name = "Maintenance Fee", category = "BANK_FEES", subcategory = "BANK_FEES_OTHER_BANK_FEES" }
+"atm fee" = { name = "ATM Fee", category = "BANK_FEES", subcategory = "BANK_FEES_ATM_FEES" }
