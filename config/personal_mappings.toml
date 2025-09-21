@@ -1,0 +1,68 @@
+# Personal Financial Transaction Mappings
+# Remove personal sections before publishing to public repo
+
+# ========== PERSONAL DATA (REMOVE BEFORE PUBLISHING) ==========
+
+
+
+# ========== TEMPLATE EXAMPLES (KEEP FOR PUBLIC REPO) ==========
+
+# [income_examples]
+# # Template: Replace with your employer/income sources
+# # Format: "description_pattern" = { name = "Display Name", category = "INCOME", subcategory = "INCOME_WAGES" }
+# # "your company name" = { name = "Your Company", category = "INCOME", subcategory = "INCOME_WAGES" }
+# # "direct deposit" = { name = "Direct Deposit", category = "INCOME", subcategory = "INCOME_WAGES" }
+# # "irs treas" = { name = "Internal Revenue Service", category = "INCOME", subcategory = "INCOME_TAX_REFUND" }
+# # "tax refund" = { name = "Tax Refund", category = "INCOME", subcategory = "INCOME_TAX_REFUND" }
+
+# [banking_examples]
+# # Template: Replace with your bank descriptions
+# # "your bank name" = { name = "Your Bank", category = "TRANSFER_IN", subcategory = "TRANSFER_IN_DEPOSIT" }
+# # "mobile deposit" = { name = "Mobile Deposit", category = "TRANSFER_IN", subcategory = "TRANSFER_IN_DEPOSIT" }
+
+# [credit_payment_examples]
+# # Template: Replace with your credit card payment descriptions
+# # "your bank credit card payment" = { name = "Your Bank", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT" }
+# # "autopay" = { name = "Credit Card AutoPay", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT" }
+# # "online payment" = { name = "Credit Card Payment", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT" }
+
+# [loan_examples]
+# # Template: Replace with your loan servicers
+# # "mortgage company" = { name = "Your Mortgage Company", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_MORTGAGE_PAYMENT" }
+# # "student loan servicer" = { name = "Your Student Loan Servicer", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT" }
+
+# [utility_examples]
+# # Template: Replace with your utility providers
+# # "electric company" = { name = "Your Electric Company", category = "RENT_AND_UTILITIES", subcategory = "RENT_AND_UTILITIES_ELECTRIC" }
+# # "gas company" = { name = "Your Gas Company", category = "RENT_AND_UTILITIES", subcategory = "RENT_AND_UTILITIES_GAS_AND_FUEL" }
+# # "water department" = { name = "Your Water Department", category = "RENT_AND_UTILITIES", subcategory = "RENT_AND_UTILITIES_WATER" }
+# # "internet provider" = { name = "Your Internet Provider", category = "RENT_AND_UTILITIES", subcategory = "RENT_AND_UTILITIES_INTERNET_AND_CABLE" }
+
+# [donation_examples]
+# # Template: Replace with your charitable organizations
+# # "your church" = { name = "Your Church", category = "GOVERNMENT_AND_NON_PROFIT", subcategory = "GOVERNMENT_AND_NON_PROFIT_DONATIONS" }
+# # "charity name" = { name = "Your Charity", category = "GOVERNMENT_AND_NON_PROFIT", subcategory = "GOVERNMENT_AND_NON_PROFIT_DONATIONS" }
+
+# [government_examples]
+# # Template: Replace with your local government agencies
+# # "county services" = { name = "Your County", category = "GOVERNMENT_AND_NON_PROFIT", subcategory = "GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES" }
+# # "dmv" = { name = "Department of Motor Vehicles", category = "GOVERNMENT_AND_NON_PROFIT", subcategory = "GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES" }
+# # "city services" = { name = "Your City", category = "GOVERNMENT_AND_NON_PROFIT", subcategory = "GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES" }
+
+# [investment_examples]
+# # Template: Replace with your investment platforms
+# # "investment company" = { name = "Your Investment Company", category = "TRANSFER_OUT", subcategory = "TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS" }
+# # "retirement account" = { name = "Your 401k Provider", category = "TRANSFER_OUT", subcategory = "TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS" }
+
+# [medical_examples]
+# # Template: Replace with your healthcare providers
+# # "your doctor" = { name = "Your Doctor", category = "MEDICAL", subcategory = "MEDICAL_PRIMARY_CARE" }
+# # "your dentist" = { name = "Your Dentist", category = "MEDICAL", subcategory = "MEDICAL_DENTAL_CARE" }
+# # "eye doctor" = { name = "Your Eye Doctor", category = "MEDICAL", subcategory = "MEDICAL_EYE_CARE" }
+# # "specialist" = { name = "Your Specialist", category = "MEDICAL", subcategory = "MEDICAL_SPECIALTY_CARE" }
+
+# [local_business_examples]
+# # Template: Replace with your local businesses
+# # "local restaurant" = { name = "Your Local Restaurant", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+# # "hair salon" = { name = "Your Hair Salon", category = "PERSONAL_CARE", subcategory = "PERSONAL_CARE_HAIR_AND_BEAUTY" }
+# # "local shop" = { name = "Your Local Shop", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE" }
