@@ -25,8 +25,10 @@ def load_config(config_file: str) -> Dict:
     """
     Load configuration from TOML file.
     
+    When running from src/, looks for config files in parent directory.
+    
     Args:
-        config_file: Path to the TOML configuration file
+        config_file: Path to the TOML configuration file (relative to project root)
         
     Returns:
         Dictionary containing configuration data
@@ -35,6 +37,12 @@ def load_config(config_file: str) -> Dict:
         FileNotFoundError: If config file doesn't exist
         tomllib.TOMLDecodeError: If config file has invalid TOML syntax
     """
+    # If running from src/, adjust path to parent directory
+    if not os.path.exists(config_file):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+        config_file = os.path.join(parent_dir, config_file)
+    
     try:
         with open(config_file, 'rb') as f:
             return tomllib.load(f)
@@ -237,6 +245,8 @@ def save_transactions_to_json(transactions: List[Dict], output_file: str) -> Non
     """
     Save transaction list to JSON file with proper formatting.
     
+    When running from src/, adjusts output path to parent directory if needed.
+    
     Args:
         transactions: List of transaction dictionaries
         output_file: Path to output JSON file
@@ -244,6 +254,13 @@ def save_transactions_to_json(transactions: List[Dict], output_file: str) -> Non
     if not transactions:
         print("No transactions to save!")
         return
+    
+    # If running from src/ and path doesn't exist, try parent directory
+    if not os.path.dirname(output_file) or not os.path.exists(os.path.dirname(output_file)):
+        if output_file.startswith('output/'):
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(current_dir)
+            output_file = os.path.join(parent_dir, output_file)
     
     # Ensure output directory exists
     output_dir = os.path.dirname(output_file)
@@ -416,10 +433,27 @@ def get_pdf_files(directory: str) -> List[str]:
 def ensure_directories_exist():
     """
     Create standard project directories if they don't exist.
+    
+    When running from src/, this creates directories in the parent directory.
+    Does NOT create config/ since that should exist with the repo.
     """
-    directories = ['statements', 'output', 'config']
+    # Get the parent directory (project root) when running from src/
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    
+    directories = ['statements', 'output']
     
     for directory in directories:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-            print(f"Created directory: {directory}")
+        dir_path = os.path.join(parent_dir, directory)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+            print(f"Created directory: {dir_path}")
+    
+    # Check if config directory exists (required for operation)
+    config_path = os.path.join(parent_dir, 'config')
+    if not os.path.exists(config_path):
+        print(f"Error: Required config directory not found at {config_path}")
+        print("Please ensure you have the complete repository with config files.")
+        return False
+    
+    return True
