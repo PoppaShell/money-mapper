@@ -2,3 +2,4 @@ output/
 statements/
 old/
 src/__pycache__/
+.vscode/

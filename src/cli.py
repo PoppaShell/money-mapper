@@ -182,21 +182,66 @@ def enrich_transactions_interactive(input_file: Optional[str] = None):
             print("Operation cancelled")
             return
     
+    # Debug mode
+    debug_mode = confirm_action("Enable debug mode for detailed processing output?")
+    
     print(f"\nEnriching transactions from '{input_file}'...")
     
     # Process enrichment
     try:
-        process_transaction_enrichment(input_file, output_file)
+        process_transaction_enrichment(input_file, output_file, debug_mode)
         print(f"\n✓ Enrichment complete! Results saved to '{output_file}'")
         
         # Ask if user wants to analyze results
         if confirm_action("\nWould you like to analyze categorization accuracy?"):
-            analyze_categorization_accuracy(output_file)
+            analyze_interactive(output_file)
             
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")
     except Exception as e:
         print(f"\n✗ Error enriching transactions: {e}")
+
+
+def analyze_interactive(file_path: Optional[str] = None):
+    """Interactive mode for analyzing categorization accuracy."""
+    print("\n--- Categorization Analysis ---")
+    
+    # Get file path
+    if not file_path:
+        default_file = "../output/enriched_transactions.json"
+        file_path = input(f"Enter enriched transactions file [{default_file}]: ").strip()
+        if not file_path:
+            file_path = default_file
+    
+    # Validate file
+    if not validate_json_file(file_path):
+        return
+    
+    # Get analysis level
+    print("\nAnalysis detail level:")
+    print("1. Basic (confidence distribution, method usage)")
+    print("2. Verbose (includes examples and patterns)")
+    print("3. Debug (full diagnostic information)")
+    
+    while True:
+        choice = input("Enter choice (1-3) [1]: ").strip()
+        if not choice:
+            choice = "1"
+        
+        if choice == "1":
+            verbose, debug = False, False
+            break
+        elif choice == "2":
+            verbose, debug = True, False
+            break
+        elif choice == "3":
+            verbose, debug = True, True
+            break
+        else:
+            print("Please enter 1, 2, or 3")
+    
+    print(f"\nAnalyzing categorization accuracy...")
+    analyze_categorization_accuracy(file_path, verbose, debug)
 
 
 def run_full_pipeline_interactive():
@@ -243,14 +288,18 @@ def run_full_pipeline_interactive():
         
         # Step 2: Enrich transactions
         print(f"\nStep 2: Enriching transactions...")
-        process_transaction_enrichment(parsed_file, enriched_file)
+        process_transaction_enrichment(parsed_file, enriched_file, debug_mode)
         print(f"✓ Enrichment complete!")
         
         # Step 3: Analysis
         print(f"\nStep 3: Analyzing results...")
-        analyze_categorization_accuracy(enriched_file)
+        analyze_categorization_accuracy(enriched_file, verbose=False, debug=False)
         
         print(f"\n🎉 Pipeline complete! Check '{enriched_file}' for final results.")
+        
+        # Ask if user wants detailed analysis
+        if confirm_action("\nWould you like to run detailed analysis?"):
+            analyze_interactive(enriched_file)
         
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")
@@ -270,6 +319,8 @@ Examples:
   %(prog)s enrich --input output/txns.json  # Enrich existing transactions
   %(prog)s pipeline --dir statements # Complete parse + enrich pipeline
   %(prog)s analyze --file output/enriched.json  # Analyze categorization accuracy
+  %(prog)s analyze --file output/enriched.json --verbose  # Detailed analysis
+  %(prog)s analyze --file output/enriched.json --debug    # Full diagnostic analysis
         """
     )
     
@@ -290,6 +341,8 @@ Examples:
                               help='Input JSON file (default: output/financial_transactions.json)')
     enrich_parser.add_argument('--output', default='output/enriched_transactions.json',
                               help='Output JSON file (default: output/enriched_transactions.json)')
+    enrich_parser.add_argument('--debug', action='store_true',
+                              help='Enable debug output for detailed processing information')
     
     # Pipeline command
     pipeline_parser = subparsers.add_parser('pipeline', help='Run complete parse + enrich pipeline')
@@ -302,6 +355,10 @@ Examples:
     analyze_parser = subparsers.add_parser('analyze', help='Analyze categorization accuracy')
     analyze_parser.add_argument('--file', default='output/enriched_transactions.json',
                                help='Enriched transactions file (default: output/enriched_transactions.json)')
+    analyze_parser.add_argument('--verbose', action='store_true',
+                               help='Enable verbose analysis with detailed examples and patterns')
+    analyze_parser.add_argument('--debug', action='store_true',
+                               help='Enable debug analysis with full diagnostic information')
     
     args = parser.parse_args()
     
@@ -336,7 +393,7 @@ Examples:
             sys.exit(1)
         
         print(f"Enriching transactions from '{args.input}'...")
-        process_transaction_enrichment(args.input, args.output)
+        process_transaction_enrichment(args.input, args.output, args.debug)
         print(f"✓ Results saved to '{args.output}'")
     
     elif args.command == 'pipeline':
@@ -360,15 +417,18 @@ Examples:
         print(f"✓ Parsed {len(transactions)} transactions")
         
         # Enrich
-        process_transaction_enrichment(parsed_file, enriched_file)
+        process_transaction_enrichment(parsed_file, enriched_file, args.debug)
         print(f"✓ Pipeline complete! Results in '{enriched_file}'")
+        
+        # Basic analysis
+        analyze_categorization_accuracy(enriched_file, verbose=False, debug=False)
     
     elif args.command == 'analyze':
         # Analyze results
         if not validate_json_file(args.file):
             sys.exit(1)
         
-        analyze_categorization_accuracy(args.file)
+        analyze_categorization_accuracy(args.file, args.verbose, args.debug)
     
     else:
         # Interactive mode
@@ -392,12 +452,7 @@ Examples:
                 run_full_pipeline_interactive()
                 break
             elif choice == '4':
-                file_path = input("Enter enriched transactions file [output/enriched_transactions.json]: ").strip()
-                if not file_path:
-                    file_path = "output/enriched_transactions.json"
-                
-                if validate_json_file(file_path):
-                    analyze_categorization_accuracy(file_path)
+                analyze_interactive()
                 break
             elif choice == '5':
                 print("Goodbye!")
