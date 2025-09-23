@@ -210,14 +210,15 @@ def categorize_with_plaid_taxonomy(description: str, merchant_name: str,
 
 
 def apply_custom_mappings(description: str, merchant_name: str,
-                         custom_mappings: Dict) -> Optional[Dict]:
+                         custom_mappings: Dict, debug_mode: bool = False) -> Optional[Dict]:
     """
-    Apply custom merchant mappings for improved categorization accuracy.
+    Apply custom merchant mappings with enhanced matching logic.
     
     Args:
         description: Transaction description
         merchant_name: Extracted merchant name
         custom_mappings: Custom mappings from config files
+        debug_mode: Enable debug output for troubleshooting
         
     Returns:
         Category information if match found, None otherwise
@@ -225,39 +226,119 @@ def apply_custom_mappings(description: str, merchant_name: str,
     cleaned_desc = description.lower()
     cleaned_merchant = merchant_name.lower()
     
-    # Check all mapping sections
+    if debug_mode:
+        print(f"DEBUG: Matching '{description}' (merchant: '{merchant_name}')")
+    
+    # Enhanced income detection - check first for highest priority
+    income_indicators = [
+        'des:dir dep', 'des:direct dep', 'direct deposit', 'payroll', 
+        'salary', 'wages', 'dir dep', 'directdep'
+    ]
+    
+    found_income_indicator = next((ind for ind in income_indicators if ind in cleaned_desc), None)
+    if found_income_indicator:
+        if debug_mode:
+            print(f"DEBUG: Found income indicator: '{found_income_indicator}'")
+            
+        # Look for income mappings that match the merchant
+        for section_name, mappings in custom_mappings.items():
+            if section_name.endswith('_examples') or section_name != 'personal_income':
+                continue
+                
+            for pattern, mapping in mappings.items():
+                pattern_lower = pattern.lower()
+                
+                # For income, check if any part of the pattern matches the merchant area
+                # Extract merchant-like words from pattern (ignore des: parts)
+                pattern_words = [w for w in pattern_lower.split() if not w.startswith('des:')]
+                
+                # Check if merchant words from pattern appear in description
+                if pattern_words and any(word in cleaned_desc for word in pattern_words):
+                    if debug_mode:
+                        print(f"DEBUG: Income match found - pattern: '{pattern}' -> {mapping['category']}")
+                    return {
+                        'primary_category': mapping['category'],
+                        'detailed_category': mapping['subcategory'],
+                        'confidence': 0.95,
+                        'method': 'enhanced_income_detection',
+                        'merchant_override': mapping.get('name', merchant_name)
+                    }
+        
+        if debug_mode:
+            print(f"DEBUG: Income indicator found but no personal mapping matched")
+    
+    # Standard mapping checks with enhanced logic
     for section_name, mappings in custom_mappings.items():
         if section_name.endswith('_examples'):
-            continue  # Skip template examples
+            continue
             
         for pattern, mapping in mappings.items():
             pattern_lower = pattern.lower()
             
-            # Check for exact match in description
+            # Method 1: Exact substring match in description
             if pattern_lower in cleaned_desc:
+                if debug_mode:
+                    print(f"DEBUG: Exact match - pattern: '{pattern}' -> {mapping['category']}")
                 return {
                     'primary_category': mapping['category'],
                     'detailed_category': mapping['subcategory'], 
                     'confidence': 0.95,
-                    'method': 'custom_mapping',
+                    'method': 'custom_exact_match',
                     'merchant_override': mapping.get('name', merchant_name)
                 }
             
-            # Check for fuzzy match on merchant name
-            if fuzzy_match(pattern_lower, cleaned_merchant, 0.8):
+            # Method 2: Enhanced merchant name matching
+            # Split pattern into words and check if most core words match
+            pattern_words = [w for w in pattern_lower.split() if len(w) > 2]  # Skip short words
+            if pattern_words:
+                matches = sum(1 for word in pattern_words if word in cleaned_desc)
+                match_ratio = matches / len(pattern_words)
+                
+                if match_ratio >= 0.6:  # At least 60% of words match
+                    if debug_mode:
+                        print(f"DEBUG: Partial match ({match_ratio:.1%}) - pattern: '{pattern}' -> {mapping['category']}")
+                    return {
+                        'primary_category': mapping['category'],
+                        'detailed_category': mapping['subcategory'],
+                        'confidence': 0.90,
+                        'method': 'custom_partial_match',
+                        'merchant_override': mapping.get('name', merchant_name)
+                    }
+            
+            # Method 3: Fuzzy match on merchant name (lowered threshold)
+            if fuzzy_match(pattern_lower, cleaned_merchant, 0.7):  # Lowered from 0.8
+                if debug_mode:
+                    print(f"DEBUG: Fuzzy match - pattern: '{pattern}' -> {mapping['category']}")
                 return {
                     'primary_category': mapping['category'],
                     'detailed_category': mapping['subcategory'],
-                    'confidence': 0.90,
-                    'method': 'custom_fuzzy',
+                    'confidence': 0.85,
+                    'method': 'custom_fuzzy_match',
                     'merchant_override': mapping.get('name', merchant_name)
                 }
+            
+            # Method 4: Check if core merchant name is within pattern or vice versa
+            if len(cleaned_merchant) > 3:
+                if cleaned_merchant in pattern_lower or pattern_lower in cleaned_merchant:
+                    if debug_mode:
+                        print(f"DEBUG: Contains match - pattern: '{pattern}' -> {mapping['category']}")
+                    return {
+                        'primary_category': mapping['category'],
+                        'detailed_category': mapping['subcategory'],
+                        'confidence': 0.85,
+                        'method': 'custom_contains_match',
+                        'merchant_override': mapping.get('name', merchant_name)
+                    }
+    
+    if debug_mode:
+        print(f"DEBUG: No custom mapping found for '{description}'")
     
     return None
 
 
 def enrich_single_transaction(transaction: Dict, plaid_config: Dict, 
-                            merchant_config: Dict, personal_config: Dict) -> Dict:
+                            merchant_config: Dict, personal_config: Dict, 
+                            debug_mode: bool = False) -> Dict:
     """
     Enrich a single transaction with merchant name and category information.
     
@@ -266,6 +347,7 @@ def enrich_single_transaction(transaction: Dict, plaid_config: Dict,
         plaid_config: Plaid taxonomy configuration
         merchant_config: Public merchant mappings
         personal_config: Personal merchant mappings
+        debug_mode: Enable debug output for troubleshooting
         
     Returns:
         Enriched transaction dictionary
@@ -275,29 +357,40 @@ def enrich_single_transaction(transaction: Dict, plaid_config: Dict,
     amount = transaction.get('amount', 0)
     transaction_type = transaction.get('transaction_type', '')
     
+    if debug_mode:
+        print(f"\nDEBUG: Processing transaction: {description}")
+    
     # For credit cards, make amounts negative for expenses
     if account_type == 'credit':
         amount = -amount
     
     # Extract merchant name
     merchant_name = extract_merchant_name(description)
+    if debug_mode:
+        print(f"DEBUG: Extracted merchant: '{merchant_name}'")
     
     # Try custom mappings first (personal, then public)
     category_info = None
     
     # Check personal mappings first
     if personal_config:
-        category_info = apply_custom_mappings(description, merchant_name, personal_config)
+        category_info = apply_custom_mappings(description, merchant_name, personal_config, debug_mode)
+        if category_info and debug_mode:
+            print(f"DEBUG: Personal mapping used: {category_info['method']}")
     
     # If no personal match, try public merchant mappings
     if not category_info and merchant_config:
-        category_info = apply_custom_mappings(description, merchant_name, merchant_config)
+        category_info = apply_custom_mappings(description, merchant_name, merchant_config, debug_mode)
+        if category_info and debug_mode:
+            print(f"DEBUG: Public mapping used: {category_info['method']}")
     
     # If no custom mapping, use Plaid taxonomy
     if not category_info:
         category_info = categorize_with_plaid_taxonomy(
             description, merchant_name, amount, transaction_type, plaid_config
         )
+        if debug_mode:
+            print(f"DEBUG: Plaid taxonomy used: {category_info['method']}")
     
     # Apply merchant name override if specified
     if 'merchant_override' in category_info:
@@ -316,11 +409,15 @@ def enrich_single_transaction(transaction: Dict, plaid_config: Dict,
         'original_amount': transaction.get('amount', 0)
     })
     
+    if debug_mode:
+        print(f"DEBUG: Final result: {category_info['primary_category']} (confidence: {category_info['confidence']})")
+    
     return enriched
 
 
 def process_transaction_enrichment(input_file: str = "output/financial_transactions.json",
-                                 output_file: str = "output/enriched_transactions.json") -> None:
+                                 output_file: str = "output/enriched_transactions.json",
+                                 debug_mode: bool = False) -> None:
     """
     Process all transactions and enrich with merchant names and categories.
     
@@ -334,6 +431,7 @@ def process_transaction_enrichment(input_file: str = "output/financial_transacti
     Args:
         input_file: Path to input transactions JSON file
         output_file: Path to output enriched transactions JSON file
+        debug_mode: Enable debug output for troubleshooting
     """
     print(f"Loading transactions from {input_file}...")
     
@@ -363,6 +461,8 @@ def process_transaction_enrichment(input_file: str = "output/financial_transacti
     
     total_transactions = len(transactions)
     print(f"Processing {total_transactions} transactions...")
+    if debug_mode:
+        print("DEBUG MODE: Detailed processing information will be shown")
     
     enriched_transactions = []
     
@@ -370,7 +470,7 @@ def process_transaction_enrichment(input_file: str = "output/financial_transacti
     for i, transaction in enumerate(transactions):
         try:
             enriched = enrich_single_transaction(
-                transaction, plaid_config, merchant_config, personal_config
+                transaction, plaid_config, merchant_config, personal_config, debug_mode
             )
             enriched_transactions.append(enriched)
         except Exception as e:
@@ -380,10 +480,12 @@ def process_transaction_enrichment(input_file: str = "output/financial_transacti
             enriched_transactions.append(transaction)
             continue
         
-        # Show progress
-        show_progress(i + 1, total_transactions)
+        # Show progress (suppress during debug mode to avoid clutter)
+        if not debug_mode:
+            show_progress(i + 1, total_transactions)
     
-    print()  # New line after progress bar
+    if not debug_mode:
+        print()  # New line after progress bar
     
     # Save enriched transactions
     print(f"Saving enriched transactions to {output_file}...")
@@ -421,6 +523,142 @@ def process_transaction_enrichment(input_file: str = "output/financial_transacti
         print(f"  {method}: {count} transactions ({percentage:.1f}%)")
 
 
+def analyze_categorization_accuracy(enriched_file: str = "output/enriched_transactions.json",
+                                  verbose: bool = False, debug: bool = False) -> None:
+    """
+    Analyze categorization accuracy with three levels of detail.
+    
+    Args:
+        enriched_file: Path to enriched transactions JSON file
+        verbose: Enable detailed analysis with examples and patterns  
+        debug: Enable debug-level diagnostic output
+    """
+    try:
+        transactions = load_transactions_from_json(enriched_file)
+    except Exception as e:
+        print(f"Error loading enriched transactions: {e}")
+        return
+    
+    if not transactions:
+        print("No enriched transactions found")
+        return
+    
+    print(f"Analyzing {len(transactions)} enriched transactions...")
+    
+    # Confidence distribution
+    confidence_ranges = {
+        'High (0.9-1.0)': 0,
+        'Medium (0.7-0.9)': 0,
+        'Low (0.5-0.7)': 0,
+        'Very Low (0.0-0.5)': 0
+    }
+    
+    low_confidence_transactions = []
+    method_counts = {}
+    
+    for transaction in transactions:
+        confidence = transaction.get('confidence', 0)
+        method = transaction.get('categorization_method', 'unknown')
+        
+        # Track methods
+        method_counts[method] = method_counts.get(method, 0) + 1
+        
+        if confidence >= 0.9:
+            confidence_ranges['High (0.9-1.0)'] += 1
+        elif confidence >= 0.7:
+            confidence_ranges['Medium (0.7-0.9)'] += 1
+        elif confidence >= 0.5:
+            confidence_ranges['Low (0.5-0.7)'] += 1
+        else:
+            confidence_ranges['Very Low (0.0-0.5)'] += 1
+            low_confidence_transactions.append(transaction)
+    
+    # Basic analysis (always shown)
+    print("\n=== BASIC ANALYSIS ===")
+    print("Confidence Distribution:")
+    for range_name, count in confidence_ranges.items():
+        percentage = (count / len(transactions)) * 100
+        print(f"  {range_name}: {count} transactions ({percentage:.1f}%)")
+    
+    overall_accuracy = (confidence_ranges['High (0.9-1.0)'] + confidence_ranges['Medium (0.7-0.9)']) / len(transactions) * 100
+    print(f"\nOverall Accuracy: {overall_accuracy:.1f}%")
+    
+    print("\nCategorization Methods:")
+    for method, count in sorted(method_counts.items(), key=lambda x: x[1], reverse=True):
+        percentage = (count / len(transactions)) * 100
+        print(f"  {method}: {count} transactions ({percentage:.1f}%)")
+    
+    # Check personal mapping usage
+    custom_methods = ['custom_exact_match', 'custom_partial_match', 'enhanced_income_detection', 'custom_fuzzy_match', 'custom_contains_match']
+    custom_count = sum(method_counts.get(method, 0) for method in custom_methods)
+    print(f"\nPersonal Mappings: {custom_count}/{len(transactions)} transactions ({custom_count/len(transactions)*100:.1f}%)")
+    
+    # Verbose analysis
+    if verbose:
+        print(f"\n=== VERBOSE ANALYSIS ===")
+        
+        # Show some low confidence examples for pattern identification
+        print(f"\nLow Confidence Examples (first 10):")
+        for i, transaction in enumerate(low_confidence_transactions[:10]):
+            desc = transaction.get('description', '')
+            merchant = transaction.get('merchant_name', '')
+            category = transaction.get('primary_category', '')
+            method = transaction.get('categorization_method', '')
+            confidence = transaction.get('confidence', 0)
+            
+            print(f"  {i+1}. Description: {desc[:50]}...")
+            print(f"     Merchant: {merchant}")
+            print(f"     Category: {category}")
+            print(f"     Method: {method}")
+            print(f"     Confidence: {confidence:.2f}")
+            print()
+        
+        # Show fallback transactions that might need personal mappings
+        fallback_methods = ['exact_keyword', 'default', 'fuzzy_merchant']
+        fallback_count = sum(method_counts.get(method, 0) for method in fallback_methods)
+        if fallback_count > 0:
+            print(f"Transactions using fallback methods: {fallback_count} ({fallback_count/len(transactions)*100:.1f}%)")
+            print("These might benefit from personal mappings")
+    
+    # Debug analysis  
+    if debug:
+        print(f"\n=== DEBUG ANALYSIS ===")
+        
+        # Show method breakdown
+        print("\nMethod Analysis:")
+        for method, count in method_counts.items():
+            print(f"  {method}: {count} transactions")
+            
+            # Show examples for this method
+            examples = [t for t in transactions if t.get('categorization_method') == method][:3]
+            for example in examples:
+                desc = example.get('description', '')[:40]
+                conf = example.get('confidence', 0)
+                cat = example.get('primary_category', '')
+                print(f"    {desc}... | {cat} | {conf:.2f}")
+        
+        # Show worst performers
+        print(f"\nLowest Confidence Transactions:")
+        sorted_low = sorted(low_confidence_transactions, key=lambda x: x.get('confidence', 0))
+        for i, transaction in enumerate(sorted_low[:5]):
+            print(f"\n{i+1}. {transaction.get('description', '')}")
+            print(f"   Merchant: {transaction.get('merchant_name', '')}")
+            print(f"   Category: {transaction.get('primary_category', '')}")
+            print(f"   Method: {transaction.get('categorization_method', '')}")
+            print(f"   Confidence: {transaction.get('confidence', 0):.3f}")
+    
+    # Basic suggestions
+    print(f"\n=== SUGGESTIONS ===")
+    if confidence_ranges['Very Low (0.0-0.5)'] > 0:
+        print(f"• Add custom mappings for {confidence_ranges['Very Low (0.0-0.5)']} very low-confidence transactions")
+    if confidence_ranges['Low (0.5-0.7)'] > 0:
+        print(f"• Review {confidence_ranges['Low (0.5-0.7)']} medium-low confidence transactions")
+    if custom_count < len(transactions) * 0.3:
+        print("• Consider adding more personal mappings - currently only covering a small portion")
+    
+    print(f"• Current accuracy: {overall_accuracy:.1f}% (target: 90%+)")
+
+
 def categorize_transaction(description: str, amount: float = 0, 
                           transaction_type: str = "") -> Dict:
     """
@@ -451,73 +689,6 @@ def categorize_transaction(description: str, amount: float = 0,
             'confidence': 0.1,
             'method': 'error'
         }
-
-
-def analyze_categorization_accuracy(enriched_file: str = "output/enriched_transactions.json") -> None:
-    """
-    Analyze categorization accuracy and provide insights for improvement.
-    
-    Args:
-        enriched_file: Path to enriched transactions JSON file
-    """
-    try:
-        transactions = load_transactions_from_json(enriched_file)
-    except Exception as e:
-        print(f"Error loading enriched transactions: {e}")
-        return
-    
-    if not transactions:
-        print("No enriched transactions found")
-        return
-    
-    print(f"Analyzing {len(transactions)} enriched transactions...")
-    
-    # Confidence distribution
-    confidence_ranges = {
-        'High (0.9-1.0)': 0,
-        'Medium (0.7-0.9)': 0,
-        'Low (0.5-0.7)': 0,
-        'Very Low (0.0-0.5)': 0
-    }
-    
-    low_confidence_transactions = []
-    
-    for transaction in transactions:
-        confidence = transaction.get('confidence', 0)
-        
-        if confidence >= 0.9:
-            confidence_ranges['High (0.9-1.0)'] += 1
-        elif confidence >= 0.7:
-            confidence_ranges['Medium (0.7-0.9)'] += 1
-        elif confidence >= 0.5:
-            confidence_ranges['Low (0.5-0.7)'] += 1
-        else:
-            confidence_ranges['Very Low (0.0-0.5)'] += 1
-            low_confidence_transactions.append(transaction)
-    
-    print("\nConfidence Distribution:")
-    for range_name, count in confidence_ranges.items():
-        percentage = (count / len(transactions)) * 100
-        print(f"  {range_name}: {count} transactions ({percentage:.1f}%)")
-    
-    # Show low confidence transactions for review
-    if low_confidence_transactions:
-        print(f"\nLow confidence transactions (showing first 10):")
-        for i, transaction in enumerate(low_confidence_transactions[:10]):
-            print(f"  {i+1}. {transaction.get('description', 'N/A')[:50]}...")
-            print(f"     Merchant: {transaction.get('merchant_name', 'N/A')}")
-            print(f"     Category: {transaction.get('primary_category', 'N/A')}")
-            print(f"     Confidence: {transaction.get('confidence', 0):.2f}")
-            print()
-    
-    # Suggest improvements
-    print("Suggestions for improvement:")
-    if confidence_ranges['Very Low (0.0-0.5)'] > 0:
-        print(f"  - Add custom mappings for {confidence_ranges['Very Low (0.0-0.5)']} low-confidence transactions")
-    if confidence_ranges['Low (0.5-0.7)'] > 0:
-        print(f"  - Review and refine {confidence_ranges['Low (0.5-0.7)']} medium-low confidence transactions")
-    
-    print(f"  - Overall accuracy: {(confidence_ranges['High (0.9-1.0)'] + confidence_ranges['Medium (0.7-0.9)']) / len(transactions) * 100:.1f}%")
 
 
 if __name__ == "__main__":
