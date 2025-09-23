@@ -34,6 +34,27 @@ keywords = [
     "pizza", "dominos", "papa johns"
 ]
 
+# Missing categories from old script
+[FOOD_AND_DRINK.FOOD_AND_DRINK_BAGELS]
+keywords = [
+    "bagel", "bagelmania", "einstein bros"
+]
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_ICE_CREAM]
+keywords = [
+    "ice cream", "frozen yogurt", "beth maries ice"
+]
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_BAKERIES]
+keywords = [
+    "bakery", "la madeleine"
+]
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_FOOD_TRUCKS_AND_STANDS]
+keywords = [
+    "food truck", "food stand"
+]
+
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SUPERSTORES]
 keywords = [
     "walmart", "target", "costco", "sams club"
@@ -79,6 +100,26 @@ keywords = [
     "amazon", "ebay", "etsy", "marketplace"
 ]
 
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES]
+keywords = [
+    "gift shop", "novelty"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OFFICE_SUPPLIES]
+keywords = [
+    "office depot", "staples", "office supplies"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_PET_SUPPLIES]
+keywords = [
+    "petco", "petsmart", "pet supplies"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_WAREHOUSE_CLUBS]
+keywords = [
+    "costco", "sams club", "bjs"
+]
+
 [TRANSPORTATION.TRANSPORTATION_GAS]
 keywords = [
     "shell", "exxon", "bp", "chevron", "texaco", "mobil", "gas", "fuel"
@@ -97,6 +138,16 @@ keywords = [
 [TRANSPORTATION.TRANSPORTATION_TAXIS_AND_RIDE_SHARES]
 keywords = [
     "uber", "lyft", "taxi", "cab"
+]
+
+[TRANSPORTATION.TRANSPORTATION_TOLLS]
+keywords = [
+    "toll", "turnpike", "sunpass"
+]
+
+[TRANSPORTATION.TRANSPORTATION_AUTO_REPAIR]
+keywords = [
+    "auto repair", "mechanic", "tire", "oil change"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_RENT]
@@ -129,6 +180,11 @@ keywords = [
     "water", "sewer", "wastewater"
 ]
 
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_SEWAGE_AND_WASTE_MANAGEMENT]
+keywords = [
+    "waste", "garbage"
+]
+
 [ENTERTAINMENT.ENTERTAINMENT_CASINOS_AND_GAMBLING]
 keywords = [
     "casino", "gambling", "lottery"
@@ -154,6 +210,26 @@ keywords = [
     "steam", "xbox", "playstation", "nintendo", "gaming"
 ]
 
+[ENTERTAINMENT.ENTERTAINMENT_MOVIES_AND_DVDS]
+keywords = [
+    "cinema", "movie", "theater", "amc", "regal", "cinemark"
+]
+
+[ENTERTAINMENT.ENTERTAINMENT_ADULT_ENTERTAINMENT]
+keywords = [
+    "adult"
+]
+
+[ENTERTAINMENT.ENTERTAINMENT_AMUSEMENT_PARKS]
+keywords = [
+    "amusement park", "theme park"
+]
+
+[ENTERTAINMENT.ENTERTAINMENT_RECREATION_CENTERS]
+keywords = [
+    "recreation", "gym", "fitness"
+]
+
 [PERSONAL_CARE.PERSONAL_CARE_HAIR_AND_BEAUTY]
 keywords = [
     "salon", "barber", "beauty", "cosmetics", "hair"
@@ -162,6 +238,16 @@ keywords = [
 [PERSONAL_CARE.PERSONAL_CARE_LAUNDRY_AND_DRY_CLEANING]
 keywords = [
     "laundry", "dry clean", "wash"
+]
+
+[PERSONAL_CARE.PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS]
+keywords = [
+    "gym", "fitness", "yoga"
+]
+
+[PERSONAL_CARE.PERSONAL_CARE_SPAS_AND_MASSAGE]
+keywords = [
+    "spa", "massage"
 ]
 
 [MEDICAL.MEDICAL_DENTAL_CARE]
@@ -184,6 +270,31 @@ keywords = [
     "doctor", "physician", "clinic", "medical", "health"
 ]
 
+[MEDICAL.MEDICAL_SPECIALTY_CARE]
+keywords = [
+    "specialist", "specialist care"
+]
+
+[MEDICAL.MEDICAL_URGENT_CARE]
+keywords = [
+    "urgent care", "emergency"
+]
+
+[MEDICAL.MEDICAL_NURSING_CARE]
+keywords = [
+    "nursing"
+]
+
+[MEDICAL.MEDICAL_MENTAL_HEALTH]
+keywords = [
+    "therapy", "therapist", "mental health"
+]
+
+[MEDICAL.MEDICAL_VETERINARY_SERVICES]
+keywords = [
+    "vet", "veterinary"
+]
+
 [LOAN_PAYMENTS.LOAN_PAYMENTS_CREDIT_CARD_PAYMENT]
 keywords = [
     "credit card payment", "card payment", "autopay"
@@ -199,6 +310,77 @@ keywords = [
     "student loan", "education loan", "nelnet"
 ]
 
+[LOAN_PAYMENTS.LOAN_PAYMENTS_CAR_PAYMENT]
+keywords = [
+    "car payment", "auto loan"
+]
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_PERSONAL_LOAN_PAYMENT]
+keywords = [
+    "personal loan"
+]
+
+# Missing categories from old script
+[INSURANCE.INSURANCE_AUTO_INSURANCE]
+keywords = [
+    "auto insurance", "car insurance", "progressive", "safeco"
+]
+
+[INSURANCE.INSURANCE_HOME_INSURANCE]
+keywords = [
+    "home insurance", "homeowners insurance"
+]
+
+[INSURANCE.INSURANCE_HEALTH_INSURANCE]
+keywords = [
+    "health insurance", "medical insurance"
+]
+
+[INSURANCE.INSURANCE_LIFE_INSURANCE]
+keywords = [
+    "life insurance"
+]
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_FURNITURE]
+keywords = [
+    "furniture", "ikea"
+]
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_HARDWARE]
+keywords = [
+    "home depot", "lowes", "ace hardware"
+]
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE]
+keywords = [
+    "repair", "maintenance", "plumbing", "leslie pool"
+]
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_SECURITY]
+keywords = [
+    "security", "alarm"
+]
+
+[TRAVEL.TRAVEL_FLIGHTS]
+keywords = [
+    "airline", "flight", "american air", "delta", "united"
+]
+
+[TRAVEL.TRAVEL_LODGING]
+keywords = [
+    "hotel", "motel", "airbnb", "lodging"
+]
+
+[TRAVEL.TRAVEL_RENTAL_CARS]
+keywords = [
+    "rental car", "hertz", "enterprise", "budget"
+]
+
+[TRAVEL.TRAVEL_OTHER_TRAVEL]
+keywords = [
+    "travel", "vacation"
+]
+
 [BANK_FEES.BANK_FEES_ATM_FEES]
 keywords = [
     "atm fee", "withdrawal fee"
@@ -212,6 +394,11 @@ keywords = [
 [BANK_FEES.BANK_FEES_OTHER_BANK_FEES]
 keywords = [
     "maintenance fee", "service charge", "bank fee"
+]
+
+[BANK_FEES.BANK_FEES_INTEREST_CHARGE]
+keywords = [
+    "interest charge"
 ]
 
 [TRANSFER_IN.TRANSFER_IN_DEPOSIT]
@@ -262,6 +449,21 @@ keywords = [
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES]
 keywords = [
     "government", "dmv", "county", "city", "state"
+]
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_FEDERAL_TAX_PAYMENT]
+keywords = [
+    "irs", "federal tax"
+]
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_LOCAL_TAX_PAYMENT]
+keywords = [
+    "property tax", "local tax"
+]
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_STATE_TAX_PAYMENT]
+keywords = [
+    "state tax"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_ACCOUNTING_AND_FINANCIAL_PLANNING]
