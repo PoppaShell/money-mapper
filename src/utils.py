@@ -48,9 +48,16 @@ def load_config(config_file: str) -> Dict:
             return tomllib.load(f)
     except FileNotFoundError:
         print(f"Error: Configuration file '{config_file}' not found")
+        print("Please ensure you have the complete repository with all config files.")
         raise
     except tomllib.TOMLDecodeError as e:
         print(f"Error: Invalid TOML syntax in '{config_file}': {e}")
+        print("Please fix the TOML syntax error and try again.")
+        print("You can use a TOML validator online or check for:")
+        print("- Missing quotes around strings")
+        print("- Unbalanced brackets or braces")
+        print("- Invalid escape sequences")
+        print("- Duplicate keys")
         raise
 
 
@@ -430,6 +437,125 @@ def get_pdf_files(directory: str) -> List[str]:
         return []
 
 
+def validate_toml_files() -> bool:
+    """
+    Validate all TOML configuration files for syntax errors.
+    
+    Returns:
+        True if all TOML files are valid, False if any have syntax errors
+    """
+    # Get the parent directory (project root) when running from src/
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    
+    config_files = [
+        'config/statement_patterns.toml',
+        'config/plaid_categories.toml', 
+        'config/merchant_mappings.toml',
+        'config/personal_mappings.toml'
+    ]
+    
+    all_valid = True
+    print("\nValidating TOML configuration files:")
+    print("-" * 50)
+    
+    for config_file in config_files:
+        file_path = os.path.join(parent_dir, config_file)
+        
+        if not os.path.exists(file_path):
+            print(f"WARNING: {config_file:<30} - File not found (optional)")
+            continue
+            
+        try:
+            with open(file_path, 'rb') as f:
+                config_data = tomllib.load(f)
+            
+            # Count sections for summary
+            section_count = len(config_data) if isinstance(config_data, dict) else 0
+            print(f"VALID:   {config_file:<30} - ({section_count} sections)")
+            
+        except tomllib.TOMLDecodeError as e:
+            print(f"ERROR:   {config_file:<30} - TOML syntax error:")
+            print(f"         {str(e)}")
+            print("         Common fixes:")
+            print("         - Check for missing quotes around strings")
+            print("         - Verify balanced brackets and braces")  
+            print("         - Look for duplicate keys in same section")
+            print("         - Check for invalid escape sequences")
+            all_valid = False
+        except Exception as e:
+            print(f"ERROR:   {config_file:<30} - Error reading: {e}")
+            all_valid = False
+    
+    print("-" * 50)
+    if all_valid:
+        print("SUCCESS: All configuration files are valid!")
+    else:
+        print("FAILED:  Some configuration files have errors that need to be fixed.")
+    
+    return all_valid
+
+
+def test_categorization_sample() -> None:
+    """
+    Test categorization with a few sample transactions to verify setup.
+    
+    This helps ensure the configuration is working properly.
+    """
+    print("\nTesting categorization with sample transactions:")
+    print("-" * 50)
+    
+    # Sample transactions to test
+    test_transactions = [
+        {"description": "walmart supercenter", "expected": "FOOD_AND_DRINK"},
+        {"description": "shell gas station", "expected": "TRANSPORTATION"},
+        {"description": "mcdonalds", "expected": "FOOD_AND_DRINK"},
+        {"description": "amazon purchase", "expected": "GENERAL_MERCHANDISE"},
+        {"description": "netflix subscription", "expected": "ENTERTAINMENT"},
+        {"description": "direct deposit payroll", "expected": "INCOME"},
+        {"description": "mobile deposit", "expected": "TRANSFER_IN"}
+    ]
+    
+    try:
+        # Try to load the enricher to test categorization
+        from transaction_enricher import extract_merchant_name, categorize_with_plaid_taxonomy
+        plaid_config = load_config('config/plaid_categories.toml')
+        
+        correct = 0
+        total = len(test_transactions)
+        
+        for test in test_transactions:
+            desc = test["description"]
+            expected = test["expected"]
+            
+            merchant = extract_merchant_name(desc)
+            result = categorize_with_plaid_taxonomy(desc, merchant, 0, "", plaid_config)
+            
+            actual = result.get('primary_category', 'OTHER')
+            confidence = result.get('confidence', 0)
+            
+            if actual == expected:
+                print(f"PASS:    '{desc}' -> {actual} (confidence: {confidence:.2f})")
+                correct += 1
+            else:
+                print(f"FAIL:    '{desc}' -> {actual}, expected {expected} (confidence: {confidence:.2f})")
+        
+        accuracy = (correct / total) * 100
+        print("-" * 50)
+        print(f"Sample accuracy: {accuracy:.1f}% ({correct}/{total})")
+        
+        if accuracy >= 80:
+            print("SUCCESS: Configuration appears to be working well!")
+        elif accuracy >= 60:
+            print("WARNING: Configuration is functional but could be improved")
+        else:
+            print("FAILED:  Configuration may need attention - low accuracy on basic tests")
+            
+    except Exception as e:
+        print(f"ERROR:   Could not run categorization test: {e}")
+        print("         This might indicate missing dependencies or config errors")
+
+
 def ensure_directories_exist():
     """
     Create standard project directories if they don't exist.
@@ -456,4 +582,11 @@ def ensure_directories_exist():
         print("Please ensure you have the complete repository with config files.")
         return False
     
+    # Validate TOML configuration files
+    print("Validating TOML configuration files...")
+    if not validate_toml_files():
+        print("Error: One or more TOML files have syntax errors. Please fix them before continuing.")
+        return False
+    
+    print("All configuration files validated successfully.")
     return True

@@ -4,37 +4,49 @@
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_GROCERIES]
 keywords = [
-    "h-e-b", "trader joe", "whole foods", "kroger", "target", "costco",
-    "walmart", "sam", "grocery", "market", "food"
+    "h-e-b", "heb", "trader joe", "whole foods", "kroger", "target", "costco",
+    "walmart", "sam", "grocery", "market", "food", "supercenter", "safeway",
+    "albertson", "publix", "meijer", "giant", "stop shop", "king soopers",
+    "smith", "ralphs", "fred meyer", "wegman", "aldi", "food lion",
+    "piggly wiggly", "winn dixie", "harris teeter"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_RESTAURANTS]
 keywords = [
-    "restaurant", "bistro", "grill", "kitchen", "cafe", "diner", "eatery"
+    "restaurant", "bistro", "grill", "kitchen", "cafe", "diner", "eatery",
+    "applebee", "olive garden", "red lobster", "outback", "longhorn",
+    "denny", "buffalo wild", "hooters", "tgi friday", "ruby tuesday",
+    "golden corral", "bob evans", "waffle house", "perkins", "village inn"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_FAST_FOOD]
 keywords = [
-    "mcdonalds", "burger king", "taco bell", "kfc", "subway", "chipotle", 
-    "panda express", "chick-fil-a", "sonic", "jack in the box", "braums"
+    "mcdonalds", "mcdonald", "burger king", "taco bell", "tacobell", "kfc", 
+    "subway", "chipotle", "panda express", "chick-fil-a", "chick fil a",
+    "sonic", "jack in the box", "braums", "popeyes", "wendys", "wendy",
+    "culvers", "panera", "five guys", "in-n-out", "in n out", "whataburger",
+    "raising canes", "raising cane", "qdoba", "moe", "hardee", "carl jr",
+    "del taco", "jimmy john", "jersey mike", "firehouse", "white castle",
+    "arby", "arbys"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_COFFEE]
 keywords = [
-    "starbucks", "dunkin", "coffee", "espresso", "boundaries coffee"
+    "starbucks", "dunkin", "dunkin donuts", "coffee", "espresso", "caribou",
+    "tim horton", "peet", "boundaries coffee"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_BARS_AND_NIGHTLIFE]
 keywords = [
-    "bar", "pub", "brewery", "nightclub", "lounge"
+    "bar", "pub", "brewery", "nightclub", "lounge", "tavern", "saloon"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_PIZZA]
 keywords = [
-    "pizza", "dominos", "papa johns"
+    "pizza", "dominos", "domino", "pizza hut", "papa john", "little caesar",
+    "papa murphy", "godfather", "casey general store"
 ]
 
-# Missing categories from old script
 [FOOD_AND_DRINK.FOOD_AND_DRINK_BAGELS]
 keywords = [
     "bagel", "bagelmania", "einstein bros"
@@ -47,7 +59,7 @@ keywords = [
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_BAKERIES]
 keywords = [
-    "bakery", "la madeleine"
+    "bakery"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_FOOD_TRUCKS_AND_STANDS]
@@ -57,97 +69,106 @@ keywords = [
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SUPERSTORES]
 keywords = [
-    "walmart", "target", "costco", "sams club"
+    "walmart", "target", "costco", "sams club", "home depot", "lowe"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS]
 keywords = [
-    "barnes noble", "bookstore", "library"
+    "barnes noble", "bookstore", "library", "books million", "borders"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES]
 keywords = [
-    "clothing", "apparel", "fashion", "shoes"
+    "clothing", "apparel", "fashion", "shoes", "tjmaxx", "tj maxx", "marshall",
+    "ross", "nordstrom", "nordstrom rack", "macy", "jcpenney", "kohl", "dillard",
+    "gap", "old navy", "banana republic", "ann taylor", "express", "forever 21",
+    "h&m", "zara", "uniqlo", "american eagle", "abercrombie", "hollister"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CONVENIENCE_STORES]
 keywords = [
-    "convenience", "7-eleven", "quick trip"
+    "convenience", "7-eleven", "circle k", "wawa", "sheetz", "casey"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_DEPARTMENT_STORES]
 keywords = [
-    "macys", "nordstrom", "sears", "jcpenney"
+    "macys", "macy", "nordstrom", "sears", "jcpenney", "dillard", "von maur"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_DISCOUNT_STORES]
 keywords = [
-    "dollar tree", "family dollar", "discount"
+    "dollar tree", "family dollar", "dollar general", "five below", "discount"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ELECTRONICS]
 keywords = [
-    "best buy", "electronics", "computer", "tech"
+    "best buy", "electronics", "computer", "tech", "apple store", "microsoft store",
+    "frys", "micro center", "radioshack", "gamestop", "nintendo", "sony", "samsung"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SPORTING_GOODS]
 keywords = [
-    "sporting goods", "sports", "athletic"
+    "sporting goods", "sports", "athletic", "dick", "dicks", "sports authority",
+    "modell", "big 5", "academy", "cabela", "bass pro", "rei", "nike", "adidas"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ONLINE_MARKETPLACES]
 keywords = [
-    "amazon", "ebay", "etsy", "marketplace"
+    "amazon", "ebay", "etsy", "marketplace", "overstock", "wayfair", "wish"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES]
 keywords = [
-    "gift shop", "novelty"
+    "gift shop", "novelty", "hallmark", "spencer", "claire"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OFFICE_SUPPLIES]
 keywords = [
-    "office depot", "staples", "office supplies"
+    "office depot", "staples", "office supplies", "officemax", "fedex office"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_PET_SUPPLIES]
 keywords = [
-    "petco", "petsmart", "pet supplies"
+    "petco", "petsmart", "pet supplies", "pet", "chewy", "pet supermarket"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_WAREHOUSE_CLUBS]
 keywords = [
-    "costco", "sams club", "bjs"
+    "costco", "sams club", "bjs", "warehouse"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_GAS]
 keywords = [
-    "shell", "exxon", "bp", "chevron", "texaco", "mobil", "gas", "fuel"
+    "shell", "exxon", "bp", "chevron", "texaco", "mobil", "gas", "fuel",
+    "racetrac", "loves", "pilot", "wawa", "thorntons", "citgo", "marathon",
+    "speedway", "valero", "phillips 66", "conoco", "casey", "kwik trip",
+    "sheetz", "circle k", "7-eleven", "convenient food mart"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_PARKING]
 keywords = [
-    "parking", "garage", "meter"
+    "parking", "garage", "meter", "valet", "park", "lot"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_PUBLIC_TRANSIT]
 keywords = [
-    "metro", "bus", "train", "transit", "subway"
+    "metro", "bus", "train", "transit", "subway", "mta", "bart", "cta"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_TAXIS_AND_RIDE_SHARES]
 keywords = [
-    "uber", "lyft", "taxi", "cab"
+    "uber", "lyft", "taxi", "cab", "ride share", "rideshare"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_TOLLS]
 keywords = [
-    "toll", "turnpike", "sunpass"
+    "toll", "turnpike", "sunpass", "ezpass", "ipass", "fastrak", "toll road"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_AUTO_REPAIR]
 keywords = [
-    "auto repair", "mechanic", "tire", "oil change"
+    "auto repair", "mechanic", "tire", "oil change", "jiffy lube", "valvoline",
+    "midas", "firestone", "goodyear", "discount tire", "pepboys"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_RENT]
@@ -167,12 +188,14 @@ keywords = [
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_INTERNET_AND_CABLE]
 keywords = [
-    "internet", "cable", "broadband", "wifi"
+    "internet", "cable", "broadband", "wifi", "xfinity", "comcast", "spectrum",
+    "cox", "directv", "dish", "charter", "time warner", "optimum", "fios"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_PHONE]
 keywords = [
-    "phone", "mobile", "cellular", "verizon", "att", "tmobile"
+    "phone", "mobile", "cellular", "verizon", "att", "at&t", "tmobile", "t-mobile",
+    "sprint", "boost", "metro pcs", "cricket", "straight talk", "tracfone"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_WATER]
@@ -192,7 +215,7 @@ keywords = [
 
 [ENTERTAINMENT.ENTERTAINMENT_MUSIC_AND_AUDIO]
 keywords = [
-    "spotify", "apple music", "music", "audio"
+    "spotify", "apple music", "amazon music", "youtube music", "pandora", "music", "audio"
 ]
 
 [ENTERTAINMENT.ENTERTAINMENT_SPORTING_EVENTS]
@@ -202,7 +225,8 @@ keywords = [
 
 [ENTERTAINMENT.ENTERTAINMENT_TV_AND_MOVIES]
 keywords = [
-    "netflix", "hulu", "disney", "movie", "theater", "cinema"
+    "netflix", "hulu", "disney", "hbo", "amazon prime", "paramount", "peacock",
+    "movie", "theater", "cinema", "amc", "regal", "cinemark", "fandango"
 ]
 
 [ENTERTAINMENT.ENTERTAINMENT_VIDEO_GAMES]
@@ -232,7 +256,8 @@ keywords = [
 
 [PERSONAL_CARE.PERSONAL_CARE_HAIR_AND_BEAUTY]
 keywords = [
-    "salon", "barber", "beauty", "cosmetics", "hair"
+    "salon", "barber", "beauty", "cosmetics", "hair", "great clips", "sport clips",
+    "supercuts", "fantastic sam", "ulta", "sephora"
 ]
 
 [PERSONAL_CARE.PERSONAL_CARE_LAUNDRY_AND_DRY_CLEANING]
@@ -242,7 +267,7 @@ keywords = [
 
 [PERSONAL_CARE.PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS]
 keywords = [
-    "gym", "fitness", "yoga"
+    "gym", "fitness", "yoga", "planet fitness", "la fitness", "24 hour fitness"
 ]
 
 [PERSONAL_CARE.PERSONAL_CARE_SPAS_AND_MASSAGE]
@@ -257,17 +282,19 @@ keywords = [
 
 [MEDICAL.MEDICAL_EYE_CARE]
 keywords = [
-    "optometrist", "eye doctor", "vision", "glasses", "contacts"
+    "optometrist", "eye doctor", "vision", "glasses", "contacts", "lenscrafters",
+    "america best", "pearle vision", "warby parker", "eyebuydirect"
 ]
 
 [MEDICAL.MEDICAL_PHARMACY]
 keywords = [
-    "pharmacy", "cvs", "walgreens", "rite aid", "prescription"
+    "pharmacy", "cvs", "walgreens", "rite aid", "prescription", "walmart pharmacy",
+    "costco pharmacy", "target pharmacy", "kroger pharmacy", "safeway pharmacy"
 ]
 
 [MEDICAL.MEDICAL_PRIMARY_CARE]
 keywords = [
-    "doctor", "physician", "clinic", "medical", "health"
+    "doctor", "physician", "clinic", "medical", "health", "kaiser"
 ]
 
 [MEDICAL.MEDICAL_SPECIALTY_CARE]
@@ -297,7 +324,8 @@ keywords = [
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_CREDIT_CARD_PAYMENT]
 keywords = [
-    "credit card payment", "card payment", "autopay"
+    "credit card payment", "card payment", "autopay", "synchrony", "capital one",
+    "chase", "citi", "discover", "american express", "wells fargo", "bank america"
 ]
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_MORTGAGE_PAYMENT]
@@ -312,7 +340,8 @@ keywords = [
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_CAR_PAYMENT]
 keywords = [
-    "car payment", "auto loan"
+    "car payment", "auto loan", "toyota financial", "honda financial", 
+    "ford motor credit", "gm financial", "ally financial", "carmax"
 ]
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_PERSONAL_LOAN_PAYMENT]
@@ -320,10 +349,10 @@ keywords = [
     "personal loan"
 ]
 
-# Missing categories from old script
 [INSURANCE.INSURANCE_AUTO_INSURANCE]
 keywords = [
-    "auto insurance", "car insurance", "progressive", "safeco"
+    "auto insurance", "car insurance", "progressive", "geico", "state farm",
+    "allstate", "usaa", "farmers", "liberty mutual", "safeco", "aaa"
 ]
 
 [INSURANCE.INSURANCE_HOME_INSURANCE]
@@ -343,17 +372,18 @@ keywords = [
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_FURNITURE]
 keywords = [
-    "furniture", "ikea"
+    "furniture", "ikea", "ashley", "wayfair", "overstock"
 ]
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_HARDWARE]
 keywords = [
-    "home depot", "lowes", "ace hardware"
+    "home depot", "lowes", "ace hardware", "true value", "menards"
 ]
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE]
 keywords = [
-    "repair", "maintenance", "plumbing", "leslie pool"
+    "repair", "maintenance", "plumbing", "leslie pool", "pool corp",
+    "sherwin williams", "benjamin moore"
 ]
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_SECURITY]
@@ -363,17 +393,20 @@ keywords = [
 
 [TRAVEL.TRAVEL_FLIGHTS]
 keywords = [
-    "airline", "flight", "american air", "delta", "united"
+    "airline", "flight", "american air", "delta", "united", "southwest",
+    "jetblue", "alaska air", "spirit", "frontier", "allegiant"
 ]
 
 [TRAVEL.TRAVEL_LODGING]
 keywords = [
-    "hotel", "motel", "airbnb", "lodging"
+    "hotel", "motel", "airbnb", "lodging", "marriott", "hilton", "hyatt",
+    "ihg", "holiday inn", "best western", "hampton inn", "courtyard",
+    "fairfield", "comfort inn", "la quinta", "red roof", "motel 6", "super 8"
 ]
 
 [TRAVEL.TRAVEL_RENTAL_CARS]
 keywords = [
-    "rental car", "hertz", "enterprise", "budget"
+    "rental car", "hertz", "enterprise", "budget", "avis", "alamo", "national", "thrifty"
 ]
 
 [TRAVEL.TRAVEL_OTHER_TRAVEL]
@@ -383,17 +416,17 @@ keywords = [
 
 [BANK_FEES.BANK_FEES_ATM_FEES]
 keywords = [
-    "atm fee", "withdrawal fee"
+    "atm fee", "withdrawal fee", "atm"
 ]
 
 [BANK_FEES.BANK_FEES_OVERDRAFT_FEES]
 keywords = [
-    "overdraft", "nsf", "insufficient funds"
+    "overdraft", "nsf", "insufficient funds", "nsf fee"
 ]
 
 [BANK_FEES.BANK_FEES_OTHER_BANK_FEES]
 keywords = [
-    "maintenance fee", "service charge", "bank fee"
+    "maintenance fee", "service charge", "bank fee", "foreign transaction", "wire fee"
 ]
 
 [BANK_FEES.BANK_FEES_INTEREST_CHARGE]
@@ -403,17 +436,18 @@ keywords = [
 
 [TRANSFER_IN.TRANSFER_IN_DEPOSIT]
 keywords = [
-    "deposit", "mobile deposit", "check deposit"
+    "deposit", "mobile deposit", "check deposit", "zelle"
 ]
 
 [TRANSFER_IN.TRANSFER_IN_PAYROLL]
 keywords = [
-    "payroll", "direct deposit", "salary", "wages"
+    "payroll", "direct deposit", "salary", "wages", "des:dir dep"
 ]
 
 [TRANSFER_OUT.TRANSFER_OUT_ACCOUNT_TRANSFER]
 keywords = [
-    "transfer", "account transfer", "online transfer"
+    "transfer", "account transfer", "online transfer", "wire transfer", "ach transfer",
+    "venmo", "cash app", "paypal"
 ]
 
 [TRANSFER_OUT.TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS]
@@ -423,22 +457,26 @@ keywords = [
 
 [INCOME.INCOME_WAGES]
 keywords = [
-    "wages", "salary", "payroll", "direct deposit"
+    "wages", "salary", "payroll", "direct deposit", "des:dir dep", "des:direct dep",
+    "des:directdep", "directdep", "dir dep", "commission", "bonus", "pay", 
+    "employment", "work", "job", "income", "earnings"
 ]
 
 [INCOME.INCOME_INTEREST_EARNED]
 keywords = [
-    "interest", "interest earned", "savings interest"
+    "interest", "interest earned", "savings interest", "dividend", "earnings"
 ]
 
 [INCOME.INCOME_TAX_REFUND]
 keywords = [
-    "tax refund", "irs", "refund"
+    "tax refund", "irs", "irs treas", "refund", "treasury", "federal refund"
 ]
 
 [INCOME.INCOME_OTHER_INCOME]
 keywords = [
-    "cash reward", "cashback", "bonus", "other income"
+    "cash reward", "cashback", "bonus", "other income", "dividend", "freelance",
+    "consulting", "unemployment", "social security", "pension", "retirement",
+    "disability", "alimony", "child support", "gift", "prize", "rebate"
 ]
 
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_DONATIONS]
@@ -448,7 +486,8 @@ keywords = [
 
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES]
 keywords = [
-    "government", "dmv", "county", "city", "state"
+    "government", "dmv", "county", "city", "state", "secretary of state", "city hall",
+    "county clerk", "vehicle registration"
 ]
 
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_FEDERAL_TAX_PAYMENT]
@@ -473,5 +512,6 @@ keywords = [
 
 [GENERAL_SERVICES.GENERAL_SERVICES_OTHER_GENERAL_SERVICES]
 keywords = [
-    "service", "professional service", "consulting"
+    "service", "professional service", "consulting", "apple", "microsoft", "google",
+    "adobe", "dropbox", "groupon", "square"
 ]

@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from statement_parser import process_pdf_statements
 from transaction_enricher import process_transaction_enrichment, analyze_categorization_accuracy
-from utils import load_transactions_from_json, ensure_directories_exist
+from utils import load_transactions_from_json, ensure_directories_exist, validate_toml_files
 
 
 def print_banner():
@@ -318,6 +318,7 @@ Examples:
   %(prog)s parse --dir statements    # Parse PDFs in statements directory
   %(prog)s enrich --input output/txns.json  # Enrich existing transactions
   %(prog)s pipeline --dir statements # Complete parse + enrich pipeline
+  %(prog)s validate                  # Validate TOML configuration files
   %(prog)s analyze --file output/enriched.json  # Analyze categorization accuracy
   %(prog)s analyze --file output/enriched.json --verbose  # Detailed analysis
   %(prog)s analyze --file output/enriched.json --debug    # Full diagnostic analysis
@@ -350,6 +351,9 @@ Examples:
                                 help='Directory containing PDF files (default: statements)')
     pipeline_parser.add_argument('--debug', action='store_true',
                                 help='Enable debug output')
+    
+    # Validate command
+    validate_parser = subparsers.add_parser('validate', help='Validate TOML configuration files')
     
     # Analyze command
     analyze_parser = subparsers.add_parser('analyze', help='Analyze categorization accuracy')
@@ -423,6 +427,15 @@ Examples:
         # Basic analysis
         analyze_categorization_accuracy(enriched_file, verbose=False, debug=False)
     
+    elif args.command == 'validate':
+        # Validate TOML files
+        print("Validating TOML configuration files...")
+        if validate_toml_files():
+            print("All TOML configuration files are valid!")
+        else:
+            print("One or more TOML files have syntax errors. Please fix them.")
+            sys.exit(1)
+    
     elif args.command == 'analyze':
         # Analyze results
         if not validate_json_file(args.file):
@@ -437,10 +450,11 @@ Examples:
         print("2. Enrich existing transactions only") 
         print("3. Complete pipeline (parse + enrich)")
         print("4. Analyze categorization accuracy")
-        print("5. Exit")
+        print("5. Validate TOML configuration files")
+        print("6. Exit")
         
         while True:
-            choice = input("\nEnter your choice (1-5): ").strip()
+            choice = input("\nEnter your choice (1-6): ").strip()
             
             if choice == '1':
                 parse_statements_interactive()
@@ -455,10 +469,17 @@ Examples:
                 analyze_interactive()
                 break
             elif choice == '5':
+                print("Validating TOML configuration files...")
+                if validate_toml_files():
+                    print("All TOML configuration files are valid!")
+                else:
+                    print("One or more TOML files have syntax errors. Please fix them.")
+                break
+            elif choice == '6':
                 print("Goodbye!")
                 break
             else:
-                print("Invalid choice. Please enter 1-5.")
+                print("Invalid choice. Please enter 1-6.")
 
 
 if __name__ == "__main__":
