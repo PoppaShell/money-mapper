@@ -1,6 +1,6 @@
 # Financial Transaction Parser & Enricher
 
-A Python tool for extracting and categorizing financial transactions from Bank of America PDF statements. Automatically detects statement types (checking, savings, credit), extracts transaction data, and enriches with merchant names and categories using the Plaid Personal Finance Category (PFC) taxonomy.
+A Python tool for extracting and categorizing financial transactions from bank statements. Automatically detects statement types (checking, savings, credit), extracts transaction data, and enriches with merchant names and categories using the Plaid Personal Finance Category (PFC) taxonomy.
 
 ## Features
 
@@ -128,7 +128,7 @@ financial_parser/
 
 ## Supported Statement Types
 
-### Bank of America Formats
+### Bank Statement Formats
 - **Checking Accounts**: Enhanced parsing for multi-line descriptions
 - **Savings Accounts**: Interest and transfer tracking
 - **Credit Cards**: Dual-date support (posting + transaction dates)
@@ -203,9 +203,3 @@ Provides detailed output for troubleshooting parsing issues.
 ## License
 
 This project is provided as-is for personal financial management. Please ensure compliance with your bank's terms of service when processing statements.
-
-## Acknowledgments
-
-- **Plaid** for the Personal Finance Category taxonomy
-- **Python community** for excellent PDF and data processing libraries
-- **Bank statement format** reverse engineering efforts
