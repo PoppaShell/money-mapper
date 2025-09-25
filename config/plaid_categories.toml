@@ -1,517 +1,750 @@
-# Plaid Personal Finance Category (PFC) Taxonomy
-# Official categorization system for financial transactions
-# Reference: https://plaid.com/docs/api/products/transactions/#transaction-object
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_GROCERIES]
-keywords = [
-    "h-e-b", "heb", "trader joe", "whole foods", "kroger", "target", "costco",
-    "walmart", "sam", "grocery", "market", "food", "supercenter", "safeway",
-    "albertson", "publix", "meijer", "giant", "stop shop", "king soopers",
-    "smith", "ralphs", "fred meyer", "wegman", "aldi", "food lion",
-    "piggly wiggly", "winn dixie", "harris teeter"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_RESTAURANTS]
-keywords = [
-    "restaurant", "bistro", "grill", "kitchen", "cafe", "diner", "eatery",
-    "applebee", "olive garden", "red lobster", "outback", "longhorn",
-    "denny", "buffalo wild", "hooters", "tgi friday", "ruby tuesday",
-    "golden corral", "bob evans", "waffle house", "perkins", "village inn"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_FAST_FOOD]
-keywords = [
-    "mcdonalds", "mcdonald", "burger king", "taco bell", "tacobell", "kfc", 
-    "subway", "chipotle", "panda express", "chick-fil-a", "chick fil a",
-    "sonic", "jack in the box", "braums", "popeyes", "wendys", "wendy",
-    "culvers", "panera", "five guys", "in-n-out", "in n out", "whataburger",
-    "raising canes", "raising cane", "qdoba", "moe", "hardee", "carl jr",
-    "del taco", "jimmy john", "jersey mike", "firehouse", "white castle",
-    "arby", "arbys"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_COFFEE]
-keywords = [
-    "starbucks", "dunkin", "dunkin donuts", "coffee", "espresso", "caribou",
-    "tim horton", "peet", "boundaries coffee"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_BARS_AND_NIGHTLIFE]
-keywords = [
-    "bar", "pub", "brewery", "nightclub", "lounge", "tavern", "saloon"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_PIZZA]
-keywords = [
-    "pizza", "dominos", "domino", "pizza hut", "papa john", "little caesar",
-    "papa murphy", "godfather", "casey general store"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_BAGELS]
-keywords = [
-    "bagel", "bagelmania", "einstein bros"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_ICE_CREAM]
-keywords = [
-    "ice cream", "frozen yogurt", "beth maries ice"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_BAKERIES]
-keywords = [
-    "bakery"
-]
-
-[FOOD_AND_DRINK.FOOD_AND_DRINK_FOOD_TRUCKS_AND_STANDS]
-keywords = [
-    "food truck", "food stand"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SUPERSTORES]
-keywords = [
-    "walmart", "target", "costco", "sams club", "home depot", "lowe"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS]
-keywords = [
-    "barnes noble", "bookstore", "library", "books million", "borders"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES]
-keywords = [
-    "clothing", "apparel", "fashion", "shoes", "tjmaxx", "tj maxx", "marshall",
-    "ross", "nordstrom", "nordstrom rack", "macy", "jcpenney", "kohl", "dillard",
-    "gap", "old navy", "banana republic", "ann taylor", "express", "forever 21",
-    "h&m", "zara", "uniqlo", "american eagle", "abercrombie", "hollister"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CONVENIENCE_STORES]
-keywords = [
-    "convenience", "7-eleven", "circle k", "wawa", "sheetz", "casey"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_DEPARTMENT_STORES]
-keywords = [
-    "macys", "macy", "nordstrom", "sears", "jcpenney", "dillard", "von maur"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_DISCOUNT_STORES]
-keywords = [
-    "dollar tree", "family dollar", "dollar general", "five below", "discount"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ELECTRONICS]
-keywords = [
-    "best buy", "electronics", "computer", "tech", "apple store", "microsoft store",
-    "frys", "micro center", "radioshack", "gamestop", "nintendo", "sony", "samsung"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SPORTING_GOODS]
-keywords = [
-    "sporting goods", "sports", "athletic", "dick", "dicks", "sports authority",
-    "modell", "big 5", "academy", "cabela", "bass pro", "rei", "nike", "adidas"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ONLINE_MARKETPLACES]
-keywords = [
-    "amazon", "ebay", "etsy", "marketplace", "overstock", "wayfair", "wish"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES]
-keywords = [
-    "gift shop", "novelty", "hallmark", "spencer", "claire"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OFFICE_SUPPLIES]
-keywords = [
-    "office depot", "staples", "office supplies", "officemax", "fedex office"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_PET_SUPPLIES]
-keywords = [
-    "petco", "petsmart", "pet supplies", "pet", "chewy", "pet supermarket"
-]
-
-[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_WAREHOUSE_CLUBS]
-keywords = [
-    "costco", "sams club", "bjs", "warehouse"
-]
-
-[TRANSPORTATION.TRANSPORTATION_GAS]
-keywords = [
-    "shell", "exxon", "bp", "chevron", "texaco", "mobil", "gas", "fuel",
-    "racetrac", "loves", "pilot", "wawa", "thorntons", "citgo", "marathon",
-    "speedway", "valero", "phillips 66", "conoco", "casey", "kwik trip",
-    "sheetz", "circle k", "7-eleven", "convenient food mart"
-]
-
-[TRANSPORTATION.TRANSPORTATION_PARKING]
-keywords = [
-    "parking", "garage", "meter", "valet", "park", "lot"
-]
-
-[TRANSPORTATION.TRANSPORTATION_PUBLIC_TRANSIT]
-keywords = [
-    "metro", "bus", "train", "transit", "subway", "mta", "bart", "cta"
-]
-
-[TRANSPORTATION.TRANSPORTATION_TAXIS_AND_RIDE_SHARES]
-keywords = [
-    "uber", "lyft", "taxi", "cab", "ride share", "rideshare"
-]
-
-[TRANSPORTATION.TRANSPORTATION_TOLLS]
-keywords = [
-    "toll", "turnpike", "sunpass", "ezpass", "ipass", "fastrak", "toll road"
-]
-
-[TRANSPORTATION.TRANSPORTATION_AUTO_REPAIR]
-keywords = [
-    "auto repair", "mechanic", "tire", "oil change", "jiffy lube", "valvoline",
-    "midas", "firestone", "goodyear", "discount tire", "pepboys"
-]
-
-[RENT_AND_UTILITIES.RENT_AND_UTILITIES_RENT]
-keywords = [
-    "rent", "rental", "lease"
-]
-
-[RENT_AND_UTILITIES.RENT_AND_UTILITIES_ELECTRIC]
-keywords = [
-    "electric", "electricity", "power", "energy"
-]
-
-[RENT_AND_UTILITIES.RENT_AND_UTILITIES_GAS_AND_FUEL]
-keywords = [
-    "natural gas", "heating", "gas utility"
-]
-
-[RENT_AND_UTILITIES.RENT_AND_UTILITIES_INTERNET_AND_CABLE]
-keywords = [
-    "internet", "cable", "broadband", "wifi", "xfinity", "comcast", "spectrum",
-    "cox", "directv", "dish", "charter", "time warner", "optimum", "fios"
-]
-
-[RENT_AND_UTILITIES.RENT_AND_UTILITIES_PHONE]
-keywords = [
-    "phone", "mobile", "cellular", "verizon", "att", "at&t", "tmobile", "t-mobile",
-    "sprint", "boost", "metro pcs", "cricket", "straight talk", "tracfone"
-]
-
-[RENT_AND_UTILITIES.RENT_AND_UTILITIES_WATER]
-keywords = [
-    "water", "sewer", "wastewater"
-]
-
-[RENT_AND_UTILITIES.RENT_AND_UTILITIES_SEWAGE_AND_WASTE_MANAGEMENT]
-keywords = [
-    "waste", "garbage"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_CASINOS_AND_GAMBLING]
-keywords = [
-    "casino", "gambling", "lottery"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_MUSIC_AND_AUDIO]
-keywords = [
-    "spotify", "apple music", "amazon music", "youtube music", "pandora", "music", "audio"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_SPORTING_EVENTS]
-keywords = [
-    "stadium", "arena", "sports event", "tickets"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_TV_AND_MOVIES]
-keywords = [
-    "netflix", "hulu", "disney", "hbo", "amazon prime", "paramount", "peacock",
-    "movie", "theater", "cinema", "amc", "regal", "cinemark", "fandango"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_VIDEO_GAMES]
-keywords = [
-    "steam", "xbox", "playstation", "nintendo", "gaming"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_MOVIES_AND_DVDS]
-keywords = [
-    "cinema", "movie", "theater", "amc", "regal", "cinemark"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_ADULT_ENTERTAINMENT]
-keywords = [
-    "adult"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_AMUSEMENT_PARKS]
-keywords = [
-    "amusement park", "theme park"
-]
-
-[ENTERTAINMENT.ENTERTAINMENT_RECREATION_CENTERS]
-keywords = [
-    "recreation", "gym", "fitness"
-]
-
-[PERSONAL_CARE.PERSONAL_CARE_HAIR_AND_BEAUTY]
-keywords = [
-    "salon", "barber", "beauty", "cosmetics", "hair", "great clips", "sport clips",
-    "supercuts", "fantastic sam", "ulta", "sephora"
-]
-
-[PERSONAL_CARE.PERSONAL_CARE_LAUNDRY_AND_DRY_CLEANING]
-keywords = [
-    "laundry", "dry clean", "wash"
-]
-
-[PERSONAL_CARE.PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS]
-keywords = [
-    "gym", "fitness", "yoga", "planet fitness", "la fitness", "24 hour fitness"
-]
-
-[PERSONAL_CARE.PERSONAL_CARE_SPAS_AND_MASSAGE]
-keywords = [
-    "spa", "massage"
-]
-
-[MEDICAL.MEDICAL_DENTAL_CARE]
-keywords = [
-    "dentist", "dental", "orthodonist"
-]
-
-[MEDICAL.MEDICAL_EYE_CARE]
-keywords = [
-    "optometrist", "eye doctor", "vision", "glasses", "contacts", "lenscrafters",
-    "america best", "pearle vision", "warby parker", "eyebuydirect"
-]
-
-[MEDICAL.MEDICAL_PHARMACY]
-keywords = [
-    "pharmacy", "cvs", "walgreens", "rite aid", "prescription", "walmart pharmacy",
-    "costco pharmacy", "target pharmacy", "kroger pharmacy", "safeway pharmacy"
-]
-
-[MEDICAL.MEDICAL_PRIMARY_CARE]
-keywords = [
-    "doctor", "physician", "clinic", "medical", "health", "kaiser"
-]
-
-[MEDICAL.MEDICAL_SPECIALTY_CARE]
-keywords = [
-    "specialist", "specialist care"
-]
-
-[MEDICAL.MEDICAL_URGENT_CARE]
-keywords = [
-    "urgent care", "emergency"
-]
-
-[MEDICAL.MEDICAL_NURSING_CARE]
-keywords = [
-    "nursing"
-]
-
-[MEDICAL.MEDICAL_MENTAL_HEALTH]
-keywords = [
-    "therapy", "therapist", "mental health"
-]
-
-[MEDICAL.MEDICAL_VETERINARY_SERVICES]
-keywords = [
-    "vet", "veterinary"
-]
-
-[LOAN_PAYMENTS.LOAN_PAYMENTS_CREDIT_CARD_PAYMENT]
-keywords = [
-    "credit card payment", "card payment", "autopay", "synchrony", "capital one",
-    "chase", "citi", "discover", "american express", "wells fargo", "bank america"
-]
-
-[LOAN_PAYMENTS.LOAN_PAYMENTS_MORTGAGE_PAYMENT]
-keywords = [
-    "mortgage", "home loan", "loancare"
-]
-
-[LOAN_PAYMENTS.LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT]
-keywords = [
-    "student loan", "education loan", "nelnet"
-]
-
-[LOAN_PAYMENTS.LOAN_PAYMENTS_CAR_PAYMENT]
-keywords = [
-    "car payment", "auto loan", "toyota financial", "honda financial", 
-    "ford motor credit", "gm financial", "ally financial", "carmax"
-]
-
-[LOAN_PAYMENTS.LOAN_PAYMENTS_PERSONAL_LOAN_PAYMENT]
-keywords = [
-    "personal loan"
-]
-
-[INSURANCE.INSURANCE_AUTO_INSURANCE]
-keywords = [
-    "auto insurance", "car insurance", "progressive", "geico", "state farm",
-    "allstate", "usaa", "farmers", "liberty mutual", "safeco", "aaa"
-]
-
-[INSURANCE.INSURANCE_HOME_INSURANCE]
-keywords = [
-    "home insurance", "homeowners insurance"
-]
-
-[INSURANCE.INSURANCE_HEALTH_INSURANCE]
-keywords = [
-    "health insurance", "medical insurance"
-]
-
-[INSURANCE.INSURANCE_LIFE_INSURANCE]
-keywords = [
-    "life insurance"
-]
-
-[HOME_IMPROVEMENT.HOME_IMPROVEMENT_FURNITURE]
-keywords = [
-    "furniture", "ikea", "ashley", "wayfair", "overstock"
-]
-
-[HOME_IMPROVEMENT.HOME_IMPROVEMENT_HARDWARE]
-keywords = [
-    "home depot", "lowes", "ace hardware", "true value", "menards"
-]
-
-[HOME_IMPROVEMENT.HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE]
-keywords = [
-    "repair", "maintenance", "plumbing", "leslie pool", "pool corp",
-    "sherwin williams", "benjamin moore"
-]
-
-[HOME_IMPROVEMENT.HOME_IMPROVEMENT_SECURITY]
-keywords = [
-    "security", "alarm"
-]
-
-[TRAVEL.TRAVEL_FLIGHTS]
-keywords = [
-    "airline", "flight", "american air", "delta", "united", "southwest",
-    "jetblue", "alaska air", "spirit", "frontier", "allegiant"
-]
-
-[TRAVEL.TRAVEL_LODGING]
-keywords = [
-    "hotel", "motel", "airbnb", "lodging", "marriott", "hilton", "hyatt",
-    "ihg", "holiday inn", "best western", "hampton inn", "courtyard",
-    "fairfield", "comfort inn", "la quinta", "red roof", "motel 6", "super 8"
-]
-
-[TRAVEL.TRAVEL_RENTAL_CARS]
-keywords = [
-    "rental car", "hertz", "enterprise", "budget", "avis", "alamo", "national", "thrifty"
-]
-
-[TRAVEL.TRAVEL_OTHER_TRAVEL]
-keywords = [
-    "travel", "vacation"
-]
+# Complete Plaid Personal Finance Category (PFC) Taxonomy (Alphabetical)
+# 
+# This file contains the complete official Plaid Personal Finance Category taxonomy
+# with keyword arrays for automatic transaction categorization. These keywords are
+# matched against transaction descriptions when custom mappings don't apply.
+#
+# STRUCTURE:
+# [PRIMARY_CATEGORY.DETAILED_CATEGORY]
+# keywords = [
+#     "keyword1", "keyword2", "keyword3"
+# ]
+#
+# ORGANIZATION:
+# - Primary categories in alphabetical order (16 total)
+# - Detailed categories in alphabetical order within each primary category (104 total)
+# - Keywords in alphabetical order within each detailed category
+#
+# USAGE:
+# - These keywords have LOWEST priority (after personal_mappings.toml and merchant_mappings.toml)
+# - Keywords are matched using substring and fuzzy matching against transaction descriptions
+# - Provides broad categorization when specific merchant mappings don't exist
+# - Safe to modify - add keywords that help with your transaction categorization
+#
+# OFFICIAL REFERENCE:
+# - Based on Plaid PFC taxonomy: https://plaid.com/docs/api/products/transactions/
+# - CSV source: https://plaid.com/documents/transactions-personal-finance-category-taxonomy.csv
+# - 16 primary categories, 104 detailed categories (as of 2024)
+#
+# MAINTENANCE:
+# - Keep keywords generic and widely applicable
+# - Avoid location-specific terms (use merchant_mappings.toml for those)
+# - Test keyword additions against real transaction descriptions
+# - Maintain alphabetical order when adding new keywords
+
+# ============================================================================
+# BANK_FEES - Banking fees and charges
+# ============================================================================
 
 [BANK_FEES.BANK_FEES_ATM_FEES]
 keywords = [
-    "atm fee", "withdrawal fee", "atm"
+    "atm fee", "atm surcharge", "foreign atm", "out of network atm", "withdrawal fee"
 ]
 
-[BANK_FEES.BANK_FEES_OVERDRAFT_FEES]
+[BANK_FEES.BANK_FEES_FOREIGN_TRANSACTION_FEES]
 keywords = [
-    "overdraft", "nsf", "insufficient funds", "nsf fee"
+    "currency conversion", "foreign purchase fee", "foreign transaction", 
+    "international fee", "international transaction"
 ]
 
-[BANK_FEES.BANK_FEES_OTHER_BANK_FEES]
+[BANK_FEES.BANK_FEES_INSUFFICIENT_FUNDS]
 keywords = [
-    "maintenance fee", "service charge", "bank fee", "foreign transaction", "wire fee"
+    "bounced check", "insufficient balance", "insufficient funds", "nsf", "returned item"
 ]
 
 [BANK_FEES.BANK_FEES_INTEREST_CHARGE]
 keywords = [
-    "interest charge"
+    "cash advance interest", "finance charge", "interest charge", "late fee", 
+    "penalty interest", "purchase interest"
 ]
 
-[TRANSFER_IN.TRANSFER_IN_DEPOSIT]
+[BANK_FEES.BANK_FEES_OVERDRAFT_FEES]
 keywords = [
-    "deposit", "mobile deposit", "check deposit", "zelle"
+    "courtesy pay", "od fee", "overdraft", "overdraft charge", "overdraft fee", 
+    "overdraft protection"
 ]
 
-[TRANSFER_IN.TRANSFER_IN_PAYROLL]
+[BANK_FEES.BANK_FEES_OTHER_BANK_FEES]
 keywords = [
-    "payroll", "direct deposit", "salary", "wages", "des:dir dep"
+    "account fee", "bank fee", "check order", "maintenance fee", "monthly fee", 
+    "service charge", "service fee", "wire fee"
 ]
 
-[TRANSFER_OUT.TRANSFER_OUT_ACCOUNT_TRANSFER]
+# ============================================================================
+# ENTERTAINMENT - Recreation and entertainment  
+# ============================================================================
+
+[ENTERTAINMENT.ENTERTAINMENT_CASINOS_AND_GAMBLING]
 keywords = [
-    "transfer", "account transfer", "online transfer", "wire transfer", "ach transfer",
-    "venmo", "cash app", "paypal"
+    "bet365", "caesars", "casino", "draftkings", "fanduel", "gambling", "lottery", 
+    "mgm", "poker", "slots", "sports betting"
 ]
 
-[TRANSFER_OUT.TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS]
+[ENTERTAINMENT.ENTERTAINMENT_MUSIC_AND_AUDIO]
 keywords = [
-    "investment", "retirement", "401k", "ira"
+    "amazon music", "apple music", "audio", "audible", "music", "pandora", 
+    "podcast", "spotify", "tidal", "youtube music"
 ]
 
-[INCOME.INCOME_WAGES]
+[ENTERTAINMENT.ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS]
 keywords = [
-    "wages", "salary", "payroll", "direct deposit", "des:dir dep", "des:direct dep",
-    "des:directdep", "directdep", "dir dep", "commission", "bonus", "pay", 
-    "employment", "work", "job", "income", "earnings"
+    "amusement park", "aquarium", "arena", "concert", "disney", "museum", 
+    "six flags", "sporting event", "stadium", "stubhub", "theme park", 
+    "ticketmaster", "tickets", "universal", "zoo"
 ]
 
-[INCOME.INCOME_INTEREST_EARNED]
+[ENTERTAINMENT.ENTERTAINMENT_TV_AND_MOVIES]
 keywords = [
-    "interest", "interest earned", "savings interest", "dividend", "earnings"
+    "amc", "cinema", "cinemark", "disney+", "hbo max", "hulu", "movie", 
+    "movie theater", "netflix", "paramount+", "peacock", "prime video", 
+    "regal", "theater"
 ]
 
-[INCOME.INCOME_TAX_REFUND]
+[ENTERTAINMENT.ENTERTAINMENT_VIDEO_GAMES]
 keywords = [
-    "tax refund", "irs", "irs treas", "refund", "treasury", "federal refund"
+    "blizzard", "epic games", "game store", "gaming", "nintendo", "playstation", 
+    "steam", "twitch", "video game", "xbox"
 ]
 
-[INCOME.INCOME_OTHER_INCOME]
+[ENTERTAINMENT.ENTERTAINMENT_OTHER_ENTERTAINMENT]
 keywords = [
-    "cash reward", "cashback", "bonus", "other income", "dividend", "freelance",
-    "consulting", "unemployment", "social security", "pension", "retirement",
-    "disability", "alimony", "child support", "gift", "prize", "rebate"
+    "adult entertainment", "arcade", "bar", "bowling", "entertainment", 
+    "karaoke", "mini golf", "nightclub", "pub", "recreation"
 ]
 
-[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_DONATIONS]
+# ============================================================================
+# FOOD_AND_DRINK - Food and beverage purchases
+# ============================================================================
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_BEER_WINE_AND_LIQUOR]
 keywords = [
-    "donation", "charity", "church", "nonprofit"
+    "abc store", "alcohol", "beer", "beer store", "brewery", "liquor", 
+    "liquor store", "spirits", "wine", "wine shop"
 ]
 
-[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES]
+[FOOD_AND_DRINK.FOOD_AND_DRINK_COFFEE]
 keywords = [
-    "government", "dmv", "county", "city", "state", "secretary of state", "city hall",
-    "county clerk", "vehicle registration"
+    "cafe", "caribou coffee", "coffee", "coffee bean", "coffee shop", 
+    "dunkin", "espresso", "peets", "starbucks", "tim hortons"
 ]
 
-[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_FEDERAL_TAX_PAYMENT]
+[FOOD_AND_DRINK.FOOD_AND_DRINK_FAST_FOOD]
 keywords = [
-    "irs", "federal tax"
+    "arbys", "burger king", "chick-fil-a", "chipotle", "dairy queen", 
+    "drive thru", "fast food", "jack in the box", "kfc", "mcdonalds", 
+    "panda express", "popeyes", "sonic", "subway", "taco bell", "wendys"
 ]
 
-[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_LOCAL_TAX_PAYMENT]
+[FOOD_AND_DRINK.FOOD_AND_DRINK_GROCERIES]
 keywords = [
-    "property tax", "local tax"
+    "aldi", "costco", "food", "food lion", "food store", "grocery", "h-e-b", 
+    "kroger", "market", "publix", "safeway", "sams club", "supermarket", 
+    "target", "trader joes", "walmart", "whole foods"
 ]
 
-[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_STATE_TAX_PAYMENT]
+[FOOD_AND_DRINK.FOOD_AND_DRINK_RESTAURANT]
 keywords = [
-    "state tax"
+    "bar and grill", "bistro", "chinese", "diner", "doordash", "eatery", 
+    "gastropub", "grill", "italian", "kitchen", "mexican", "restaurant", 
+    "steakhouse", "sushi", "thai", "uber eats"
 ]
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_VENDING_MACHINES]
+keywords = [
+    "canteen", "micro market", "vending", "vending machine"
+]
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK]
+keywords = [
+    "bakery", "candy store", "catering", "deli", "dessert", "food truck", 
+    "frozen yogurt", "ice cream", "juice bar", "smoothie"
+]
+
+# ============================================================================
+# GENERAL_MERCHANDISE - Retail and general goods
+# ============================================================================
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS]
+keywords = [
+    "barnes noble", "book shop", "books", "bookstore", "comic book", 
+    "library", "magazines", "newspapers"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES]
+keywords = [
+    "accessories", "apparel", "boutique", "clothing", "dress shop", 
+    "fashion", "jewelry", "shoe store", "shoes"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CONVENIENCE_STORES]
+keywords = [
+    "7-eleven", "circle k", "convenience", "corner store", "gas station mart", 
+    "quick trip", "sheetz", "speedway", "wawa"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_DEPARTMENT_STORES]
+keywords = [
+    "bloomingdales", "department store", "dillards", "jcpenney", "kohls", 
+    "macys", "neiman marcus", "nordstrom", "sears"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_DISCOUNT_STORES]
+keywords = [
+    "99 cents", "bargain", "discount", "dollar general", "dollar tree", 
+    "family dollar", "outlet", "thrift"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ELECTRONICS]
+keywords = [
+    "apple store", "best buy", "computer", "electronics", "laptop", 
+    "microsoft store", "phone", "radio shack", "tablet", "tv"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES]
+keywords = [
+    "card shop", "flower shop", "florist", "gift shop", "gifts", 
+    "hallmark", "novelty", "party supply", "photo"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OFFICE_SUPPLIES]
+keywords = [
+    "business supplies", "copy center", "office depot", "office supplies", 
+    "officemax", "printing", "staples"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ONLINE_MARKETPLACES]
+keywords = [
+    "amazon", "e-commerce", "ebay", "etsy", "marketplace", "online shopping", 
+    "target.com", "walmart.com"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_PET_SUPPLIES]
+keywords = [
+    "animal supplies", "cat food", "dog food", "pet food", "pet store", 
+    "pet supplies", "petco", "petsmart", "veterinary"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SPORTING_GOODS]
+keywords = [
+    "academy sports", "athletic", "bass pro shops", "big 5", "cabelas", 
+    "camping", "dicks sporting goods", "fishing", "hunting", "outdoor", 
+    "rei", "sporting goods", "sports"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SUPERSTORES]
+keywords = [
+    "big box", "bjs", "costco", "fred meyer", "meijer", "sams club", 
+    "superstore", "target", "walmart", "warehouse club"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_TOBACCO_AND_VAPE]
+keywords = [
+    "cigar", "cigarette", "e-cigarette", "smoke shop", "tobacco", 
+    "tobacco shop", "vape", "vapor"
+]
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE]
+keywords = [
+    "art supplies", "craft", "fabric", "general merchandise", "hardware", 
+    "hobby", "toy store", "toys", "variety store"
+]
+
+# ============================================================================
+# GENERAL_SERVICES - Professional and general services
+# ============================================================================
 
 [GENERAL_SERVICES.GENERAL_SERVICES_ACCOUNTING_AND_FINANCIAL_PLANNING]
 keywords = [
-    "accounting", "tax preparation", "financial advisor"
+    "accountant", "cpa", "financial advisor", "financial planning", 
+    "h&r block", "tax preparation", "tax service", "turbotax"
+]
+
+[GENERAL_SERVICES.GENERAL_SERVICES_AUTOMOTIVE]
+keywords = [
+    "auto repair", "brake", "car service", "car wash", "mechanic", 
+    "oil change", "smog check", "tire"
+]
+
+[GENERAL_SERVICES.GENERAL_SERVICES_CHILDCARE]
+keywords = [
+    "after school", "babysitter", "child care", "childcare", "daycare", 
+    "nanny", "preschool"
+]
+
+[GENERAL_SERVICES.GENERAL_SERVICES_CONSULTING_AND_LEGAL]
+keywords = [
+    "attorney", "consultant", "consulting", "law firm", "lawyer", 
+    "legal", "legal services"
+]
+
+[GENERAL_SERVICES.GENERAL_SERVICES_EDUCATION]
+keywords = [
+    "college", "education", "online course", "school", "student fees", 
+    "textbooks", "training", "tuition", "university"
+]
+
+[GENERAL_SERVICES.GENERAL_SERVICES_INSURANCE]
+keywords = [
+    "auto insurance", "car insurance", "health insurance", "home insurance", 
+    "homeowners insurance", "insurance", "life insurance", "renters insurance", 
+    "umbrella insurance"
+]
+
+[GENERAL_SERVICES.GENERAL_SERVICES_POSTAGE_AND_SHIPPING]
+keywords = [
+    "dhl", "fedex", "freight", "mailing", "package", "postage", 
+    "shipping", "ups", "usps"
+]
+
+[GENERAL_SERVICES.GENERAL_SERVICES_STORAGE]
+keywords = [
+    "mini storage", "public storage", "self storage", "storage", 
+    "storage unit", "u-haul storage"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_OTHER_GENERAL_SERVICES]
 keywords = [
-    "service", "professional service", "consulting", "apple", "microsoft", "google",
-    "adobe", "dropbox", "groupon", "square"
+    "advertising", "cloud storage", "domain", "marketing", "saas", 
+    "services", "software", "subscription", "web hosting"
 ]
+
+# ============================================================================
+# GOVERNMENT_AND_NON_PROFIT - Government and charitable organizations
+# ============================================================================
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_DONATIONS]
+keywords = [
+    "charity", "church", "donation", "goodwill", "nonprofit", "red cross", 
+    "religious", "salvation army", "tithing", "united way"
+]
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES]
+keywords = [
+    "city", "county", "court", "dmv", "federal", "government", "irs", 
+    "license", "medicare", "permit", "social security", "state"
+]
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_TAX_PAYMENT]
+keywords = [
+    "estimated tax", "income tax", "irs payment", "local tax", "property tax", 
+    "sales tax", "state tax", "tax", "tax payment"
+]
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_OTHER_GOVERNMENT_AND_NON_PROFIT]
+keywords = [
+    "government agency", "government services", "municipal", "non-profit", 
+    "public service", "public utility"
+]
+
+# ============================================================================
+# HOME_IMPROVEMENT - Home and property improvements
+# ============================================================================
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_FURNITURE]
+keywords = [
+    "ashley furniture", "bedding", "crate barrel", "furniture", "home accessories", 
+    "home decor", "ikea", "mattress", "pottery barn", "rooms to go", "sleep number"
+]
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_HARDWARE]
+keywords = [
+    "ace hardware", "building materials", "hardware", "home depot", "lowes", 
+    "lumber", "menards", "paint", "tools"
+]
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE]
+keywords = [
+    "contractor", "electrician", "handyman", "hvac", "landscaping", 
+    "lawn care", "maintenance", "plumber", "repair", "roofing"
+]
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_SECURITY]
+keywords = [
+    "adt", "alarm", "home security", "monitoring", "nest", "ring", 
+    "security system", "surveillance"
+]
+
+[HOME_IMPROVEMENT.HOME_IMPROVEMENT_OTHER_HOME_IMPROVEMENT]
+keywords = [
+    "cleaning service", "home improvement", "maid service", "pest control", 
+    "pool service", "remodeling", "renovation"
+]
+
+# ============================================================================
+# INCOME - Money coming into accounts
+# ============================================================================
+
+[INCOME.INCOME_DIVIDENDS]
+keywords = [
+    "distribution", "div", "dividend", "dividends", "etf dividend", 
+    "investment dividend", "mutual fund dividend", "stock dividend"
+]
+
+[INCOME.INCOME_INTEREST_EARNED]
+keywords = [
+    "account interest", "accrued interest", "deposit interest", "int earned", 
+    "interest", "interest earned", "interest payment", "savings interest"
+]
+
+[INCOME.INCOME_RETIREMENT_PENSION]
+keywords = [
+    "pension", "pension payment", "retirement", "retirement benefits", 
+    "retirement payment", "social security", "ss payment", "ssa"
+]
+
+[INCOME.INCOME_TAX_REFUND]
+keywords = [
+    "federal tax refund", "irs refund", "irs treas", "refund", "state tax refund", 
+    "tax refund", "tax return", "treasury"
+]
+
+[INCOME.INCOME_UNEMPLOYMENT]
+keywords = [
+    "state unemployment", "ui benefits", "unemployment", "unemployment benefits", 
+    "unemployment comp", "unemployment insurance"
+]
+
+[INCOME.INCOME_WAGES]
+keywords = [
+    "contractor payment", "dd", "dir dep", "direct deposit", "directdep", 
+    "earnings", "freelance", "gig work", "pay", "paycheck", "payroll", 
+    "salary", "tips", "wages"
+]
+
+[INCOME.INCOME_OTHER_INCOME]
+keywords = [
+    "alimony", "bonus", "cash back", "cashback", "child support", "miscellaneous income", 
+    "other income", "rental income", "rent payment received", "reward", "side income"
+]
+
+# ============================================================================
+# LOAN_PAYMENTS - Debt and loan payments
+# ============================================================================
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_CAR_PAYMENT]
+keywords = [
+    "auto loan", "auto payment", "car lease", "car loan", "car payment", 
+    "ford credit", "honda financial", "toyota financial", "vehicle payment"
+]
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_CREDIT_CARD_PAYMENT]
+keywords = [
+    "amex payment", "autopay", "card payment", "cc payment", "credit card payment", 
+    "discover payment", "mastercard payment", "visa payment"
+]
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_MORTGAGE_PAYMENT]
+keywords = [
+    "chase home", "home loan", "loancare", "mortgage", "mortgage payment", 
+    "quicken loans", "rocket mortgage", "wells fargo home"
+]
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_PERSONAL_LOAN_PAYMENT]
+keywords = [
+    "affirm", "afterpay", "bnpl", "buy now pay later", "cash advance", 
+    "klarna", "loan payment", "personal loan", "sezzle"
+]
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT]
+keywords = [
+    "college loan", "education loan", "fedloan", "great lakes", "navient", 
+    "nelnet", "sallie mae", "student loan"
+]
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_OTHER_PAYMENT]
+keywords = [
+    "debt payment", "installment payment", "loan pymt", "misc debt", "other loan"
+]
+
+# ============================================================================
+# MEDICAL - Healthcare and medical services
+# ============================================================================
+
+[MEDICAL.MEDICAL_DENTAL_CARE]
+keywords = [
+    "dental", "dental care", "dental clinic", "dentist", "orthodonist", 
+    "teeth cleaning"
+]
+
+[MEDICAL.MEDICAL_EYE_CARE]
+keywords = [
+    "contacts", "eye care", "eye doctor", "glasses", "optometrist", "vision", 
+    "vision center"
+]
+
+[MEDICAL.MEDICAL_NURSING_CARE]
+keywords = [
+    "assisted living", "care facility", "home health", "nursing", 
+    "nursing care", "nursing home"
+]
+
+[MEDICAL.MEDICAL_PHARMACIES_AND_SUPPLEMENTS]
+keywords = [
+    "cvs", "drugs", "medication", "pharmacy", "prescription", "rite aid", 
+    "supplements", "vitamins", "walgreens"
+]
+
+[MEDICAL.MEDICAL_PRIMARY_CARE]
+keywords = [
+    "clinic", "doctor", "family practice", "health", "hospital", 
+    "internal medicine", "medical", "medical center", "physician", "urgent care"
+]
+
+[MEDICAL.MEDICAL_VETERINARY_SERVICES]
+keywords = [
+    "animal care", "animal hospital", "pet care", "pet clinic", "vet", 
+    "veterinarian", "veterinary"
+]
+
+[MEDICAL.MEDICAL_OTHER_MEDICAL]
+keywords = [
+    "ambulance", "blood work", "ct scan", "emergency room", "healthcare", 
+    "lab", "medical", "mri", "therapy", "x-ray"
+]
+
+# ============================================================================
+# PERSONAL_CARE - Personal care and wellness
+# ============================================================================
+
+[PERSONAL_CARE.PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS]
+keywords = [
+    "24 hour fitness", "anytime fitness", "crossfit", "fitness", "golds gym", 
+    "gym", "la fitness", "pilates", "planet fitness", "ymca", "yoga"
+]
+
+[PERSONAL_CARE.PERSONAL_CARE_HAIR_AND_BEAUTY]
+keywords = [
+    "barber", "beauty", "cosmetics", "facial", "hair", "makeup", "manicure", 
+    "massage", "nails", "pedicure", "salon", "spa"
+]
+
+[PERSONAL_CARE.PERSONAL_CARE_LAUNDRY_AND_DRY_CLEANING]
+keywords = [
+    "cleaning", "dry clean", "dry cleaner", "laundromat", "laundry", "wash", 
+    "wash and fold"
+]
+
+[PERSONAL_CARE.PERSONAL_CARE_OTHER_PERSONAL_CARE]
+keywords = [
+    "counseling", "meditation app", "mental health", "personal care", 
+    "psychologist", "therapist", "therapy", "wellness"
+]
+
+# ============================================================================
+# RENT_AND_UTILITIES - Housing and utility payments
+# ============================================================================
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_GAS_AND_ELECTRICITY]
+keywords = [
+    "con edison", "duke energy", "electric", "electricity", "energy", 
+    "gas", "heating", "natural gas", "pge", "power", "utility"
+]
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_INTERNET_AND_CABLE]
+keywords = [
+    "att", "broadband", "cable", "comcast", "cox", "directv", "dish", 
+    "internet", "spectrum", "verizon", "wifi"
+]
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_RENT]
+keywords = [
+    "apartment", "housing", "landlord", "lease", "property management", 
+    "rent", "rental"
+]
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_SEWAGE_AND_WASTE_MANAGEMENT]
+keywords = [
+    "garbage", "recycling", "sanitation", "sewage", "sewer", "trash", 
+    "waste", "waste management"
+]
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_TELEPHONE]
+keywords = [
+    "att wireless", "cellular", "cell phone", "mobile", "phone", "sprint", 
+    "telephone", "t-mobile", "verizon wireless"
+]
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_WATER]
+keywords = [
+    "municipal water", "water", "water bill", "water department", 
+    "water service", "water utility"
+]
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_OTHER_UTILITIES]
+keywords = [
+    "city services", "municipal services", "other utility", "public utilities", 
+    "utilities", "utility"
+]
+
+# ============================================================================
+# TRANSFER_IN - Money transferred into accounts
+# ============================================================================
+
+[TRANSFER_IN.TRANSFER_IN_CASH_ADVANCES_AND_LOANS]
+keywords = [
+    "advance", "cash advance", "credit line advance", "line of credit", 
+    "loan deposit", "payday loan", "personal loan"
+]
+
+[TRANSFER_IN.TRANSFER_IN_DEPOSIT]
+keywords = [
+    "atm deposit", "bank deposit", "cash deposit", "check deposit", 
+    "deposit", "mobile deposit", "remote deposit"
+]
+
+[TRANSFER_IN.TRANSFER_IN_INVESTMENT_AND_RETIREMENT_FUNDS]
+keywords = [
+    "401k contribution", "brokerage transfer", "investment account", 
+    "investment transfer", "ira contribution", "retirement transfer"
+]
+
+[TRANSFER_IN.TRANSFER_IN_SAVINGS]
+keywords = [
+    "save transfer", "savings account transfer", "savings deposit", 
+    "savings transfer", "transfer to savings"
+]
+
+[TRANSFER_IN.TRANSFER_IN_ACCOUNT_TRANSFER]
+keywords = [
+    "account transfer", "ach transfer", "bank transfer", "internal transfer", 
+    "online transfer", "transfer", "transfer in", "wire transfer"
+]
+
+[TRANSFER_IN.TRANSFER_IN_OTHER_TRANSFER_IN]
+keywords = [
+    "credit transfer", "inbound transfer", "misc transfer", "other transfer"
+]
+
+# ============================================================================
+# TRANSFER_OUT - Money transferred out of accounts  
+# ============================================================================
+
+[TRANSFER_OUT.TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS]
+keywords = [
+    "401k", "acorns", "betterment", "brokerage", "fidelity", "investment", 
+    "ira", "retirement", "robinhood", "schwab", "vanguard"
+]
+
+[TRANSFER_OUT.TRANSFER_OUT_SAVINGS]
+keywords = [
+    "emergency fund", "save", "savings account", "savings transfer", 
+    "transfer to savings"
+]
+
+[TRANSFER_OUT.TRANSFER_OUT_WITHDRAWAL]
+keywords = [
+    "atm", "atm withdrawal", "bank withdrawal", "cash out", "cash withdrawal", 
+    "withdrawal"
+]
+
+[TRANSFER_OUT.TRANSFER_OUT_ACCOUNT_TRANSFER]
+keywords = [
+    "account transfer", "ach transfer", "bank transfer", "online transfer", 
+    "transfer", "transfer out", "wire transfer"
+]
+
+[TRANSFER_OUT.TRANSFER_OUT_OTHER_TRANSFER_OUT]
+keywords = [
+    "debit transfer", "misc transfer", "other transfer", "outbound transfer"
+]
+
+# ============================================================================
+# TRANSPORTATION - Travel and transportation
+# ============================================================================
+
+[TRANSPORTATION.TRANSPORTATION_BIKES_AND_SCOOTERS]
+keywords = [
+    "bicycle rental", "bike rental", "bike share", "bird", "e-scooter", 
+    "lime", "scooter", "spin"
+]
+
+[TRANSPORTATION.TRANSPORTATION_GAS]
+keywords = [
+    "arco", "bp", "chevron", "exxon", "fuel", "gas", "gas station", 
+    "gasoline", "mobil", "petrol", "shell", "texaco"
+]
+
+[TRANSPORTATION.TRANSPORTATION_PARKING]
+keywords = [
+    "garage", "meter", "park", "parking", "parking fee", "parking garage", 
+    "parking lot", "valet"
+]
+
+[TRANSPORTATION.TRANSPORTATION_PUBLIC_TRANSIT]
+keywords = [
+    "bart", "bus", "light rail", "metro", "mta", "public transport", 
+    "subway", "train", "transit", "wmata"
+]
+
+[TRANSPORTATION.TRANSPORTATION_TAXIS_AND_RIDE_SHARES]
+keywords = [
+    "cab", "lyft", "rideshare", "ride share", "taxi", "transportation", 
+    "uber", "yellow cab"
+]
+
+[TRANSPORTATION.TRANSPORTATION_TOLLS]
+keywords = [
+    "bridge toll", "ezpass", "fastrak", "highway toll", "sunpass", "toll", 
+    "toll road", "turnpike"
+]
+
+[TRANSPORTATION.TRANSPORTATION_OTHER_TRANSPORTATION]
+keywords = [
+    "boat", "charter", "ferry", "helicopter", "transport service", "transportation"
+]
+
+# ============================================================================
+# TRAVEL - Travel and vacation expenses
+# ============================================================================
+
+[TRAVEL.TRAVEL_FLIGHTS]
+keywords = [
+    "airline", "alaska air", "american airlines", "delta", "flight", 
+    "frontier", "jetblue", "southwest", "spirit", "united"
+]
+
+[TRAVEL.TRAVEL_LODGING]
+keywords = [
+    "airbnb", "booking.com", "expedia", "hilton", "hotel", "hotels.com", 
+    "hyatt", "inn", "lodging", "marriott", "motel", "resort", "vrbo"
+]
+
+[TRAVEL.TRAVEL_RENTAL_CARS]
+keywords = [
+    "alamo", "avis", "budget", "car rental", "enterprise", "hertz", 
+    "national", "rental car", "zipcar"
+]
+
+[TRAVEL.TRAVEL_OTHER_TRAVEL]
+keywords = [
+    "cruise", "luggage", "passport", "tour", "travel", "travel agency", 
+    "vacation", "visa"
+]
+
+# ============================================================================
+# END OF PLAID CATEGORIES
+# ============================================================================
+
+# USAGE NOTES:
+# 1. Keywords are matched using substring and fuzzy matching against transaction descriptions
+# 2. These provide broad categorization when specific merchant mappings don't exist
+# 3. Add keywords that help with your specific transaction patterns
+# 4. Keep keywords generic - location-specific terms belong in merchant_mappings.toml
+# 5. Test keyword additions against real transaction descriptions
+# 6. Maintain alphabetical order when adding new keywords
+#
+# EXAMPLES OF KEYWORD MATCHING:
+# Transaction: "walmart supercenter #1234 anytown usa"
+# → Matches "walmart" keyword → Returns FOOD_AND_DRINK, FOOD_AND_DRINK_GROCERIES
+#
+# Transaction: "shell gas station pump 3"  
+# → Matches "shell" keyword → Returns TRANSPORTATION, TRANSPORTATION_GAS
+#
+# Transaction: "monthly gym membership fee"
+# → Matches "gym" keyword → Returns PERSONAL_CARE, PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS
+#
+# CUSTOMIZATION TIPS:
+# 1. Add keywords for businesses common in your area
+# 2. Add abbreviations and alternative spellings
+# 3. Focus on keywords that appear in your actual transaction descriptions
+# 4. Remove keywords that cause incorrect categorization for your transactions
