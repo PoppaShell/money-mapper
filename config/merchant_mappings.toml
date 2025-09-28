@@ -29,6 +29,7 @@
 
 # ============================================================================
 # BANK_FEES - Banking fees and charges
+# ============================================================================
 
 [BANK_FEES.BANK_FEES_ATM_FEES]
 # ATM fees and surcharges
@@ -43,6 +44,7 @@
 # Interest charges on balances and advances
 "interest charged on balance transfers" = { name = "Balance Transfer Interest", category = "BANK_FEES", subcategory = "BANK_FEES_INTEREST_CHARGE" }
 "late fee" = { name = "Late Fee", category = "BANK_FEES", subcategory = "BANK_FEES_INTEREST_CHARGE" }
+"interest charged on purchases" = { name = "Interest Charge", category = "BANK_FEES", subcategory = "BANK_FEES_INTEREST_CHARGE" }
 
 [BANK_FEES.BANK_FEES_OTHER_BANK_FEES]
 # General banking fees
@@ -52,7 +54,10 @@
 [BANK_FEES.BANK_FEES_OVERDRAFT_FEES]
 # Overdraft fees
 "overdraft fee" = { name = "Overdraft Fee", category = "BANK_FEES", subcategory = "BANK_FEES_OVERDRAFT_FEES" }
+
+# ============================================================================
 # ENTERTAINMENT - Recreation and entertainment
+# ============================================================================
 
 [ENTERTAINMENT.ENTERTAINMENT_CASINOS_AND_GAMBLING]
 # Casinos and gambling platforms
@@ -70,16 +75,24 @@
 
 [ENTERTAINMENT.ENTERTAINMENT_OTHER_ENTERTAINMENT]
 "dave busters" = { name = "Dave & Buster's", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_OTHER_ENTERTAINMENT" }
+"axs.com" = { name = "AXS Ticketing", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_OTHER_ENTERTAINMENT" }
+"oculus" = { name = "Oculus", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_OTHER_ENTERTAINMENT" }
+"seatgeek tickets" = { name = "SeatGeek Tickets", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_OTHER_ENTERTAINMENT" }
+"eventlink" = { name = "Eventlink", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_OTHER_ENTERTAINMENT" }
 
 [ENTERTAINMENT.ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS]
 # Theme parks, entertainment venues, and ticketing
 "disney" = { name = "Disney", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
 "fandango" = { name = "Fandango", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
+"legoland" = { name = "LEGOLAND", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
+"lost river cave" = { name = "Lost River Cave", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
 "six flags" = { name = "Six Flags", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
 "stubhub" = { name = "StubHub", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
 "ticketmaster" = { name = "Ticketmaster", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
 "universal studios" = { name = "Universal Studios", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
-"lost river cave" = { name = "Lost River Cave", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
+"americas natl parks" = { name = "America's National Parks", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
+"upward sports" = { name = "Upward Sports", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
+"aqtca prk" = { name = "Aquatica Park", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS" }
 
 [ENTERTAINMENT.ENTERTAINMENT_TV_AND_MOVIES]
 # Streaming services and movie theaters
@@ -94,6 +107,7 @@
 "paramount+" = { name = "Paramount+", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_TV_AND_MOVIES" }
 "prime video" = { name = "Prime Video", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_TV_AND_MOVIES" }
 "regal cinemas" = { name = "Regal Cinemas", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_TV_AND_MOVIES" }
+"movietavern" = { name = "Movie Tavern", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_TV_AND_MOVIES" }
 
 [ENTERTAINMENT.ENTERTAINMENT_VIDEO_GAMES]
 # Gaming platforms and stores
@@ -102,7 +116,10 @@
 "playstation" = { name = "PlayStation", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_VIDEO_GAMES" }
 "steam" = { name = "Steam", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_VIDEO_GAMES" }
 "xbox" = { name = "Xbox", category = "ENTERTAINMENT", subcategory = "ENTERTAINMENT_VIDEO_GAMES" }
+
+# ============================================================================
 # FOOD_AND_DRINK - Food and beverage purchases
+# ============================================================================
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_BEER_WINE_AND_LIQUOR]
 # Alcoholic beverages and liquor stores
@@ -121,6 +138,11 @@
 "summer moon" = { name = "Summer Moon Coffee", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
 "tim hortons" = { name = "Tim Hortons", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
 "boundaries coffee" = { name = "Boundaries Coffee", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
+"einsteins bagels" = { name = "Einstein Bros. Bagels", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
+"einstein bros" = { name = "Einstein Bros. Bagels", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
+"einstein bagels" = { name = "Einstein Bros. Bagels", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
+"snooze" = { name = "Snooze Eatery", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
+"dutchbros" = { name = "Dutch Bros Coffee", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE" }
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_FAST_FOOD]
 # Fast food chains and quick service restaurants
@@ -181,6 +203,20 @@
 "shipleys donuts" = { name = "Shipley's Donuts", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
 "blaze pizza" = { name = "Blaze Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
 "panda" = { name = "Panda Express", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"domino's" = { name = "Domino's Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"dominos" = { name = "Domino's Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"wendy's" = { name = "Wendy's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"chuy's" = { name = "Chuy's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"slim chickens" = { name = "Slim Chickens", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"rodeo goat" = { name = "Rodeo Goat", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"condado tacos" = { name = "Condado Tacos", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"first watch" = { name = "First Watch", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"which wich" = { name = "Which Wich", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"mcalisters" = { name = "McAlister's Deli", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"smashburger" = { name = "Smashburger", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"shake shack" = { name = "Shake Shack", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"aquatica culinary" = { name = "Aquatica Culinary Orlando", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+"casey s" = { name = "Casey's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_GROCERIES]
 # Grocery stores and supermarkets
@@ -211,6 +247,11 @@
 "camellia food" = { name = "Camellia Food Store", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
 "hannaford" = { name = "Hannaford", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
 "piggly wiggly" = { name = "Piggly Wiggly", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"tom thumb" = { name = "Tom Thumb", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"wmt plus" = { name = "Walmart", category = "GENERAL_SERVICES", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"walmart.com" = { name = "Walmart.com", category = "GENERAL_MERCHANDISE", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"central market" = { name = "Central Market", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
+"winndixie" = { name = "Winn-Dixie", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES" }
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK]
 # Specialty food, desserts, ice cream, and bagels
@@ -223,6 +264,12 @@
 "smoothie king" = { name = "Smoothie King", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
 "tropical smoothie" = { name = "Tropical Smoothie Cafe", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
 "yogurtland" = { name = "Yogurtland", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
+"kona ice" = { name = "Kona Ice", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
+"andy's" = { name = "Andy's Frozen Custard", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
+"jeni's splendid ice" = { name = "Jeni's Splendid Ice Creams", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
+"jenis" = { name = "Jeni's Splendid Ice Creams", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
+"marble slab" = { name = "Marble Slab Creamery", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
+"193pepsiven" = { name = "Pepsi Vending", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK" }
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_RESTAURANT]
 # Full-service restaurants and dining
@@ -278,7 +325,16 @@
 "ruby tuesday" = { name = "Ruby Tuesday", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT" }
 "tgi fridays" = { name = "TGI Friday's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT" }
 "the nook" = { name = "The Nook", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT" }
+"lazy dog restaurant" = { name = "Lazy Dog Restaurant & Bar", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+"fogo" = { name = "Fogo de Chao", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+"coal vines" = { name = "Coal Vines", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+"prep and pastry" = { name = "Prep & Pastry", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+"giordano's" = { name = "Giordano's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANTS" }
+"cicis" = { name = "Cicis Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD" }
+
+# ============================================================================
 # GENERAL_MERCHANDISE - Retail and general goods
+# ============================================================================
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS]
 # Bookstores and magazine retailers
@@ -312,6 +368,15 @@
 "lids" = { name = "Lids", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
 "maurices" = { name = "Maurices", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
 "rue21" = { name = "rue21", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"kohl's" = { name = "Kohl's", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"altar'd state" = { name = "Altar'd State", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"rack room shoes" = { name = "Rack Room Shoes", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"lucchese" = { name = "Lucchese", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"miss a" = { name = "Miss A", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"kept clothing" = { name = "Kept Clothing", category = "GENERALGENERAL_MERCHANDISE_SERVICES", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"kohl" = { name = "Kohl's", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"lanebryantcom bensalem" = { name = "LanebryantCom Bensalem", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
+"carters" = { name = "Carter's", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES" }
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CONVENIENCE_STORES]
 # Convenience stores and gas station marts
@@ -357,6 +422,7 @@
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES]
 # Gift shops and novelty items
 "legends gifts" = { name = "Legends Gifts", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES" }
+"funko" = { name = "Funko", category = "ENTERTAINMENT", subcategory = "GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES" }
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OFFICE_SUPPLIES]
 # Office supply and business stores
@@ -375,7 +441,9 @@
 "temu" = { name = "Temu", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
 "temu.com" = { name = "Temu", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
 "tiktok shop" = { name = "TikTok Shop", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
-"walmart.com" = { name = "Walmart.com", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
+"tiktok merchant" = { name = "TikTok Shop", category = "GENERAL_SERVICES", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
+"nike.com" = { name = "Nike.com", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
+"bestbuy.com" = { name = "Best Buy", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES" }
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_PET_SUPPLIES]
 # Pet stores and animal supplies
@@ -407,7 +475,15 @@
 "tractor supply" = { name = "Tractor Supply Co", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_SUPERSTORES" }
 "tractor supply co" = { name = "Tractor Supply Co", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_SUPERSTORES" }
 "tractor-supply-co" = { name = "Tractor Supply Co", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_SUPERSTORES" }
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE]
+# Other miscellaneous merchandise, including toys, hobbies, and arts and crafts
+"hobby-lobby" = { name = "Hobby Lobby", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE" }
+"dayspring cards" = { name = "DaySpring Cards", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE" }
+
+# ============================================================================
 # GENERAL_SERVICES - Professional and general services
+# ============================================================================
 
 [GENERAL_SERVICES.GENERAL_SERVICES_ACCOUNTING_AND_FINANCIAL_PLANNING]
 # Tax preparation and financial services
@@ -431,6 +507,12 @@
 "advance auto" = { name = "Advance Auto Parts", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_AUTOMOTIVE" }
 "carmax" = { name = "CarMax", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_AUTOMOTIVE" }
 "napa auto" = { name = "NAPA Auto Parts", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_AUTOMOTIVE" }
+
+[GENERAL_SERVICES.GENERAL_SERVICES_EDUCATION]
+# Elementary, high school, professional schools, and college tuition
+"teacherspayteachers" = { name = "Teachers Pay Teachers", category = "GENERAL_SERVICES", subcategory = "EDUCATION_TUITION" }
+"simplyparenttaught" = { name = "Simply Parent Taught", category = "GENERAL_SERVICES", subcategory = "EDUCATION_TUITION" }
+"aceable" = { name = "Aceable", category = "GENERAL_SERVICES", subcategory = "EDUCATION_TUITION" }
 
 [GENERAL_SERVICES.GENERAL_SERVICES_INSURANCE]
 # Insurance companies
@@ -458,6 +540,9 @@
 "check n go" = { name = "Check 'n Go", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
 "github" = { name = "GitHub", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
 "office365" = { name = "Microsoft Office 365", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
+"klarna" = { name = "Klarna", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
+"claude.ai" = { name = "Claude AI Subscription", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
+"gofundme" = { name = "GoFundMe", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_OTHER_GENERAL_SERVICES" }
 
 [GENERAL_SERVICES.GENERAL_SERVICES_POSTAGE_AND_SHIPPING]
 # Shipping and mailing services
@@ -466,7 +551,10 @@
 "ups" = { name = "UPS", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_POSTAGE_AND_SHIPPING" }
 "ups store" = { name = "The UPS Store", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_POSTAGE_AND_SHIPPING" }
 "usps" = { name = "United Postal Service", category = "GENERAL_SERVICES", subcategory = "GENERAL_SERVICES_POSTAGE_AND_SHIPPING" }
+
+# ============================================================================
 # GOVERNMENT_AND_NON_PROFIT - Government and charitable organizations
+# ============================================================================
 
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_DONATIONS]
 # Charitable organizations and religious institutions
@@ -475,7 +563,10 @@
 "salvation army" = { name = "Salvation Army", category = "GOVERNMENT_AND_NON_PROFIT", subcategory = "GOVERNMENT_AND_NON_PROFIT_DONATIONS" }
 "st jude" = { name = "St. Jude Children's Research Hospital", category = "GOVERNMENT_AND_NON_PROFIT", subcategory = "GOVERNMENT_AND_NON_PROFIT_DONATIONS" }
 "united way" = { name = "United Way", category = "GOVERNMENT_AND_NON_PROFIT", subcategory = "GOVERNMENT_AND_NON_PROFIT_DONATIONS" }
+
+# ============================================================================
 # HOME_IMPROVEMENT - Home and property improvements
+# ============================================================================
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_FURNITURE]
 # Furniture stores and home furnishing retailers
@@ -503,7 +594,10 @@
 "leslie pool" = { name = "Leslie's Pool Supplies", category = "HOME_IMPROVEMENT", subcategory = "HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE" }
 "leslies pool" = { name = "Leslie's Pool Supply", category = "HOME_IMPROVEMENT", subcategory = "HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE" }
 "pool supply" = { name = "Pool Supply Store", category = "HOME_IMPROVEMENT", subcategory = "HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE" }
+
+# ============================================================================
 # INCOME - Money coming into accounts
+# ============================================================================
 
 [INCOME.INCOME_INTEREST_EARNED]
 # Bank interest payments and savings account interest
@@ -533,7 +627,10 @@
 "direct deposit" = { name = "Direct Deposit", category = "INCOME", subcategory = "INCOME_WAGES" }
 "directdep" = { name = "Direct Deposit", category = "INCOME", subcategory = "INCOME_WAGES" }
 "payroll" = { name = "Payroll", category = "INCOME", subcategory = "INCOME_WAGES" }
+
+# ============================================================================
 # LOAN_PAYMENTS - Debt and loan payments
+# ============================================================================
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_CAR_PAYMENT]
 # Auto loan and lease payments
@@ -573,7 +670,10 @@
 "navient" = { name = "Navient", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT" }
 "nelnet" = { name = "Nelnet", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT" }
 "sallie mae" = { name = "Sallie Mae", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT" }
+
+# ============================================================================
 # MEDICAL - Healthcare and medical services
+# ============================================================================
 
 [MEDICAL.MEDICAL_EYE_CARE]
 # Vision care and eyewear retailers
@@ -583,6 +683,7 @@
 "pearle vision" = { name = "Pearle Vision", category = "MEDICAL", subcategory = "MEDICAL_EYE_CARE" }
 "visionworks" = { name = "Visionworks", category = "MEDICAL", subcategory = "MEDICAL_EYE_CARE" }
 "warby parker" = { name = "Warby Parker", category = "MEDICAL", subcategory = "MEDICAL_EYE_CARE" }
+"zenni optical" = { name = "Zenni Optical", category = "MEDICAL", subcategory = "MEDICAL_EYE_CARE" }
 
 [MEDICAL.MEDICAL_PHARMACIES_AND_SUPPLEMENTS]
 # Pharmacies and health retailers
@@ -592,7 +693,10 @@
 "rite aid" = { name = "Rite Aid", category = "MEDICAL", subcategory = "MEDICAL_PHARMACIES_AND_SUPPLEMENTS" }
 "vitamin shoppe" = { name = "Vitamin Shoppe", category = "MEDICAL", subcategory = "MEDICAL_PHARMACIES_AND_SUPPLEMENTS" }
 "walgreens" = { name = "Walgreens", category = "MEDICAL", subcategory = "MEDICAL_PHARMACIES_AND_SUPPLEMENTS" }
+
+# ============================================================================
 # PERSONAL_CARE - Personal care and wellness
+# ============================================================================
 
 [PERSONAL_CARE.PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS]
 # Gyms and fitness facilities
@@ -614,7 +718,10 @@
 "sport clips" = { name = "Sport Clips", category = "PERSONAL_CARE", subcategory = "PERSONAL_CARE_HAIR_AND_BEAUTY" }
 "supercuts" = { name = "Supercuts", category = "PERSONAL_CARE", subcategory = "PERSONAL_CARE_HAIR_AND_BEAUTY" }
 "ulta" = { name = "Ulta Beauty", category = "PERSONAL_CARE", subcategory = "PERSONAL_CARE_HAIR_AND_BEAUTY" }
+
+# ============================================================================
 # RENT_AND_UTILITIES - Housing and utility payments
+# ============================================================================
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_GAS_AND_ELECTRICITY]
 # Utility companies for gas and electric
@@ -644,7 +751,11 @@
 "sprint" = { name = "Sprint", category = "RENT_AND_UTILITIES", subcategory = "RENT_AND_UTILITIES_TELEPHONE" }
 "t-mobile" = { name = "T-Mobile", category = "RENT_AND_UTILITIES", subcategory = "RENT_AND_UTILITIES_TELEPHONE" }
 "verizon" = { name = "Verizon Wireless", category = "RENT_AND_UTILITIES", subcategory = "RENT_AND_UTILITIES_TELEPHONE" }
+"at&t" = { name = "AT&T", category = "RENT_AND_UTILITIES", subcategory = "RENT_AND_UTILITIES_TELEPHONE" }
+
+# ============================================================================
 # TRANSFER_IN - Money transferred into accounts
+# ============================================================================
 
 [TRANSFER_IN.TRANSFER_IN_ACCOUNT_TRANSFER]
 # Digital payment platforms and transfer services
@@ -656,7 +767,10 @@
 # Mobile deposits and check deposits
 "check deposit" = { name = "Check Deposit", category = "TRANSFER_IN", subcategory = "TRANSFER_IN_DEPOSIT" }
 "mobile deposit" = { name = "Mobile Deposit", category = "TRANSFER_IN", subcategory = "TRANSFER_IN_DEPOSIT" }
+
+# ============================================================================
 # TRANSFER_OUT - Money transferred out of accounts
+# ============================================================================
 
 [TRANSFER_OUT.TRANSFER_OUT_ACCOUNT_TRANSFER]
 "paypal des" = { name = "PayPal", category = "TRANSFER_OUT", subcategory = "TRANSFER_OUT_ACCOUNT_TRANSFER" }
@@ -672,6 +786,7 @@
 "citgo" = { name = "Citgo", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
 "exxon" = { name = "ExxonMobil", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
 "loves" = { name = "Love's Travel Stops", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
+"love's" = { name = "Love's Travel Stops", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
 "marathon" = { name = "Marathon", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
 "mobil" = { name = "Mobil", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
 "murphy" = { name = "Murphy USA", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS" }
@@ -692,13 +807,18 @@
 "lyft" = { name = "Lyft", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES" }
 "uber" = { name = "Uber", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES" }
 "uber trip" = { name = "Uber", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES" }
+"desert cab" = { name = "Desert Cab", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES" }
+"taxi ycs" = { name = "Yellow Checker Star Transportation", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES" }
 
 [TRANSPORTATION.TRANSPORTATION_TOLLS]
 # Toll roads and electronic toll collection
 "ezpass" = { name = "E-ZPass", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TOLLS" }
 "fastrak" = { name = "FasTrak", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TOLLS" }
 "sunpass" = { name = "SunPass", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TOLLS" }
+
+# ============================================================================
 # TRAVEL - Travel and vacation expenses
+# ============================================================================
 
 [TRAVEL.TRAVEL_FLIGHTS]
 # Airlines and flight booking
@@ -710,6 +830,9 @@
 "southwest" = { name = "Southwest Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS" }
 "spirit airlines" = { name = "Spirit Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS" }
 "united airlines" = { name = "United Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS" }
+"southwes" = { name = "Southwest Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS" }
+"american air" = { name = "American Air", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS" }
+"spirit airl" = { name = "Spirit Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS" }
 
 [TRAVEL.TRAVEL_LODGING]
 # Hotels and accommodation booking
@@ -724,6 +847,10 @@
 "ihg" = { name = "InterContinental Hotels Group", category = "TRAVEL", subcategory = "TRAVEL_LODGING" }
 "marriott" = { name = "Marriott", category = "TRAVEL", subcategory = "TRAVEL_LODGING" }
 "vrbo" = { name = "VRBO", category = "TRAVEL", subcategory = "TRAVEL_LODGING" }
+"holiday inn" = { name = "Holiday Inn", category = "TRAVEL", subcategory = "TRAVEL_LODGING" }
+"sonesta" = { name = "Sonesta Hotels", category = "TRAVEL", subcategory = "TRAVEL_LODGING" }
+"bkghotel at booking" = { name = "Booking.com Hotels", category = "TRAVEL", subcategory = "TRAVEL_LODGING" }
+"la quinta inn suites" = { name = "La Quinta Inn & Suites", category = "TRAVEL", subcategory = "TRAVEL_LODGING" }
 
 [TRAVEL.TRAVEL_RENTAL_CARS]
 # Car rental companies
@@ -734,6 +861,7 @@
 "hertz" = { name = "Hertz", category = "TRAVEL", subcategory = "TRAVEL_RENTAL_CARS" }
 "national car rental" = { name = "National Car Rental", category = "TRAVEL", subcategory = "TRAVEL_RENTAL_CARS" }
 "zipcar" = { name = "Zipcar", category = "TRAVEL", subcategory = "TRAVEL_RENTAL_CARS" }
+"eractoll" = { name = "Enterprise Rent-A-Car Toll", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TOLLS" }
 
 [TRAVEL.TRAVEL_OTHER_TRAVEL]
 # Other travel services
