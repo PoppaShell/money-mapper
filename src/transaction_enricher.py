@@ -213,6 +213,7 @@ def apply_custom_mappings(description: str, merchant_name: str,
                          custom_mappings: Dict, debug_mode: bool = False) -> Optional[Dict]:
     """
     Apply custom merchant mappings with enhanced matching logic.
+    Fixed to handle 3-level TOML structure: [CATEGORY][SUBCATEGORY][PATTERNS]
     
     Args:
         description: Transaction description
@@ -232,103 +233,90 @@ def apply_custom_mappings(description: str, merchant_name: str,
     # Enhanced income detection - check first for highest priority
     income_indicators = [
         'des:dir dep', 'des:direct dep', 'direct deposit', 'payroll', 
-        'salary', 'wages', 'dir dep', 'directdep'
+        'salary', 'wages', 'dir dep', 'directdep', 'interest earned'
     ]
     
     found_income_indicator = next((ind for ind in income_indicators if ind in cleaned_desc), None)
-    if found_income_indicator:
-        if debug_mode:
-            print(f"DEBUG: Found income indicator: '{found_income_indicator}'")
-            
-        # Look for income mappings that match the merchant
-        for section_name, mappings in custom_mappings.items():
-            if section_name.endswith('_examples') or section_name != 'personal_income':
-                continue
-                
-            for pattern, mapping in mappings.items():
-                pattern_lower = pattern.lower()
-                
-                # For income, check if any part of the pattern matches the merchant area
-                # Extract merchant-like words from pattern (ignore des: parts)
-                pattern_words = [w for w in pattern_lower.split() if not w.startswith('des:')]
-                
-                # Check if merchant words from pattern appear in description
-                if pattern_words and any(word in cleaned_desc for word in pattern_words):
-                    if debug_mode:
-                        print(f"DEBUG: Income match found - pattern: '{pattern}' -> {mapping['category']}")
-                    return {
-                        'primary_category': mapping['category'],
-                        'detailed_category': mapping['subcategory'],
-                        'confidence': 0.95,
-                        'method': 'enhanced_income_detection',
-                        'merchant_override': mapping.get('name', merchant_name)
-                    }
-        
-        if debug_mode:
-            print(f"DEBUG: Income indicator found but no personal mapping matched")
+    if found_income_indicator and debug_mode:
+        print(f"DEBUG: Found income indicator: '{found_income_indicator}'")
     
-    # Standard mapping checks with enhanced logic
-    for section_name, mappings in custom_mappings.items():
-        if section_name.endswith('_examples'):
+    # Handle 3-level structure: [PRIMARY_CATEGORY][DETAILED_CATEGORY][PATTERNS]
+    for primary_category, subcategories in custom_mappings.items():
+        if debug_mode:
+            print(f"DEBUG: Checking primary category: {primary_category}")
+        
+        # Skip template/example sections
+        if 'example' in primary_category.lower() or 'template' in primary_category.lower():
             continue
-            
-        for pattern, mapping in mappings.items():
-            pattern_lower = pattern.lower()
-            
-            # Method 1: Exact substring match in description
-            if pattern_lower in cleaned_desc:
+        
+        # Iterate through subcategories (second level)
+        if isinstance(subcategories, dict):
+            for subcategory_key, patterns in subcategories.items():
                 if debug_mode:
-                    print(f"DEBUG: Exact match - pattern: '{pattern}' -> {mapping['category']}")
-                return {
-                    'primary_category': mapping['category'],
-                    'detailed_category': mapping['subcategory'], 
-                    'confidence': 0.95,
-                    'method': 'custom_exact_match',
-                    'merchant_override': mapping.get('name', merchant_name)
-                }
-            
-            # Method 2: Enhanced merchant name matching
-            # Split pattern into words and check if most core words match
-            pattern_words = [w for w in pattern_lower.split() if len(w) > 2]  # Skip short words
-            if pattern_words:
-                matches = sum(1 for word in pattern_words if word in cleaned_desc)
-                match_ratio = matches / len(pattern_words)
+                    print(f"DEBUG: Checking subcategory: {subcategory_key}")
                 
-                if match_ratio >= 0.6:  # At least 60% of words match
-                    if debug_mode:
-                        print(f"DEBUG: Partial match ({match_ratio:.1%}) - pattern: '{pattern}' -> {mapping['category']}")
-                    return {
-                        'primary_category': mapping['category'],
-                        'detailed_category': mapping['subcategory'],
-                        'confidence': 0.90,
-                        'method': 'custom_partial_match',
-                        'merchant_override': mapping.get('name', merchant_name)
-                    }
-            
-            # Method 3: Fuzzy match on merchant name (lowered threshold)
-            if fuzzy_match(pattern_lower, cleaned_merchant, 0.7):  # Lowered from 0.8
-                if debug_mode:
-                    print(f"DEBUG: Fuzzy match - pattern: '{pattern}' -> {mapping['category']}")
-                return {
-                    'primary_category': mapping['category'],
-                    'detailed_category': mapping['subcategory'],
-                    'confidence': 0.85,
-                    'method': 'custom_fuzzy_match',
-                    'merchant_override': mapping.get('name', merchant_name)
-                }
-            
-            # Method 4: Check if core merchant name is within pattern or vice versa
-            if len(cleaned_merchant) > 3:
-                if cleaned_merchant in pattern_lower or pattern_lower in cleaned_merchant:
-                    if debug_mode:
-                        print(f"DEBUG: Contains match - pattern: '{pattern}' -> {mapping['category']}")
-                    return {
-                        'primary_category': mapping['category'],
-                        'detailed_category': mapping['subcategory'],
-                        'confidence': 0.85,
-                        'method': 'custom_contains_match',
-                        'merchant_override': mapping.get('name', merchant_name)
-                    }
+                # Now iterate through actual patterns (third level)
+                if isinstance(patterns, dict):
+                    for pattern, mapping in patterns.items():
+                        if debug_mode:
+                            print(f"DEBUG: Checking pattern: '{pattern}'")
+                        
+                        # Verify mapping has required keys
+                        if not isinstance(mapping, dict) or 'category' not in mapping or 'subcategory' not in mapping:
+                            if debug_mode:
+                                print(f"DEBUG: Invalid mapping structure for pattern '{pattern}': {mapping}")
+                            continue
+                        
+                        pattern_lower = pattern.lower()
+                        
+                        # Method 1: Exact substring match in description
+                        if pattern_lower in cleaned_desc:
+                            if debug_mode:
+                                print(f"DEBUG: Exact match - pattern: '{pattern}' -> {mapping['category']}")
+                            return {
+                                'primary_category': mapping['category'],
+                                'detailed_category': mapping['subcategory'],
+                                'confidence': 0.95,
+                                'method': 'custom_exact_match',
+                                'merchant_override': mapping.get('name', merchant_name)
+                            }
+                        
+                        # Method 2: Exact match in merchant name
+                        if pattern_lower in cleaned_merchant:
+                            if debug_mode:
+                                print(f"DEBUG: Merchant match - pattern: '{pattern}' -> {mapping['category']}")
+                            return {
+                                'primary_category': mapping['category'],
+                                'detailed_category': mapping['subcategory'],
+                                'confidence': 0.90,
+                                'method': 'custom_merchant_match',
+                                'merchant_override': mapping.get('name', merchant_name)
+                            }
+                        
+                        # Method 3: Fuzzy match in description
+                        if fuzzy_match(pattern_lower, cleaned_desc, 0.8):
+                            if debug_mode:
+                                print(f"DEBUG: Fuzzy match - pattern: '{pattern}' -> {mapping['category']}")
+                            return {
+                                'primary_category': mapping['category'],
+                                'detailed_category': mapping['subcategory'],
+                                'confidence': 0.85,
+                                'method': 'custom_fuzzy_match',
+                                'merchant_override': mapping.get('name', merchant_name)
+                            }
+                        
+                        # Method 4: Contains match for longer patterns
+                        if len(cleaned_merchant) > 3:
+                            if cleaned_merchant in pattern_lower or pattern_lower in cleaned_merchant:
+                                if debug_mode:
+                                    print(f"DEBUG: Contains match - pattern: '{pattern}' -> {mapping['category']}")
+                                return {
+                                    'primary_category': mapping['category'],
+                                    'detailed_category': mapping['subcategory'],
+                                    'confidence': 0.85,
+                                    'method': 'custom_contains_match',
+                                    'merchant_override': mapping.get('name', merchant_name)
+                                }
     
     if debug_mode:
         print(f"DEBUG: No custom mapping found for '{description}'")
@@ -689,6 +677,29 @@ def categorize_transaction(description: str, amount: float = 0,
             'confidence': 0.1,
             'method': 'error'
         }
+
+
+
+
+def fuzzy_match(s1: str, s2: str, threshold: float = 0.8) -> bool:
+    """
+    Check if two strings match with a similarity threshold.
+    
+    Args:
+        s1: First string
+        s2: Second string  
+        threshold: Minimum similarity score (0.0 to 1.0)
+        
+    Returns:
+        True if similarity >= threshold
+    """
+    try:
+        from difflib import SequenceMatcher
+        similarity = SequenceMatcher(None, s1.lower(), s2.lower()).ratio()
+        return similarity >= threshold
+    except Exception:
+        # Fallback to simple substring matching
+        return s1.lower() in s2.lower() or s2.lower() in s1.lower()
 
 
 if __name__ == "__main__":
