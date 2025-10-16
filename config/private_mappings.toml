@@ -1,0 +1,170 @@
+# Private Financial Transaction Mappings - Personal and Local Businesses
+# 
+# This file contains YOUR specific merchant mappings for local businesses,
+# personal services, and location-specific patterns. These mappings have
+# HIGHEST priority and override both public_mappings.toml and plaid_categories.toml.
+#
+# PRIVACY NOTICE:
+# - This file contains YOUR PERSONAL DATA
+# - Should not be shared publicly or committed to version control
+# - Keep backup copies of your customizations
+#
+# STRUCTURE:
+# [PRIMARY_CATEGORY.DETAILED_CATEGORY]
+# "pattern" = { name = "Clean Name", category = "PRIMARY", subcategory = "DETAILED", scope = "private" }
+#
+# SCOPE GUIDELINES:
+# Use scope = "private" for:
+# - Local businesses (restaurants, services, shops)
+# - Personal service providers (doctors, dentists, salons) 
+# - Regional chains not widely known
+# - Your employer and income sources
+# - Location-specific patterns
+#
+# MAINTENANCE:
+# - Update when you change jobs or move
+# - Add new local businesses as discovered
+# - Remove patterns for businesses no longer used
+
+[ENTERTAINMENT.ENTERTAINMENT_OTHER_ENTERTAINMENT]
+# Other entertainment and recreational activities
+
+
+[ENTERTAINMENT.ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS]
+# Sports events, theme parks, museums, and attractions
+
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_COFFEE]
+# Coffee shops, cafes, and coffee-related purchases
+
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_FAST_FOOD]
+# Fast food chains and quick service restaurants
+
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK]
+# Other food and beverage purchases
+
+
+[FOOD_AND_DRINK.FOOD_AND_DRINK_RESTAURANT]
+# Full-service restaurants and dining
+
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS]
+# Bookstores, newsstands, and magazine retailers
+
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES]
+# Clothing stores, fashion retailers, and accessories
+
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CONVENIENCE_STORES]
+# Convenience stores and gas station marts
+
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ELECTRONICS]
+# Electronics stores and technology retailers
+
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ONLINE_MARKETPLACES]
+# E-commerce platforms and online retailers
+
+
+[GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE]
+# Other general retail and merchandise stores
+
+
+[GENERAL_SERVICES.GENERAL_SERVICES_AUTOMOTIVE]
+# Auto repair, maintenance, and automotive services
+
+
+[GENERAL_SERVICES.GENERAL_SERVICES_OTHER_GENERAL_SERVICES]
+# Other professional and general services
+
+
+[GENERAL_SERVICES.GENERAL_SERVICES_POSTAGE_AND_SHIPPING]
+# Shipping, mailing, and postage services
+
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_DONATIONS]
+# Charitable donations and religious contributions
+
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES]
+# Government departments, agencies, and public services
+
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_OTHER_GOVERNMENT_AND_NON_PROFIT]
+# Other government and non-profit organizations
+
+
+[GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_TAX_PAYMENT]
+# Tax payments and government revenue collections
+
+
+[INCOME.INCOME_WAGES]
+# Wages, salaries, and employment income
+
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_CAR_PAYMENT]
+# Auto loans, car payments, and vehicle financing
+
+
+[LOAN_PAYMENTS.LOAN_PAYMENTS_MORTGAGE_PAYMENT]
+# Mortgage payments and home loan payments
+
+
+[MEDICAL.MEDICAL_DENTAL_CARE]
+# Dental care, orthodontics, and oral health services
+
+
+[MEDICAL.MEDICAL_EYE_CARE]
+# Eye care, vision services, and optical retailers
+
+
+[MEDICAL.MEDICAL_OTHER_MEDICAL]
+# Other medical services and healthcare-related expenses
+
+
+[MEDICAL.MEDICAL_PHARMACIES_AND_SUPPLEMENTS]
+# Pharmacies, medications, and health supplements
+
+
+[MEDICAL.MEDICAL_PRIMARY_CARE]
+# Primary care, medical services, and healthcare providers
+
+
+[PERSONAL_CARE.PERSONAL_CARE_HAIR_AND_BEAUTY]
+# Hair salons, beauty services, and cosmetic retailers
+
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_GAS_AND_ELECTRICITY]
+# Gas and electric utilities and energy services
+
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_TELEPHONE]
+# Telephone services and mobile phone carriers
+
+
+[RENT_AND_UTILITIES.RENT_AND_UTILITIES_WATER]
+# Water utilities and municipal water services
+
+
+[TRANSFER_OUT.TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS]
+# Investment account transfers and retirement contributions
+
+
+[TRANSPORTATION.TRANSPORTATION_GAS]
+# Gasoline, fuel, and gas station purchases
+
+
+[TRANSPORTATION.TRANSPORTATION_PARKING]
+# Parking fees, garage fees, and parking services
+
+
+[TRANSPORTATION.TRANSPORTATION_TOLLS]
+# Toll roads, bridge tolls, and electronic toll collection
+
+
+[TRAVEL.TRAVEL_LODGING]
+# Hotels, accommodations, and lodging reservations

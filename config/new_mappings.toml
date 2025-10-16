@@ -1,0 +1,28 @@
+# New Financial Transaction Mappings - Input Template
+#
+# Add new transaction mappings below. Run 'python cli.py add-mappings' to process.
+# This file will be automatically processed and cleared after successful import.
+#
+# REQUIRED FIELDS:
+# - name: Clean display name for the merchant
+# - category: Primary PFC category (see list below)
+# - subcategory: Detailed PFC subcategory
+# - scope: "public" for national chains, "private" for local businesses
+#
+# VALIDATION:
+# - Patterns will be checked for duplicates across all mapping files
+# - Categories will be validated against official PFC taxonomy
+# - Scope will determine target file (private_mappings.toml vs public_mappings.toml)
+#
+# AVAILABLE PRIMARY CATEGORIES:
+# BANK_FEES, ENTERTAINMENT, FOOD_AND_DRINK, GENERAL_MERCHANDISE, GENERAL_SERVICES,
+# GOVERNMENT_AND_NON_PROFIT, HOME_IMPROVEMENT, INCOME, LOAN_PAYMENTS, MEDICAL,
+# PERSONAL_CARE, RENT_AND_UTILITIES, TRANSFER_IN, TRANSFER_OUT, TRANSPORTATION, TRAVEL
+#
+# EXAMPLES:
+# "starbucks" = { name = "Starbucks", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
+# "joes pizza downtown" = { name = "Joe's Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "private" }
+# "shell gas" = { name = "Shell", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
+#
+# ADD NEW ENTRIES BELOW THIS LINE:
+# ============================================================================
