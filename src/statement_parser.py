@@ -22,10 +22,10 @@ from config_manager import get_config_manager
 def load_statement_patterns(config_dir: str = "config") -> Dict:
     """
     Load statement parsing patterns from centralized configuration.
-    
+
     Args:
         config_dir: Configuration directory
-        
+
     Returns:
         Dictionary containing statement patterns
     """
@@ -36,6 +36,22 @@ def load_statement_patterns(config_dir: str = "config") -> Dict:
     except Exception as e:
         print(f"Error loading statement patterns: {e}")
         sys.exit(1)
+
+
+def normalize_whitespace(text: str) -> str:
+    """
+    Normalize whitespace in text by replacing multiple consecutive spaces with a single space.
+
+    Args:
+        text: Text to normalize
+
+    Returns:
+        Text with normalized whitespace
+    """
+    # Replace multiple spaces with single space
+    normalized = re.sub(r'\s+', ' ', text)
+    # Strip leading/trailing whitespace
+    return normalized.strip()
 
 
 def process_pdf_statements(directory: str, debug: bool = False) -> List[Dict]:
@@ -352,7 +368,7 @@ def extract_credit_transactions(text: str, patterns: Dict, debug: bool = False) 
                     
                     transaction = {
                         'date': date.strip(),
-                        'description': description.strip(),
+                        'description': normalize_whitespace(description),
                         'amount': amount
                     }
                     transactions.append(transaction)
@@ -463,7 +479,7 @@ def extract_section_transactions(text: str, section_pattern: str, transaction_ty
 
                         transaction = {
                             'date': match[0],
-                            'description': match[1].strip(),
+                            'description': normalize_whitespace(match[1]),
                             'amount': amount
                         }
                         transactions.append(transaction)
