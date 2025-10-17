@@ -177,6 +177,7 @@ money-mapper/
     "description": "GROCERY STORE #1234",
     "amount": -127.43,
     "account_type": "credit",
+    "account_number": "****5678",
     "source_file": "statement_2025_01.pdf"
 }
 ```
@@ -188,6 +189,7 @@ money-mapper/
     "description": "DIRECT DEPOSIT PAYROLL",
     "amount": 2500.00,
     "account_type": "checking",
+    "account_number": "****9012",
     "source_file": "checking_2025_01.pdf"
 }
 ```
@@ -199,6 +201,7 @@ money-mapper/
 - `description`: Transaction description with normalized whitespace
 - `amount`: Transaction amount (negative = expense, positive = income)
 - `account_type`: Type of account (credit, checking, savings)
+- `account_number`: Masked account number showing only last 4 digits (e.g., "****1234")
 - `source_file`: Original PDF statement filename
 
 ### Enriched Transactions (`output/enriched_transactions.json`)
@@ -210,6 +213,7 @@ money-mapper/
     "description": "GROCERY STORE #1234",
     "amount": -127.43,
     "account_type": "credit",
+    "account_number": "****5678",
     "source_file": "statement_2025_01.pdf",
     "merchant_name": "Grocery Store",
     "category": "FOOD_AND_DRINK",
