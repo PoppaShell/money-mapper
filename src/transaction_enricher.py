@@ -168,9 +168,6 @@ def enrich_transaction(transaction: Dict, private_mappings: Dict, public_mapping
     # Add categorization results
     enriched.update(category_result)
 
-    # Add metadata
-    enriched['enrichment_date'] = transaction.get('processing_date', '')
-
     # Apply privacy redaction AFTER categorization (so matching still works)
     # Load privacy configuration from settings.toml
     try:

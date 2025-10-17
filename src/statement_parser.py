@@ -132,7 +132,6 @@ def process_pdf_statements(directory: str, debug: bool = False) -> List[Dict]:
             # Add file metadata to each transaction
             for transaction in transactions:
                 transaction['source_file'] = os.path.basename(pdf_file)
-                transaction['processing_date'] = datetime.now().isoformat()
             
             all_transactions.extend(transactions)
             
@@ -181,8 +180,14 @@ def parse_statement_text(text: str, config: Dict, debug: bool = False) -> List[D
     
     if debug:
         print(f"\nSUCCESS: Detected statement type: {statement_type}")
-    
-    # Step 2: Extract transactions based on statement type
+
+    # Step 2: Extract statement period (for year information)
+    period_config = config.get('period_patterns', {})
+    statement_period = extract_statement_period(text, period_config)
+    if debug and statement_period:
+        print(f"Statement period: {statement_period}")
+
+    # Step 3: Extract transactions based on statement type
     transaction_patterns = config.get('transaction_sections', {})
     if statement_type not in transaction_patterns:
         if debug:
@@ -196,9 +201,9 @@ def parse_statement_text(text: str, config: Dict, debug: bool = False) -> List[D
         print(f"  Available sections: {list(patterns.keys())}")
     
     transactions = []
-    
+
     if statement_type == 'credit':
-        transactions = extract_credit_transactions(text, patterns, debug)
+        transactions = extract_credit_transactions(text, patterns, debug, statement_period)
     elif statement_type in ['checking', 'savings']:
         transactions = extract_banking_transactions(text, patterns, debug)
     else:
@@ -315,10 +320,60 @@ def detect_statement_type(text: str, detection_config: Dict, debug: bool = False
     return None
 
 
-def extract_credit_transactions(text: str, patterns: Dict, debug: bool = False) -> List[Dict]:
-    """Extract transactions from credit card statements."""
+def determine_transaction_year(month: int, statement_period: Optional[Dict]) -> int:
+    """
+    Determine the year for a transaction based on its month and the statement period.
+
+    For statements spanning year boundaries (e.g., Dec 2024 - Jan 2025):
+    - Transactions in months > statement end month are from previous year
+    - Otherwise use statement end year
+
+    Args:
+        month: Transaction month (1-12)
+        statement_period: Statement period dict with end_month and end_year
+
+    Returns:
+        Year for the transaction
+    """
+    if not statement_period or 'end_year' not in statement_period:
+        # Fallback to current year if no statement period
+        return datetime.now().year
+
+    end_year = statement_period['end_year']
+    end_month_str = statement_period.get('end_month', '')
+
+    # Convert end month to number (handle month names)
+    month_map = {'01': 1, '02': 2, '03': 3, '04': 4, '05': 5, '06': 6,
+                 '07': 7, '08': 8, '09': 9, '10': 10, '11': 11, '12': 12,
+                 'january': 1, 'february': 2, 'march': 3, 'april': 4,
+                 'may': 5, 'june': 6, 'july': 7, 'august': 8,
+                 'september': 9, 'october': 10, 'november': 11, 'december': 12}
+
+    end_month = month_map.get(end_month_str.lower(), month_map.get(end_month_str, 12))
+
+    # If transaction month > end month, it's from previous year
+    # Example: End month = Jan (1), transaction month = Dec (12) → previous year
+    if month > end_month:
+        return end_year - 1
+    else:
+        return end_year
+
+
+def extract_credit_transactions(text: str, patterns: Dict, debug: bool = False, statement_period: Optional[Dict] = None) -> List[Dict]:
+    """
+    Extract transactions from credit card statements.
+
+    Args:
+        text: Statement text
+        patterns: Transaction patterns
+        debug: Debug mode
+        statement_period: Statement period with start/end dates and years
+
+    Returns:
+        List of transaction dictionaries
+    """
     transactions = []
-    
+
     if debug:
         print(f"\n--- Credit Card Transaction Extraction ---")
     
@@ -344,20 +399,24 @@ def extract_credit_transactions(text: str, patterns: Dict, debug: bool = False) 
             for match in matches:
                 try:
                     # Credit card patterns can have different formats
-                    # Common formats: (date, description, amount) or (date, date, description, amount)
+                    # Common formats: (date, description, amount) or (trans_date, post_date, description, amount)
                     if len(match) == 3:
                         # Format: (date, description, amount)
+                        # Single date - use for both transaction and posting date
                         date, description, amount_str = match
+                        transaction_date = date
+                        posting_date = None  # No separate posting date
                     elif len(match) == 4:
                         # Format: (trans_date, post_date, description, amount)
-                        date = match[0]  # Use transaction date
+                        transaction_date = match[0]  # When purchase was made
+                        posting_date = match[1]      # When it posted to account
                         description = match[2]
                         amount_str = match[3]
                     else:
                         if debug:
                             print(f"    WARNING: Unexpected match format with {len(match)} groups: {match}")
                         continue
-                    
+
                     # Parse amount
                     amount = float(amount_str.replace(',', ''))
 
@@ -365,12 +424,25 @@ def extract_credit_transactions(text: str, patterns: Dict, debug: bool = False) 
                     # - Positive amounts in PDF = Purchases (money spent) → make negative
                     # - Negative amounts in PDF = Payments/Credits (money received) → make positive
                     amount = -amount  # Flip the sign
-                    
+
+                    # Determine year for transaction_date and posting_date
+                    # Extract month from MM/DD format
+                    trans_month = int(transaction_date.strip().split('/')[0])
+                    trans_year = determine_transaction_year(trans_month, statement_period)
+
                     transaction = {
-                        'date': date.strip(),
+                        'date': transaction_date.strip(),
                         'description': normalize_whitespace(description),
-                        'amount': amount
+                        'amount': amount,
+                        'transaction_date': f"{transaction_date.strip()}/{trans_year}"  # MM/DD/YYYY
                     }
+
+                    # Add posting_date if available (credit cards with dual dates)
+                    if posting_date:
+                        post_month = int(posting_date.strip().split('/')[0])
+                        post_year = determine_transaction_year(post_month, statement_period)
+                        transaction['posting_date'] = f"{posting_date.strip()}/{post_year}"  # MM/DD/YYYY
+
                     transactions.append(transaction)
                     
                 except (ValueError, IndexError) as e:
