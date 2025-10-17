@@ -244,20 +244,28 @@ def sanitize_description(description: str, sanitization_patterns: List = None,
         # Apply fuzzy keyword-based redaction
         keywords_config = privacy_config.get('keywords', {})
 
-        # Process names
-        for name in keywords_config.get('names', []):
+        # Sort keywords by length (descending) to process longer phrases first
+        # This prevents partial redaction when multiple keywords appear together
+        # Example: "Alice Johnson" with keywords ["alice", "johnson"] - process "alice johnson" before "alice"
+
+        # Process names (sorted by length, descending)
+        names_sorted = sorted(keywords_config.get('names', []), key=len, reverse=True)
+        for name in names_sorted:
             sanitized = _fuzzy_redact_keyword(sanitized, name, '[NAME]', threshold)
 
-        # Process employers
-        for employer in keywords_config.get('employers', []):
+        # Process employers (sorted by length, descending)
+        employers_sorted = sorted(keywords_config.get('employers', []), key=len, reverse=True)
+        for employer in employers_sorted:
             sanitized = _fuzzy_redact_keyword(sanitized, employer, '[EMPLOYER]', threshold)
 
-        # Process locations
-        for location in keywords_config.get('locations', []):
+        # Process locations (sorted by length, descending)
+        locations_sorted = sorted(keywords_config.get('locations', []), key=len, reverse=True)
+        for location in locations_sorted:
             sanitized = _fuzzy_redact_keyword(sanitized, location, '[LOCATION]', threshold)
 
-        # Process custom keywords
-        for keyword in keywords_config.get('custom', []):
+        # Process custom keywords (sorted by length, descending)
+        custom_sorted = sorted(keywords_config.get('custom', []), key=len, reverse=True)
+        for keyword in custom_sorted:
             sanitized = _fuzzy_redact_keyword(sanitized, keyword, '[REDACTED]', threshold)
 
     return sanitized.strip()
@@ -318,6 +326,14 @@ def _fuzzy_redact_keyword(text: str, keyword: str, replacement: str, threshold: 
         # If similarity exceeds threshold, mark for replacement
         if similarity >= threshold:
             replacements_made.append((i, i + keyword_word_count, window_text))
+        # Also check for substring matches within single words (for embedded keywords like "TXCARMICHAEL")
+        elif keyword_word_count == 1:  # Only for single-word keywords
+            for j, word in enumerate(window_words):
+                word_lower = word.lower()
+                # Check if keyword appears as substring (case-insensitive)
+                if keyword_normalized in word_lower:
+                    # Replace the keyword portion within the word
+                    replacements_made.append((i + j, i + j + 1, word))
 
     # Apply replacements from right to left to maintain indices
     for start_idx, end_idx, original_phrase in reversed(replacements_made):

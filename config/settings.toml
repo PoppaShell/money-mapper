@@ -98,7 +98,7 @@ account_numbers = [
 # NOTE: Process COID before INDN to avoid the INDN pattern eating the space before COID
 pii_fields = [
     { pattern = '''COID:\d+''', replacement = 'COID:[COMPANY]', description = "Company IDs in ACH" },
-    { pattern = '''INDN:[A-Z\s,\.]+?(?=\s+[A-Z]{3,}:|$)''', replacement = 'INDN:[NAME]', description = "Individual names in ACH" },
+    { pattern = '''INDN:[A-Za-z\s,\.]+?(?=\s*CO\s*ID:|\s+COID:|$)''', replacement = 'INDN:[NAME]', description = "Individual names in ACH (handles mixed case and spacing variations)" },
 ]
 
 # Reference and tracking numbers
