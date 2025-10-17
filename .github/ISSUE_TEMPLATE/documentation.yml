@@ -1,0 +1,74 @@
+name: Documentation Issue
+description: Report missing, unclear, or incorrect documentation
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the documentation! Clear docs make the project better for everyone.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation issue is this?
+      options:
+        - README - Inaccurate or outdated
+        - README - Missing information
+        - Code comments - Missing or unclear
+        - Configuration - Unclear settings/options
+        - Examples - Missing or incorrect
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: Where is the documentation issue? (file, section, line number)
+      placeholder: "File: README.md, Section: Installation, Line: 42"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's Wrong?
+      description: Describe what's missing, unclear, or incorrect
+      placeholder: The documentation states X, but it should state Y because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement
+      description: How should this be documented instead?
+      placeholder: |
+        Suggested text:
+        ```
+        [Your suggested documentation text here]
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context that would help improve the documentation
+      placeholder: Add any other context here...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have checked the latest version of the documentation
+          required: true
+        - label: I have searched existing issues to ensure this isn't a duplicate
+          required: true
