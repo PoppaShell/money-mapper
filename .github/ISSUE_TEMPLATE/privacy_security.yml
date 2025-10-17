@@ -1,0 +1,119 @@
+name: Privacy/Security Issue
+description: Report a privacy or security concern
+title: "[Privacy/Security]: "
+labels: ["security", "privacy"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **⚠️ IMPORTANT:** If this is a critical security vulnerability that could be exploited, please DO NOT create a public issue. Instead, contact the maintainer privately.
+
+        For privacy concerns and non-critical security issues, please provide details below.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Issue Type
+      description: What type of privacy/security issue is this?
+      options:
+        - Privacy - Personal data exposure
+        - Privacy - Insufficient redaction
+        - Security - Data handling concern
+        - Security - Configuration vulnerability
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the privacy or security concern (use generic examples, not real personal data)
+      placeholder: Describe the issue here...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: How can this issue be reproduced? Use GENERIC/EXAMPLE data only!
+      placeholder: |
+        1. Configure settings with example data '...'
+        2. Process sample transaction '...'
+        3. Observe redaction failure
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen to protect privacy/security?
+      placeholder: Describe the expected secure behavior...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happens? (Redact any real personal information!)
+      placeholder: Describe what actually happens...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this privacy/security issue?
+      options:
+        - Low (Edge case, low risk)
+        - Medium (Common scenario, moderate risk)
+        - High (Frequent scenario, high risk)
+        - Critical (Widespread exposure, immediate risk)
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What data could be exposed? Who is affected?
+      placeholder: |
+        - Data at risk: [e.g., names, account numbers]
+        - Affected users: [e.g., all users, users with certain config]
+        - Attack vector: [e.g., exported files, logs]
+    validations:
+      required: true
+
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Current Workaround
+      description: Is there a current workaround to mitigate this issue?
+      placeholder: Describe any workarounds or temporary solutions...
+    validations:
+      required: false
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Fix
+      description: Do you have suggestions for how to fix this?
+      placeholder: Describe potential solutions...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have used ONLY generic/example data (no real personal information)
+          required: true
+        - label: I have searched existing issues to ensure this isn't a duplicate
+          required: true
+        - label: This is not a critical vulnerability requiring private disclosure
+          required: true

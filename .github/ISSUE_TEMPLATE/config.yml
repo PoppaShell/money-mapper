@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/PoppaShell/money-mapper/discussions
+    about: Ask questions or start a discussion about the project
+  - name: Security Vulnerability (Private)
+    url: https://github.com/PoppaShell/money-mapper/security/advisories/new
+    about: Report a critical security vulnerability privately
