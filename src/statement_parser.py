@@ -187,6 +187,15 @@ def parse_statement_text(text: str, config: Dict, debug: bool = False) -> List[D
     if debug and statement_period:
         print(f"Statement period: {statement_period}")
 
+    # Step 2.5: Extract account number
+    account_patterns = config.get('account_patterns', {})
+    account_number = extract_account_number(text, account_patterns, debug)
+    masked_account = None
+    if account_number:
+        masked_account = mask_account_number(account_number)
+        if debug:
+            print(f"Account number extracted and masked: {masked_account}")
+
     # Step 3: Extract transactions based on statement type
     transaction_patterns = config.get('transaction_sections', {})
     if statement_type not in transaction_patterns:
@@ -210,10 +219,14 @@ def parse_statement_text(text: str, config: Dict, debug: bool = False) -> List[D
         if debug:
             print(f"ERROR: Unknown statement type '{statement_type}'")
     
-    # Step 3: Add metadata (no redaction at parse time - that happens during enrichment)
+    # Step 4: Add metadata (no redaction at parse time - that happens during enrichment)
     for transaction in transactions:
         # Add account type to identify which statement this came from
         transaction['account_type'] = statement_type
+
+        # Add masked account number if available
+        if masked_account:
+            transaction['account_number'] = masked_account
 
         # Standardize date format
         if 'date' in transaction:
@@ -616,6 +629,32 @@ def extract_account_number(text: str, account_patterns: Dict, debug: bool = Fals
             continue
     
     return None
+
+
+def mask_account_number(account_number: str) -> str:
+    """
+    Mask account number to show only last 4 digits.
+
+    Args:
+        account_number: Full account number (may contain spaces or dashes)
+
+    Returns:
+        Masked account number (e.g., "****1234")
+
+    Examples:
+        "1234 5678 9012 3456" -> "****3456"
+        "1234-5678-9012" -> "****9012"
+        "123456789012" -> "****9012"
+    """
+    # Remove spaces, dashes, and other non-digit characters
+    digits_only = ''.join(c for c in account_number if c.isdigit())
+
+    # Show last 4 digits only
+    if len(digits_only) >= 4:
+        return '****' + digits_only[-4:]
+    else:
+        # If less than 4 digits, mask what we have
+        return '****' + digits_only
 
 
 def validate_transaction(transaction: Dict) -> bool:
