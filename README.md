@@ -167,34 +167,64 @@ money-mapper/
 ## Output Format
 
 ### Raw Transactions (`output/financial_transactions.json`)
+
+**Credit Card Transaction (with dual dates):**
 ```json
 {
-    "date": "2025-04-02",
-    "description": "WALMART.COM 555-555-5555 CA 1234 5678",
-    "amount": -27.03,
+    "date": "01/15",
+    "transaction_date": "01/15/2025",
+    "posting_date": "01/17/2025",
+    "description": "GROCERY STORE #1234",
+    "amount": -127.43,
     "account_type": "credit",
-    "source_file": "eStmt_2025-07-26.pdf",
-    "processing_date": "2025-04-03T12:30:00.000000"
+    "source_file": "statement_2025_01.pdf"
 }
 ```
+
+**Banking Transaction (checking/savings):**
+```json
+{
+    "date": "2025-01-20",
+    "description": "DIRECT DEPOSIT PAYROLL",
+    "amount": 2500.00,
+    "account_type": "checking",
+    "source_file": "checking_2025_01.pdf"
+}
+```
+
+**Field Descriptions:**
+- `date`: Original date format from statement (MM/DD or YYYY-MM-DD)
+- `transaction_date`: Full date when purchase was made (MM/DD/YYYY) - credit cards only
+- `posting_date`: Full date when transaction posted to account (MM/DD/YYYY) - credit cards with dual dates only
+- `description`: Transaction description with normalized whitespace
+- `amount`: Transaction amount (negative = expense, positive = income)
+- `account_type`: Type of account (credit, checking, savings)
+- `source_file`: Original PDF statement filename
 
 ### Enriched Transactions (`output/enriched_transactions.json`)
 ```json
 {
-    "date": "2025-04-02",
-    "description": "WALMART.COM [PHONE] CA 1234 5678",
-    "amount": -27.03,
+    "date": "01/15",
+    "transaction_date": "01/15/2025",
+    "posting_date": "01/17/2025",
+    "description": "GROCERY STORE #1234",
+    "amount": -127.43,
     "account_type": "credit",
-    "source_file": "eStmt_2025-07-26.pdf",
-    "processing_date": "2025-04-03T12:30:00.000000",
-    "merchant_name": "Walmart",
+    "source_file": "statement_2025_01.pdf",
+    "merchant_name": "Grocery Store",
     "category": "FOOD_AND_DRINK",
-    "subcategory": "FOOD_AND_DRINK_GROCERIES",
+    "subcategory": "GROCERIES",
     "confidence": 0.95,
-    "categorization_method": "public_mapping",
-    "enrichment_date": "2025-04-03T12:30:00.000000"
-  }
+    "categorization_method": "public_mapping"
+}
 ```
+
+**Additional Enrichment Fields:**
+- `merchant_name`: Cleaned merchant name extracted from description
+- `category`: Primary category from Plaid taxonomy
+- `subcategory`: Detailed subcategory
+- `confidence`: Match confidence score (0.0-1.0)
+- `categorization_method`: How category was determined (public_mapping, private_mapping, fuzzy_match, plaid_taxonomy)
 
 ## Supported Statement Types
 
@@ -207,9 +237,16 @@ money-mapper/
 - **Credit Cards**: Dual-date support (posting + transaction dates)
 
 ### Date Handling
-- Automatically determines correct years for partial dates
-- Handles cross-year statement periods
-- Standardizes to ISO format (YYYY-MM-DD)
+- **Transaction Dates**: Captures both transaction date and posting date from credit card statements
+- **Year Detection**: Automatically determines correct year for MM/DD dates using statement period
+- **Cross-Year Support**: Handles statements spanning year boundaries (e.g., Dec 2024 - Jan 2025)
+- **Format Preservation**: Keeps original `date` format while adding full `transaction_date` and `posting_date` fields
+- **Backwards Compatible**: Existing code continues to work with `date` field
+
+**Example - Cross-Year Statement:**
+- Statement Period: December 2024 - January 2025
+- Transaction on 12/25 → `transaction_date: "12/25/2024"`
+- Transaction on 01/05 → `transaction_date: "01/05/2025"`
 
 ## Category System
 
