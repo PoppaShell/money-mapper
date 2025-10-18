@@ -21,12 +21,15 @@ class ConfigManager:
     def __init__(self, config_dir: str = None):
         """
         Initialize configuration manager.
-        
+
         Args:
             config_dir: Configuration directory path. Auto-detected if None.
         """
         self.config_dir = self._find_config_directory(config_dir)
-        self.settings_file = os.path.join(self.config_dir, "settings.toml")
+        self.public_settings_file = os.path.join(self.config_dir, "public_settings.toml")
+        self.private_settings_file = os.path.join(self.config_dir, "private_settings.toml")
+        # Keep legacy settings file for migration purposes
+        self.legacy_settings_file = os.path.join(self.config_dir, "settings.toml")
         self.settings = self._load_settings()
     
     def _find_config_directory(self, config_dir: Optional[str]) -> str:
@@ -52,18 +55,85 @@ class ConfigManager:
         return os.path.abspath('config')
     
     def _load_settings(self) -> Dict:
-        """Load settings from settings.toml file."""
-        if not os.path.exists(self.settings_file):
-            # Return default settings if file doesn't exist
-            return self._get_default_settings()
-        
+        """
+        Load and merge settings from public_settings.toml and private_settings.toml.
+
+        Returns:
+            Merged settings dictionary with private settings taking precedence.
+        """
+        # Try loading public settings
+        public_settings = self._load_public_settings()
+
+        # Try loading private settings
+        private_settings = self._load_private_settings()
+
+        # Merge settings (private takes precedence)
+        merged_settings = self._merge_settings(public_settings, private_settings)
+
+        return merged_settings
+
+    def _load_public_settings(self) -> Dict:
+        """Load public settings from public_settings.toml or legacy settings.toml."""
+        # Try new public_settings.toml first
+        if os.path.exists(self.public_settings_file):
+            try:
+                with open(self.public_settings_file, 'rb') as f:
+                    return tomllib.load(f)
+            except Exception as e:
+                print(f"Warning: Could not load public_settings.toml: {e}")
+
+        # Fall back to legacy settings.toml for migration
+        if os.path.exists(self.legacy_settings_file):
+            try:
+                with open(self.legacy_settings_file, 'rb') as f:
+                    legacy_settings = tomllib.load(f)
+                    # Remove privacy section if it exists (will be in private_settings.toml)
+                    legacy_settings.pop('privacy', None)
+                    return legacy_settings
+            except Exception as e:
+                print(f"Warning: Could not load settings.toml: {e}")
+
+        # Return defaults if nothing found
+        print("Warning: No settings file found. Using defaults.")
+        return self._get_default_settings()
+
+    def _load_private_settings(self) -> Dict:
+        """Load private settings from private_settings.toml."""
+        if not os.path.exists(self.private_settings_file):
+            # Private settings don't exist yet (first run or not configured)
+            return {}
+
         try:
-            with open(self.settings_file, 'rb') as f:
+            with open(self.private_settings_file, 'rb') as f:
                 return tomllib.load(f)
         except Exception as e:
-            print(f"Warning: Could not load settings.toml: {e}")
-            print("Using default settings.")
-            return self._get_default_settings()
+            print(f"Warning: Could not load private_settings.toml: {e}")
+            return {}
+
+    def _merge_settings(self, public: Dict, private: Dict) -> Dict:
+        """
+        Merge public and private settings, with private taking precedence.
+
+        Args:
+            public: Public settings dictionary
+            private: Private settings dictionary
+
+        Returns:
+            Merged settings dictionary
+        """
+        import copy
+        merged = copy.deepcopy(public)
+
+        # Recursively merge dictionaries
+        def deep_merge(base, override):
+            for key, value in override.items():
+                if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+                    deep_merge(base[key], value)
+                else:
+                    base[key] = value
+
+        deep_merge(merged, private)
+        return merged
     
     def _get_default_settings(self) -> Dict:
         """Return default settings structure."""
@@ -76,9 +146,10 @@ class ConfigManager:
             'file_paths': {
                 'private_mappings': 'private_mappings.toml',
                 'public_mappings': 'public_mappings.toml',
+                'private_settings': 'private_settings.toml',
+                'public_settings': 'public_settings.toml',
                 'plaid_categories': 'plaid_categories.toml',
                 'statement_patterns': 'statement_patterns.toml',
-                'settings': 'settings.toml',
                 'new_mappings_template': 'new_mappings.toml'
             },
             'default_files': {
@@ -257,6 +328,28 @@ class ConfigManager:
 
         return processing.get(setting_key, defaults.get(setting_key, False))
 
+    def check_first_run(self) -> bool:
+        """
+        Check if this is the first run (private config files missing).
+
+        Returns:
+            True if private configs are missing, False otherwise
+        """
+        private_settings_exists = os.path.exists(self.private_settings_file)
+        private_mappings_path = os.path.join(self.config_dir, 'private_mappings.toml')
+        private_mappings_exists = os.path.exists(private_mappings_path)
+
+        return not (private_settings_exists and private_mappings_exists)
+
+    def get_privacy_settings(self) -> Dict:
+        """
+        Get privacy settings from merged configuration.
+
+        Returns:
+            Privacy settings dictionary
+        """
+        return self.settings.get('privacy', {})
+
 
 # Global instance for easy access
 _config_manager = None
@@ -317,11 +410,13 @@ def validate_config() -> Tuple[bool, List[str], List[str]]:
 if __name__ == "__main__":
     """Test the configuration manager."""
     print("=== Configuration Manager Test ===")
-    
+
     config = get_config_manager()
-    
+
     print(f"Config directory: {config.config_dir}")
-    print(f"Settings file: {config.settings_file}")
+    print(f"Public settings file: {config.public_settings_file}")
+    print(f"Private settings file: {config.private_settings_file}")
+    print(f"First run: {config.check_first_run()}")
     
     print("\nDirectories:")
     for key in ['statements', 'output', 'config']:

@@ -84,14 +84,46 @@ python src/cli.py enrich --debug --input output/financial_transactions.json
 
 ## Configuration
 
-### Initial Setup
+### First-Run Setup Wizard
 
-The project includes template configuration files. On first run:
+Money Mapper includes an interactive setup wizard that runs automatically on first use:
 
-1. **Review** `config/settings.toml` - Main configuration file
-2. **Customize** `config/private_mappings.toml` - Add your local merchants and personal mappings
-3. **Review** `config/public_mappings.toml` - Pre-configured with 580+ national chain mappings
-4. **Configure Privacy** - Add personal info to redact in `settings.toml`
+```bash
+# Setup wizard runs automatically on first launch
+python src/cli.py
+
+# Or run setup manually anytime
+python src/cli.py setup
+```
+
+The setup wizard will:
+1. **Create private configuration files** from templates (gitignored)
+2. **Configure privacy settings** interactively (names, employers, locations to redact)
+3. **Check for existing statements** and offer to parse them
+4. **Guide you through initial setup** with helpful prompts
+
+### Configuration Files
+
+Money Mapper uses a **public/private configuration split** for security:
+
+**Public Configuration** (versioned in git, shared across users):
+- `config/public_settings.toml` - Application settings (paths, thresholds, processing options)
+- `config/public_mappings.toml` - National chain merchant mappings (580+)
+- `config/plaid_categories.toml` - Plaid Personal Finance Category taxonomy
+- `config/statement_patterns.toml` - PDF parsing patterns
+
+**Private Configuration** (gitignored, user-specific):
+- `config/private_settings.toml` - Privacy settings (names, employers, locations to redact)
+- `config/private_mappings.toml` - Personal/local merchant mappings
+
+**Templates** (versioned in git, used to create private configs):
+- `config/templates/private_settings.toml` - Template for privacy settings
+- `config/templates/private_mappings.toml` - Template for personal mappings
+
+This structure ensures:
+- ✅ **Zero risk** of committing private data to git
+- ✅ **Easy setup** with automated configuration creation
+- ✅ **Clear separation** between public and private settings
 
 ### Adding Custom Merchants
 Edit `config/new_mappings.toml` and follow instructions in the file to add properly formatted and categorized mappings.
@@ -149,14 +181,19 @@ money-mapper/
 │   ├── transaction_enricher.py     # Categorization logic
 │   ├── utils.py                    # Shared utilities
 │   ├── config_manager.py           # Configuration management
+│   ├── setup_wizard.py             # First-run setup wizard
 │   └── mapping_processor.py        # Mapping validation & management
 ├── config/
-│   ├── settings.toml               # Main configuration (paths, privacy, etc.)
-│   ├── statement_patterns.toml     # PDF parsing patterns
-│   ├── plaid_categories.toml       # Official Plaid PFC taxonomy
-│   ├── private_mappings.toml       # Your personal/local merchant mappings
-│   ├── public_mappings.toml        # National chain merchant mappings (580+)
-│   └── new_mappings.toml           # Template for adding new mappings
+│   ├── templates/                  # Configuration templates (versioned)
+│   │   ├── private_settings.toml   # Template for privacy settings
+│   │   └── private_mappings.toml   # Template for personal mappings
+│   ├── public_settings.toml        # Public settings (versioned)
+│   ├── private_settings.toml       # Private settings (gitignored)
+│   ├── public_mappings.toml        # National chain mappings (versioned, 580+)
+│   ├── private_mappings.toml       # Personal/local mappings (gitignored)
+│   ├── plaid_categories.toml       # Official Plaid PFC taxonomy (versioned)
+│   ├── statement_patterns.toml     # PDF parsing patterns (versioned)
+│   └── new_mappings.toml           # Template for adding new mappings (versioned)
 ├── statements/                     # Place PDF statements here (gitignored)
 ├── output/                         # Generated JSON files (gitignored)
 ├── backups/                        # Automatic mapping backups (gitignored)
@@ -294,7 +331,7 @@ After:  ACME CORP DES:DIR DEP ID:[REF] INDN:[NAME] COID:[COMPANY]
 
 ### Fuzzy Keyword Redaction (User-Configured)
 
-Protect your personal information by adding keywords to `config/settings.toml`:
+Protect your personal information by configuring privacy settings in `config/private_settings.toml` (created during setup wizard):
 
 ```toml
 [privacy.keywords]
@@ -328,7 +365,7 @@ The system uses **fuzzy matching** (85% similarity threshold) to catch variation
 
 ### Configuration
 
-Enable/disable redaction in `config/settings.toml`:
+Enable/disable redaction in `config/private_settings.toml`:
 
 ```toml
 [privacy]
@@ -336,6 +373,8 @@ enable_redaction = true              # Enable/disable all redaction
 redaction_mode = "fuzzy"             # "exact" or "fuzzy" matching
 fuzzy_redaction_threshold = 0.85     # Similarity threshold (0.0-1.0)
 ```
+
+**Note:** Privacy settings are stored in `config/private_settings.toml` (gitignored) to prevent accidental commits of personal information.
 
 **Threshold Guidelines:**
 - **0.90+**: Stricter matching, fewer false positives
@@ -369,8 +408,9 @@ fuzzy_redaction_threshold = 0.85     # Similarity threshold (0.0-1.0)
 
 ### Configuration System
 
-All configuration is centralized in `config/settings.toml`:
+Money Mapper uses a split configuration system for security:
 
+**Public Settings** (`config/public_settings.toml`) - Shared application settings:
 ```toml
 [directories]
 statements = "statements"      # PDF input directory
@@ -379,6 +419,8 @@ output = "output"             # JSON output directory
 [file_paths]
 private_mappings = "private_mappings.toml"
 public_mappings = "public_mappings.toml"
+private_settings = "private_settings.toml"
+public_settings = "public_settings.toml"
 
 [fuzzy_matching]
 enrichment_threshold = 0.7    # Minimum similarity for fuzzy matching
@@ -386,12 +428,23 @@ enrichment_threshold = 0.7    # Minimum similarity for fuzzy matching
 [processing]
 validate_categories = true    # Validate against PFC taxonomy
 interactive_conflicts = true  # Prompt for conflict resolution
+```
 
+**Private Settings** (`config/private_settings.toml`) - Personal privacy settings (gitignored):
+```toml
 [privacy]
 enable_redaction = true
 redaction_mode = "fuzzy"
 fuzzy_redaction_threshold = 0.85
+
+[privacy.keywords]
+names = ["Your Name"]
+employers = ["Your Company"]
+locations = ["Your City"]
+custom = []
 ```
+
+The configuration manager automatically merges both files, with private settings taking precedence.
 
 ## Troubleshooting
 
