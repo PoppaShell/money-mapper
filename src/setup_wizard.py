@@ -10,6 +10,7 @@ import os
 import sys
 import shutil
 import tomllib
+import json
 
 # Add the src directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -70,10 +71,10 @@ def run_setup_wizard(config_dir: str = "config") -> bool:
     print("-" * 60)
     print()
 
-    check_and_offer_statement_processing(config_dir)
+    stats = check_and_offer_statement_processing(config_dir)
 
     # Step 4: Setup complete message
-    display_setup_complete(config_dir)
+    display_setup_complete(config_dir, stats)
 
     return True
 
@@ -243,20 +244,24 @@ def save_privacy_settings(config_dir: str, names: list, employers: list,
         return False
 
 
-def check_and_offer_statement_processing(config_dir: str = "config"):
+def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
     """
-    Check for existing statements and offer to process them.
+    Check for existing statements and offer to process them automatically.
 
     Args:
         config_dir: Configuration directory path
+
+    Returns:
+        Dictionary with processing statistics (num_transactions, categorization_rate)
     """
     config = get_config_manager(config_dir)
     statements_dir = config.get_directory_path('statements')
+    stats = {'num_transactions': 0, 'categorization_rate': None}
 
     if not os.path.exists(statements_dir):
         print(f"No statements directory found at: {statements_dir}")
         print("Create the directory and add PDF statements to get started.")
-        return
+        return stats
 
     # Check for PDF files
     pdf_files = [f for f in os.listdir(statements_dir) if f.lower().endswith('.pdf')]
@@ -264,41 +269,142 @@ def check_and_offer_statement_processing(config_dir: str = "config"):
     if not pdf_files:
         print(f"No PDF files found in: {statements_dir}")
         print("Add PDF statements to that directory to get started.")
-        return
+        return stats
 
     print(f"Found {len(pdf_files)} PDF file(s) in {statements_dir}")
     print()
 
     response = input("Would you like to parse these statements now? (y/n): ").strip().lower()
 
-    if response == 'y':
-        print("\nYou can parse statements using:")
-        print("  python src/cli.py parse")
-        print()
-        print("After parsing, use the Interactive Mapping Builder (Menu Option 6)")
-        print("to create mappings for uncategorized transactions.")
-    else:
-        print("\nYou can parse statements later using the CLI.")
+    if response != 'y':
+        print("\nYou can parse statements later using:")
+        print("  python src/cli.py parse --dir statements")
+        print("  python src/cli.py enrich")
+        print("  python src/cli.py analyze")
+        return stats
+
+    # Get file paths from config manager
+    parsed_file = config.get_default_file_path('parsed_transactions')
+    enriched_file = config.get_default_file_path('enriched_transactions')
+
+    try:
+        # Step 1: Parse statements
+        print("\n" + "-" * 60)
+        print("Parsing Statements")
+        print("-" * 60)
+        print(f"Parsing statements from '{statements_dir}' directory...")
+
+        from statement_parser import process_pdf_statements
+        from utils import save_transactions_to_json
+
+        transactions = process_pdf_statements(statements_dir, debug=False)
+
+        if not transactions:
+            print("\n✗ No transactions found in PDF files")
+            print("You can try again later with:")
+            print("  python src/cli.py parse --dir statements")
+            return stats
+
+        # Save transactions
+        save_transactions_to_json(transactions, parsed_file)
+
+        num_transactions = len(transactions)
+        stats['num_transactions'] = num_transactions
+
+        print(f"✓ Successfully parsed {num_transactions} transaction(s) from {len(pdf_files)} file(s)")
+        print(f"  Output: {parsed_file}")
+
+        # Step 2: Enrich transactions
+        print("\n" + "-" * 60)
+        print("Enriching Transactions")
+        print("-" * 60)
+        print("Enriching transactions...")
+
+        from transaction_enricher import process_transaction_enrichment
+        process_transaction_enrichment(parsed_file, enriched_file, debug=False)
+
+        print(f"✓ Successfully enriched {num_transactions} transaction(s)")
+        print(f"  Output: {enriched_file}")
+
+        # Step 3: Show analysis with Interactive Mapping Builder integration
+        print("\n" + "-" * 60)
+        print("Categorization Analysis")
+        print("-" * 60)
+
+        from transaction_enricher import analyze_categorization_accuracy
+
+        # Load enriched transactions to calculate categorization rate
+        with open(enriched_file, 'r') as f:
+            enriched_transactions = json.load(f)
+
+        categorized = sum(1 for t in enriched_transactions if t.get('category') != 'UNCATEGORIZED')
+        if num_transactions > 0:
+            stats['categorization_rate'] = (categorized / num_transactions) * 100
+
+        # Run analysis (this includes Interactive Mapping Builder integration)
+        analyze_categorization_accuracy(enriched_file, verbose=False, debug=False)
+
+        return stats
+
+    except KeyboardInterrupt:
+        print("\n\nSetup interrupted by user.")
+        print("\nYou can complete parsing later with:")
+        print("  python src/cli.py parse --dir statements")
+        return stats
+    except Exception as e:
+        print(f"\n✗ Error during processing: {e}")
+        print("\nYou can try again later with:")
+        print("  python src/cli.py parse --dir statements")
+        print("  python src/cli.py enrich")
+        return stats
 
 
-def display_setup_complete(config_dir: str = "config"):
+def display_setup_complete(config_dir: str = "config", stats: dict = None):
     """
-    Display setup complete message.
+    Display setup complete message with optional processing statistics.
 
     Args:
         config_dir: Configuration directory path
+        stats: Dictionary with processing statistics (num_transactions, categorization_rate)
     """
-    print("\n" + "=" * 60)
-    print("  Setup Complete!")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print(" " * 24 + "Setup Complete!")
+    print("=" * 70)
     print()
-    print("Your configuration has been saved to:")
+    print("Your Money Mapper installation is ready to use!")
+    print()
+
+    # Show summary
+    print("Summary:")
+    print("  ✓ Configuration files created")
+    print("  ✓ Privacy settings configured")
+
+    if stats and stats.get('num_transactions', 0) > 0:
+        print(f"  ✓ Statements parsed: {stats['num_transactions']} transaction(s)")
+        if stats.get('categorization_rate') is not None:
+            print(f"  ✓ Categorization rate: {stats['categorization_rate']:.1f}%")
+
+    print()
+    print("Configuration files:")
     print(f"  - {config_dir}/private_settings.toml (privacy settings)")
     print(f"  - {config_dir}/private_mappings.toml (personal merchant mappings)")
     print()
     print("These files are gitignored and won't be committed to version control.")
     print()
-    print("You can run Money Mapper normally now. Enjoy!")
+
+    # Show next steps
+    print("Next steps:")
+    if not stats or stats.get('num_transactions', 0) == 0:
+        print("  1. Add PDF statements to 'statements/' directory")
+        print("  2. Run: python src/cli.py")
+        print("  3. Choose option 3 for complete processing pipeline")
+    else:
+        print("  1. Add new statements to 'statements/' directory")
+        print("  2. Run: python src/cli.py")
+        print("  3. Choose option 3 to process new statements")
+
+    print()
+    print("=" * 70)
     print()
 
 
