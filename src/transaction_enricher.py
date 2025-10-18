@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple
 # Add the src directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from utils import load_config, load_transactions_from_json, save_transactions_to_json, sanitize_description
+from utils import load_config, load_transactions_from_json, save_transactions_to_json, sanitize_description, prompt_yes_no
 from config_manager import get_config_manager
 
 
@@ -540,8 +540,7 @@ def analyze_categorization_accuracy(file_path: str, verbose: bool = False, debug
         for i, (desc, count) in enumerate(top_transactions, 1):
             print(f"{i:2}. {desc} ({count} occurrence{'s' if count > 1 else ''})")
 
-        response = input("\nWould you like to create mappings for these transactions? (y/n): ").strip().lower()
-        if response == 'y':
+        if prompt_yes_no("\nWould you like to create mappings for these transactions?", default=True):
             # Load original descriptions from parsed transactions file (before privacy redaction)
             # The enriched file has redacted descriptions, but we need originals for the wizard
             config = get_config_manager()
@@ -580,8 +579,7 @@ def analyze_categorization_accuracy(file_path: str, verbose: bool = False, debug
             if created > 0:
                 # Ask if user wants to re-run enrichment with the newly processed mappings
                 print(f"\n--- Next Steps ---")
-                response = input("\nWould you like to re-run enrichment with the new mappings? (y/n): ").strip().lower()
-                if response == 'y':
+                if prompt_yes_no("\nWould you like to re-run enrichment with the new mappings?", default=True):
                     # Get the input file (parsed transactions)
                     config = get_config_manager()
                     parsed_file = config.get_default_file_path('parsed_transactions')

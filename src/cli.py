@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from statement_parser import process_pdf_statements
 from transaction_enricher import process_transaction_enrichment, analyze_categorization_accuracy
-from utils import load_transactions_from_json, ensure_directories_exist, validate_toml_files
+from utils import load_transactions_from_json, ensure_directories_exist, validate_toml_files, prompt_yes_no
 
 try:
     from config_manager import get_config_manager
@@ -212,24 +212,18 @@ def validate_config_paths(config_manager, command: str = None) -> bool:
     return True
 
 
-def confirm_action(message: str) -> bool:
+def confirm_action(message: str, default: bool = True) -> bool:
     """
-    Ask user for confirmation.
-    
+    Ask user for confirmation with default Yes.
+
     Args:
         message: Confirmation message
-        
+        default: Default value (True for yes, False for no)
+
     Returns:
         True if user confirms, False otherwise
     """
-    while True:
-        response = input(f"{message} (y/n): ").lower().strip()
-        if response in ['y', 'yes']:
-            return True
-        elif response in ['n', 'no']:
-            return False
-        else:
-            print("Please enter 'y' or 'n'")
+    return prompt_yes_no(message, default=default)
 
 
 def parse_statements_interactive():

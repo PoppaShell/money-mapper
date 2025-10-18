@@ -27,12 +27,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from config_manager import get_config_manager
+    from utils import prompt_yes_no
 except ImportError:
     # If running from different directory, try relative import
     try:
         from .config_manager import get_config_manager
+        from .utils import prompt_yes_no
     except ImportError:
-        print("Error: Could not import config_manager. Please ensure config_manager.py is in the same directory.")
+        print("Error: Could not import required modules. Please ensure config_manager.py and utils.py are in the same directory.")
         sys.exit(1)
 
 
@@ -1354,16 +1356,9 @@ class MappingProcessor:
                 traceback.print_exc()
             return False
 
-    def _confirm_action(self, message: str) -> bool:
-        """Ask user for confirmation."""
-        while True:
-            response = input(f"{message} (y/n): ").lower().strip()
-            if response in ['y', 'yes']:
-                return True
-            elif response in ['n', 'no']:
-                return False
-            else:
-                print("Please enter 'y' or 'n'")
+    def _confirm_action(self, message: str, default: bool = True) -> bool:
+        """Ask user for confirmation with default Yes."""
+        return prompt_yes_no(message, default=default)
     
     def _interactive_fix_validation_issues(self, issues: List[Dict]) -> int:
         """Interactively fix validation issues."""

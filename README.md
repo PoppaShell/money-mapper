@@ -201,7 +201,7 @@ Found 12 unique uncategorized merchants:
 3. ABC HARDWARE (4 occurrences)
 ...
 
-Would you like to create mappings for these transactions? (y/n): y
+Would you like to create mappings for these transactions? [y/n, Enter=yes]: y
 
 --- Interactive Mapping Builder ---
 
@@ -233,7 +233,7 @@ Select scope:
   2. private - Local business or personal (kept private)
 Enter number (or 'q' to go back): 2
 
-Create this mapping? (y/n/back): y
+Create this mapping? [y/yes/n/no/back, Enter=y]: y
 
 ✓ Added to new_mappings.toml:
   "local coffee shop" = { name = "Local Coffee Shop", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "private" }
@@ -250,7 +250,7 @@ Mapping Builder Summary:
 New mappings have been added to new_mappings.toml
 They need to be processed to take effect.
 
-Would you like to run the mapping processor now? (y/n): y
+Would you like to run the mapping processor now? [y/n, Enter=yes]: y
 
 [Mapping processor runs, validates, and integrates mappings...]
 
@@ -259,7 +259,7 @@ Your new mappings are now active.
 
 --- Next Steps ---
 
-Would you like to re-run enrichment with the new mappings? (y/n): y
+Would you like to re-run enrichment with the new mappings? [y/n, Enter=yes]: y
 
 [Re-running enrichment...]
 
@@ -279,10 +279,12 @@ Categorization improved by 16.7%!
 - **Immediate Feedback**: Re-run enrichment to see improvements right away
 
 **Tips:**
+- **Press Enter to accept defaults** - Most prompts default to "yes" for faster workflow
 - Use the Interactive Mapping Builder regularly to maintain high categorization rates
 - Process new uncategorized merchants as they appear each month
 - Skip merchants you're unsure about - you can always categorize them later
 - Use `back` if you select the wrong category to restart that transaction
+- **Input validation prevents accidents** - Invalid input re-prompts instead of skipping
 
 ### Mapping Processing & Management
 

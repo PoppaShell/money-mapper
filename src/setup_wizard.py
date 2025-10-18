@@ -16,6 +16,7 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config_manager import get_config_manager
+from utils import prompt_yes_no
 
 
 def check_first_run() -> bool:
@@ -141,9 +142,7 @@ def configure_privacy_settings(config_dir: str = "config") -> bool:
     print("transaction descriptions to protect your privacy when sharing or debugging.")
     print()
 
-    response = input("Would you like to configure privacy redaction now? (y/n): ").strip().lower()
-
-    if response != 'y':
+    if not prompt_yes_no("Would you like to configure privacy redaction now?", default=True):
         print("Skipping privacy configuration. You can configure it later by editing")
         print(f"{config_dir}/private_settings.toml")
         return False
@@ -159,8 +158,7 @@ def configure_privacy_settings(config_dir: str = "config") -> bool:
     custom = input("Custom keywords to redact (comma-separated): ").strip()
 
     print()
-    redaction_enabled = input("Enable redaction? (y/n, default: y): ").strip().lower()
-    redaction_enabled = redaction_enabled != 'n'  # Default to True
+    redaction_enabled = prompt_yes_no("Enable redaction?", default=True)
 
     redaction_mode = input("Redaction mode (exact/fuzzy, default: fuzzy): ").strip().lower()
     if redaction_mode not in ['exact', 'fuzzy']:
@@ -274,9 +272,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
     print(f"Found {len(pdf_files)} PDF file(s) in {statements_dir}")
     print()
 
-    response = input("Would you like to parse these statements now? (y/n): ").strip().lower()
-
-    if response != 'y':
+    if not prompt_yes_no("Would you like to parse these statements now?", default=True):
         print("\nYou can parse statements later using:")
         print("  python src/cli.py parse --dir statements")
         print("  python src/cli.py enrich")
