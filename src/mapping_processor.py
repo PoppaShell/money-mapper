@@ -195,9 +195,6 @@ class MappingProcessor:
         self.new_mappings_file = mapping_files['new_mappings_template']
         self.backup_dir = mapping_files['backup_directory']
         
-        # Settings file path
-        self.settings_file = self.config.get_file_path('settings')
-        
         # Ensure backup directory exists
         self._ensure_backup_directory()
         
@@ -647,12 +644,22 @@ class MappingProcessor:
         print(f"   Template includes documentation and examples for new mappings")
     
     def _create_settings_file(self) -> None:
-        """Report what settings file would be created."""
-        if os.path.exists(self.settings_file):
-            print(f"Settings file already exists: {self.settings_file}")
-            return
-        
-        print(f"Would create settings file: {self.settings_file}")
+        """Report on configuration files status."""
+        public_settings = self.config.get_file_path('public_settings')
+        private_settings = self.config.get_file_path('private_settings')
+
+        print("Configuration files:")
+        if os.path.exists(public_settings):
+            print(f"  ✓ Public settings exists: {public_settings}")
+        else:
+            print(f"  ✗ Public settings missing: {public_settings}")
+
+        if os.path.exists(private_settings):
+            print(f"  ✓ Private settings exists: {private_settings}")
+        else:
+            print(f"  ✗ Private settings missing: {private_settings}")
+            print(f"     Run setup wizard to create private configuration")
+
         print(f"   Settings include fuzzy matching thresholds and processing options")
     
     def _process_new_mappings(self) -> bool:

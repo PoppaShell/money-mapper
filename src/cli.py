@@ -74,7 +74,7 @@ def validate_directory(directory: str) -> bool:
     """
     if not os.path.exists(directory):
         print(f"Error: Directory '{directory}' does not exist")
-        print("Please check your settings.toml [directories] section or create the directory")
+        print("Please check your config/public_settings.toml [directories] section or create the directory")
         return False
     
     if not os.path.isdir(directory):
@@ -204,7 +204,8 @@ def validate_config_paths(config_manager, command: str = None) -> bool:
         print("Configuration validation failed:")
         for error in validation_errors:
             print(f"  - {error}")
-        print(f"\nPlease check your settings.toml file or create the missing directories/files.")
+        print(f"\nPlease check your config files (public_settings.toml, private_settings.toml)")
+        print(f"or create the missing directories/files.")
         print(f"Current config directory: {config_dir}")
         return False
     
@@ -238,11 +239,11 @@ def parse_statements_interactive():
     # Get defaults from config manager
     config = get_config_manager()
     
-    # Show current configuration from settings.toml
+    # Show current configuration
     default_dir = config.get_directory_path('statements')
     default_output = config.get_default_file_path('parsed_transactions')
-    
-    print(f"Current configuration from settings.toml:")
+
+    print(f"Current configuration:")
     print(f"  Input directory: {default_dir}")
     print(f"  Output file: {default_output}")
     
@@ -301,14 +302,14 @@ def enrich_transactions_interactive(input_file: Optional[str] = None):
     # Show current configuration and allow overrides
     if not input_file:
         default_input = config.get_default_file_path('parsed_transactions')
-        print(f"Current input file from settings.toml: {default_input}")
-        
+        print(f"Current input file: {default_input}")
+
         input_file = input(f"Enter input file name (Enter for default): ").strip()
         if not input_file:
             input_file = default_input
-    
+
     default_output = config.get_default_file_path('enriched_transactions')
-    print(f"Current output file from settings.toml: {default_output}")
+    print(f"Current output file: {default_output}")
     
     output_file = input(f"Enter output file name (Enter for default): ").strip()
     if not output_file:
