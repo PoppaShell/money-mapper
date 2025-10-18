@@ -169,12 +169,10 @@ def enrich_transaction(transaction: Dict, private_mappings: Dict, public_mapping
     enriched.update(category_result)
 
     # Apply privacy redaction AFTER categorization (so matching still works)
-    # Load privacy configuration from settings.toml
+    # Load privacy configuration from config manager
     try:
         config_manager = get_config_manager()
-        settings_file = config_manager.get_file_path('settings')
-        settings_config = load_config(settings_file)
-        privacy_config = settings_config.get('privacy', {})
+        privacy_config = config_manager.get_privacy_settings()
 
         # Redact the description in the enriched output
         enriched['description'] = sanitize_description(

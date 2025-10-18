@@ -465,7 +465,8 @@ The configuration manager automatically merges both files, with private settings
 **Configuration errors**:
 - Validate TOML syntax (use a TOML validator)
 - Run: `python src/cli.py validate`
-- Check file paths in `config/settings.toml`
+- Check file paths in `config/public_settings.toml`
+- Ensure `config/private_settings.toml` exists (run setup wizard if missing)
 - Ensure required fields are present in mappings
 
 **Mapping conflicts**:
