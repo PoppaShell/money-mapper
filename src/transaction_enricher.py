@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import json
+import fnmatch
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Dict, List, Optional, Tuple
@@ -277,64 +278,157 @@ def find_merchant_mapping(description: str, private_mappings: Dict, public_mappi
     }
 
 
+def wildcard_pattern_match(text: str, pattern: str) -> bool:
+    """
+    Match wildcard pattern against text with flexible matching.
+
+    For patterns like "joe*pizza*", this will match:
+    - "joes pizza" (exact)
+    - "joe's pizzeria" (fragments match)
+    - "joe pizza shop" (fragments match)
+
+    Args:
+        text: Text to search in (already lowercased)
+        pattern: Wildcard pattern (already lowercased)
+
+    Returns:
+        True if pattern matches text
+    """
+    # First try standard fnmatch
+    if fnmatch.fnmatch(text, pattern):
+        return True
+
+    # If pattern doesn't have wildcards at start/end, try with implied wildcards
+    if not pattern.startswith('*'):
+        if fnmatch.fnmatch(text, f'*{pattern}'):
+            return True
+    if not pattern.endswith('*'):
+        if fnmatch.fnmatch(text, f'{pattern}*'):
+            return True
+    if not (pattern.startswith('*') or pattern.endswith('*')):
+        if fnmatch.fnmatch(text, f'*{pattern}*'):
+            return True
+
+    # For patterns with *, split on * and check if fragments appear in order
+    if '*' in pattern:
+        fragments = [f for f in pattern.split('*') if f and f != '?']
+        if not fragments:
+            return False
+
+        # Check if all fragments appear in text in order
+        pos = 0
+        for fragment in fragments:
+            # Handle ? wildcards in fragments
+            if '?' in fragment:
+                # For now, just check if the non-? parts are present
+                fragment_parts = fragment.split('?')
+                for part in fragment_parts:
+                    if part:
+                        idx = text.find(part, pos)
+                        if idx == -1:
+                            return False
+                        pos = idx + len(part)
+            else:
+                idx = text.find(fragment, pos)
+                if idx == -1:
+                    return False
+                pos = idx + len(fragment)
+        return True
+
+    return False
+
+
 def apply_custom_mappings(description: str, merchant_name: str,
                          mappings: Dict, method_name: str, fuzzy_threshold: float = 0.7) -> Optional[Dict]:
     """
     Apply custom mappings (private or public) to find category.
-    
+
+    Supports wildcard patterns using * (zero or more chars) and ? (single char).
+    Exact matches take priority over wildcard matches.
+
     Args:
         description: Transaction description
         merchant_name: Extracted merchant name
         mappings: Custom mappings dictionary
         method_name: Name of method for tracking
         fuzzy_threshold: Threshold for fuzzy matching
-        
+
     Returns:
         Categorization result or None if no match
     """
     cleaned_desc = description.lower().strip()
     cleaned_merchant = merchant_name.lower().strip()
-    
-    # Flatten mappings to check all categories
+
+    # Separate patterns into exact and wildcard for priority matching
+    exact_patterns = []
+    wildcard_patterns = []
+
+    # Flatten mappings and categorize patterns
     for category_key, category_data in mappings.items():
         if not isinstance(category_data, dict):
             continue
-            
+
         for subcategory_key, subcategory_data in category_data.items():
             if not isinstance(subcategory_data, dict):
                 continue
-            
-            # Check each merchant pattern in this subcategory
+
+            # Collect patterns with their metadata
             for pattern, mapping_data in subcategory_data.items():
                 if not isinstance(mapping_data, dict):
                     continue
-                
+
                 pattern_lower = pattern.lower()
-                
-                # Method 1: Exact substring match in description
-                if pattern_lower in cleaned_desc:
-                    return create_mapping_result(mapping_data, method_name, 0.95)
-                
-                # Method 2: Partial word matching
-                pattern_words = pattern_lower.split()
-                desc_words = cleaned_desc.split()
-                matches = sum(1 for word in pattern_words if word in desc_words)
-                if len(pattern_words) > 0 and matches / len(pattern_words) >= 0.6:
-                    confidence = 0.85 + (matches / len(pattern_words)) * 0.1
-                    return create_mapping_result(mapping_data, method_name, confidence)
-                
-                # Method 3: Fuzzy matching on merchant name
-                if cleaned_merchant and len(pattern_lower) > 2:
-                    similarity = fuzzy_match_similarity(pattern_lower, cleaned_merchant)
-                    if similarity >= fuzzy_threshold:
-                        confidence = min(0.80, similarity)
-                        return create_mapping_result(mapping_data, 'fuzzy_match', confidence)
-                
-                # Method 4: Contains matching
-                if (cleaned_merchant and 
-                    (cleaned_merchant in pattern_lower or pattern_lower in cleaned_merchant)):
-                    return create_mapping_result(mapping_data, method_name, 0.75)
-    
+                pattern_info = (pattern_lower, mapping_data)
+
+                # Check if pattern contains wildcards
+                if '*' in pattern_lower or '?' in pattern_lower:
+                    wildcard_patterns.append(pattern_info)
+                else:
+                    exact_patterns.append(pattern_info)
+
+    # Priority 1: Try exact pattern matching first
+    for pattern_lower, mapping_data in exact_patterns:
+        # Method 1: Exact substring match in description
+        if pattern_lower in cleaned_desc:
+            return create_mapping_result(mapping_data, method_name, 0.95)
+
+        # Method 2: Partial word matching
+        pattern_words = pattern_lower.split()
+        desc_words = cleaned_desc.split()
+        matches = sum(1 for word in pattern_words if word in desc_words)
+        if len(pattern_words) > 0 and matches / len(pattern_words) >= 0.6:
+            confidence = 0.85 + (matches / len(pattern_words)) * 0.1
+            return create_mapping_result(mapping_data, method_name, confidence)
+
+        # Method 3: Fuzzy matching on merchant name
+        if cleaned_merchant and len(pattern_lower) > 2:
+            similarity = fuzzy_match_similarity(pattern_lower, cleaned_merchant)
+            if similarity >= fuzzy_threshold:
+                confidence = min(0.80, similarity)
+                return create_mapping_result(mapping_data, 'fuzzy_match', confidence)
+
+        # Method 4: Contains matching
+        if (cleaned_merchant and
+            (cleaned_merchant in pattern_lower or pattern_lower in cleaned_merchant)):
+            return create_mapping_result(mapping_data, method_name, 0.75)
+
+    # Priority 2: Try wildcard pattern matching
+    for pattern_lower, mapping_data in wildcard_patterns:
+        # Wildcard match on full description using flexible matching
+        if wildcard_pattern_match(cleaned_desc, pattern_lower):
+            return create_mapping_result(mapping_data, method_name, 0.90)
+
+        # Wildcard match on merchant name
+        if cleaned_merchant and wildcard_pattern_match(cleaned_merchant, pattern_lower):
+            return create_mapping_result(mapping_data, method_name, 0.89)
+
+        # Wildcard match on individual words in description (for shorter patterns)
+        if len(pattern_lower) < 15:  # Only for shorter patterns to avoid performance issues
+            desc_words = cleaned_desc.split()
+            for word in desc_words:
+                if wildcard_pattern_match(word, pattern_lower):
+                    return create_mapping_result(mapping_data, method_name, 0.85)
+
     return None
 
 
