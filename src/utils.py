@@ -781,3 +781,93 @@ def show_progress(current: int, total: int, bar_length: int = 50) -> None:
     filled_length = int(bar_length * current / total)
     bar = '█' * filled_length + '░' * (bar_length - filled_length)
     print(f'\r[{bar}] {percent}% ({current}/{total})', end='', flush=True)
+
+
+def prompt_yes_no(message: str, default: bool = True) -> bool:
+    """
+    Prompt user for yes/no input with default.
+
+    Args:
+        message: Prompt message (without yes/no indicator)
+        default: Default value (True for yes, False for no)
+
+    Returns:
+        True for yes, False for no
+
+    Example:
+        >>> prompt_yes_no("Continue?", default=True)
+        Continue? [y/n, Enter=yes]:
+        # User presses Enter -> returns True
+        # User types "n" -> returns False
+    """
+    if default:
+        suffix = " [y/n, Enter=yes]: "
+    else:
+        suffix = " [y/n, Enter=no]: "
+
+    while True:
+        response = input(message + suffix).strip().lower()
+
+        # Empty input = use default
+        if not response:
+            return default
+
+        # Explicit yes/no
+        if response in ['y', 'yes']:
+            return True
+        elif response in ['n', 'no']:
+            return False
+        else:
+            default_text = "yes" if default else "no"
+            print(f"Invalid input. Please enter 'y' for yes or 'n' for no (or press Enter for {default_text}).")
+
+
+def prompt_with_validation(message: str, valid_options: List[str], default: str = None,
+                          case_sensitive: bool = False) -> str:
+    """
+    Prompt user with input validation and re-prompting.
+
+    Args:
+        message: Prompt message
+        valid_options: List of valid input options
+        default: Default option if user presses Enter (optional)
+        case_sensitive: Whether to do case-sensitive matching
+
+    Returns:
+        User's validated input (or default)
+
+    Example:
+        >>> prompt_with_validation("Action?", ['y', 'n', 'back'], default='y')
+        Action? (Y/n/back): hello
+        Invalid input. Please enter one of: y, n, back
+        Action? (Y/n/back):
+        # Returns 'y' (default)
+    """
+    # Build prompt suffix
+    if default:
+        options_str = '/'.join(valid_options)
+        suffix = f" [{options_str}, Enter={default}]: "
+    else:
+        suffix = f" [{'/'.join(valid_options)}]: "
+
+    while True:
+        response = input(message + suffix).strip()
+
+        # Empty input = use default if provided
+        if not response and default:
+            return default
+
+        # Validate input
+        if not case_sensitive:
+            response_lower = response.lower()
+            valid_lower = [opt.lower() for opt in valid_options]
+            if response_lower in valid_lower:
+                # Return in original case from valid_options
+                idx = valid_lower.index(response_lower)
+                return valid_options[idx]
+        else:
+            if response in valid_options:
+                return response
+
+        # Invalid input - show helpful message and re-prompt
+        print(f"Invalid input. Please enter one of: {', '.join(valid_options)}")

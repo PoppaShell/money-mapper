@@ -21,7 +21,7 @@ from collections import Counter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config_manager import get_config_manager
-from utils import load_config
+from utils import load_config, prompt_yes_no, prompt_with_validation
 from mapping_processor import MappingProcessor
 
 
@@ -451,25 +451,24 @@ def run_mapping_wizard(
         print(f"{'='*70}")
 
         # Ask if user wants to create a mapping for this transaction
-        action = input(f"\nCreate mapping for this transaction? (y/n/s=skip remaining/q=quit): ").strip().lower()
+        action = prompt_with_validation(
+            "\nCreate mapping for this transaction?",
+            valid_options=['y', 'yes', 'n', 'no', 's', 'skip', 'q', 'quit'],
+            default='y'
+        )
 
-        if action == 'n' or action == 'skip':
+        if action in ['n', 'no']:
             print("Skipping this transaction...")
             skipped += 1
             continue
-        elif action == 's':
+        elif action in ['s', 'skip']:
             print("Skipping remaining transactions...")
             skipped += (len(top_transactions) - idx + 1)
             break
-        elif action == 'q':
+        elif action in ['q', 'quit']:
             print("Exiting mapping builder...")
             skipped += (len(top_transactions) - idx + 1)
             break
-        elif action != 'y':
-            # Default to 'n' if unrecognized input
-            print("Invalid input, skipping this transaction...")
-            skipped += 1
-            continue
 
         # Use original description for suggestions (not the redacted one)
         suggested_keyword = suggest_keyword(original_desc)
@@ -525,17 +524,18 @@ def run_mapping_wizard(
             print(f"  Subcategory: {detailed}")
             print(f"  Scope: {scope}")
 
-            confirm = input(f"\nCreate this mapping? (y/n/back): ").strip().lower()
+            confirm = prompt_with_validation(
+                "\nCreate this mapping?",
+                valid_options=['y', 'yes', 'n', 'no', 'back'],
+                default='y'
+            )
             if confirm == 'back':
                 print("Going back...")
                 continue  # Restart the while loop
-            elif confirm == 'n':
+            elif confirm in ['n', 'no']:
                 print("Cancelled. Skipping this transaction...")
                 skipped += 1
                 break
-            elif confirm != 'y':
-                print("Invalid input. Please enter y, n, or back.")
-                continue
 
             # Create the mapping
             success = create_mapping_entry(
@@ -548,8 +548,7 @@ def run_mapping_wizard(
                 mappings_created += 1
             else:
                 print("\n✗ Failed to create mapping")
-                retry = input("Retry? (y/n): ").strip().lower()
-                if retry == 'y':
+                if prompt_yes_no("Retry?", default=True):
                     continue  # Restart the while loop
                 else:
                     skipped += 1
@@ -570,9 +569,8 @@ def run_mapping_wizard(
         print(f"\nNew mappings have been added to new_mappings.toml")
         print("They need to be processed to take effect.")
         print()
-        response = input("Would you like to run the mapping processor now? (y/n): ").strip().lower()
 
-        if response == 'y':
+        if prompt_yes_no("Would you like to run the mapping processor now?", default=True):
             print("\n" + "="*70)
             print("Running Mapping Processor...")
             print("="*70)
