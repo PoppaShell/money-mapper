@@ -10,7 +10,7 @@ A Python tool for extracting and categorizing financial transactions from bank s
 - **Merchant Recognition**: Extracts clean merchant names from descriptions
 - **Smart Categorization**: Uses Plaid PFC taxonomy + custom mappings
 - **Interactive Mapping Builder**: Guided workflow to categorize uncategorized transactions with smart suggestions
-- **Configurable**: TOML-based configuration system via `settings.toml`
+- **Configurable**: Dual TOML configuration (`public_settings.toml` and `private_settings.toml`)
 - **Privacy-Aware**: Sanitizes account numbers and sensitive data automatically
 - **Progress Tracking**: Visual progress bars for long-running operations
 - **Mapping Management**: Interactive tools for managing merchant categorizations
