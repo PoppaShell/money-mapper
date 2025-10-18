@@ -32,9 +32,11 @@ strong_indicators = { "your regular savings" = 5 }
 weight = 1
 
 [account_patterns]
+# Credit card pattern should be checked first (most specific - 4 sets of digits)
+credit = '''Account #\s*(\d{4}\s+\d{4}\s+\d{4}\s+\d{4})'''
+# Banking patterns (3 sets of digits)
 checking = '''Account number:\s*(\d{4}\s+\d{4}\s+\d{4})'''
 savings = '''Account number:\s*(\d{4}\s+\d{4}\s+\d{4})'''
-credit = '''Account #\s*(\d{4}\s+\d{4}\s+\d{4}\s+\d{4})'''
 
 [transaction_sections.checking]
 # Match detail sections only (with "Date" header), not summary lines
