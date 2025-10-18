@@ -562,12 +562,38 @@ Examples:
                                    help='Configuration directory (default: from config)')
     add_mappings_parser.add_argument('--debug', action='store_true',
                                    help='Enable debug output for detailed processing information')
-    
+
+    # Setup command
+    setup_parser = subparsers.add_parser('setup', help='Run first-time setup wizard')
+    setup_parser.add_argument('--config',
+                             help='Configuration directory (default: config)')
+
     args = parser.parse_args()
-    
+
     # Print banner first
     print_banner()
-    
+
+    # Check for first-run and launch setup wizard if needed
+    try:
+        from setup_wizard import check_first_run, run_setup_wizard
+
+        if check_first_run():
+            print()
+            if not run_setup_wizard():
+                print("Setup was not completed. Please run setup wizard again.")
+                sys.exit(1)
+            print()
+            print("Setup complete! You can now use Money Mapper.")
+            print()
+            # If no command was specified, exit after setup
+            if not args.command:
+                sys.exit(0)
+    except ImportError:
+        print("Warning: Could not import setup wizard. Continuing without first-run setup.")
+    except Exception as e:
+        print(f"Warning: Setup wizard encountered an error: {e}")
+        print("Continuing with existing configuration.")
+
     # Only initialize config manager when needed, not at startup
     if args.command:
         # For specific commands, get config manager
@@ -779,31 +805,46 @@ Examples:
     elif args.command == 'add-mappings':
         # Use config defaults with flag overrides
         config_dir = args.config if args.config else config.config_dir
-        
+
         print(f"Add-mappings Configuration:")
         print(f"  Config directory: {config_dir}")
         if args.config:
             print(f"  (Directory overridden by --config flag)")
-        
+
         print(f"\nAnalyzing mappings in '{config_dir}'...")
-        
+
         try:
             processor = get_mapping_processor(config_dir=config_dir, debug_mode=args.debug)
             success = processor.run_full_processing()
-            
+
             if success:
                 print(f"Mapping analysis complete!")
             else:
                 print(f"Mapping analysis failed")
                 sys.exit(1)
-                
+
         except Exception as e:
             print(f"Error analyzing mappings: {e}")
             if args.debug:
                 import traceback
                 traceback.print_exc()
             sys.exit(1)
-    
+
+    elif args.command == 'setup':
+        # Run setup wizard manually
+        from setup_wizard import run_setup_wizard
+
+        config_dir = args.config if args.config else "config"
+        print(f"\nRunning setup wizard...")
+        print(f"  Config directory: {config_dir}")
+        print()
+
+        if run_setup_wizard(config_dir):
+            print("\nSetup wizard completed successfully!")
+        else:
+            print("\nSetup wizard was not completed.")
+            sys.exit(1)
+
     else:
         # Interactive mode
         print("\nWhat would you like to do?")

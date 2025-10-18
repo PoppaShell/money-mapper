@@ -1,0 +1,53 @@
+# Money Mapper Public Settings Configuration
+#
+# This file contains configurable settings for the Money Mapper transaction parser.
+# These are PUBLIC settings that are shared across all users and versioned in git.
+#
+# For PRIVATE settings (privacy redaction), see config/private_settings.toml
+
+[directories]
+# Directory paths (relative to project root)
+statements = "statements"        # Where PDF statements are stored
+output = "output"               # Where processed files are saved
+config = "config"               # Where configuration files are stored
+
+[file_paths]
+# Configuration file names (relative to config directory)
+private_mappings = "private_mappings.toml"    # Personal/local merchant mappings
+public_mappings = "public_mappings.toml"      # National chain merchant mappings
+private_settings = "private_settings.toml"    # Private settings (privacy config)
+public_settings = "public_settings.toml"      # This public settings file
+plaid_categories = "plaid_categories.toml"    # Plaid Personal Finance Categories
+statement_patterns = "statement_patterns.toml" # PDF parsing patterns
+
+# Input/output file names
+new_mappings_template = "new_mappings.toml"   # Template for new mappings
+
+[default_files]
+# Default output file names (relative to output directory)
+parsed_transactions = "financial_transactions.json"     # Raw parsed transactions
+enriched_transactions = "enriched_transactions.json"    # Categorized transactions
+
+[fuzzy_matching]
+# Thresholds for fuzzy string matching (0.0 to 1.0)
+enrichment_threshold = 0.7           # Minimum similarity for transaction enrichment
+mapping_processor_threshold = 0.8    # Minimum similarity for mapping processor
+
+[file_management]
+# File management settings
+backup_directory = "backups"         # Where backup files are stored
+
+[processing]
+# Processing behavior settings
+auto_alphabetize = true              # Automatically sort mappings alphabetically
+interactive_conflicts = true         # Enable interactive conflict resolution
+validate_categories = true           # Validate categories against PFC taxonomy
+
+[confidence_thresholds]
+# Analysis confidence thresholds (0.0 to 1.0)
+high_confidence = 0.8               # Threshold for high confidence categorization
+medium_confidence = 0.5             # Threshold for medium confidence categorization
+
+[display]
+# Display and output formatting settings
+max_examples_shown = 10             # Maximum number of examples to show in analysis

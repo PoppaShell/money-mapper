@@ -4,3 +4,10 @@ claude.md
 output/
 src/__pycache__/
 statements/
+
+# Private configuration files (user-specific, not versioned)
+config/private_settings.toml
+config/private_mappings.toml
+
+# Keep templates versioned
+!config/templates/
