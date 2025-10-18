@@ -42,7 +42,14 @@ python src/cli.py --help
 python src/cli.py
 ```
 
-You'll see a menu with options:
+**First Run:** The setup wizard will automatically launch and guide you through:
+- Creating private configuration files
+- Configuring privacy settings
+- Parsing existing statements (automatic if you opt in)
+- Enriching and categorizing transactions
+- Building initial merchant mappings
+
+**Subsequent Runs:** You'll see the main menu with options:
 ```
 1. Extract transactions from PDFs
 2. Categorize transactions
@@ -100,8 +107,30 @@ python src/cli.py setup
 The setup wizard will:
 1. **Create private configuration files** from templates (gitignored)
 2. **Configure privacy settings** interactively (names, employers, locations to redact)
-3. **Check for existing statements** and offer to parse them
-4. **Guide you through initial setup** with helpful prompts
+3. **Parse existing statements** automatically if you opt in
+4. **Enrich and categorize transactions** with immediate analysis results
+5. **Launch Interactive Mapping Builder** for any uncategorized transactions
+6. **Complete setup in one session** - ready to use immediately!
+
+**What the Setup Wizard Does:**
+
+**Privacy Configuration:**
+- Creates `config/private_settings.toml` from template
+- Creates `config/private_mappings.toml` from template
+- Interactively configures names, employers, and locations to redact
+
+**Automatic Processing (if you opt in):**
+- Parses all PDF statements in `statements/` directory
+- Enriches transactions with categories and merchant names
+- Shows categorization analysis results
+- Offers Interactive Mapping Builder for uncategorized transactions
+- Completes full setup in one seamless workflow
+
+**Manual Processing (if you decline):**
+- Shows instructions for running commands later:
+  - `python src/cli.py parse --dir statements`
+  - `python src/cli.py enrich`
+  - `python src/cli.py analyze`
 
 ### Configuration Files
 
