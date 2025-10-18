@@ -9,6 +9,7 @@ A Python tool for extracting and categorizing financial transactions from bank s
 - **Transaction Extraction**: Parses transaction data with proper date handling
 - **Merchant Recognition**: Extracts clean merchant names from descriptions
 - **Smart Categorization**: Uses Plaid PFC taxonomy + custom mappings
+- **Interactive Mapping Builder**: Guided workflow to categorize uncategorized transactions with smart suggestions
 - **Configurable**: TOML-based configuration system via `settings.toml`
 - **Privacy-Aware**: Sanitizes account numbers and sensitive data automatically
 - **Progress Tracking**: Visual progress bars for long-running operations
@@ -142,6 +143,118 @@ The [Plaid PFC (Personal Finance Categories)](https://plaid.com/docs/transaction
 "shell gas" = { name = "Shell", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
 ```
 
+### Interactive Mapping Builder
+
+The Interactive Mapping Builder provides a guided workflow to quickly categorize uncategorized transactions without manually editing files.
+
+**When does it activate?**
+- Automatically offered after running categorization analysis (CLI Option 2 or 4)
+- When uncategorized transactions are found
+
+**How it works:**
+
+1. **Frequency Analysis**: Identifies top 25 most common uncategorized merchants
+2. **Smart Suggestions**: Automatically suggests keywords and merchant names
+3. **Guided Selection**: Choose categories from numbered menus with descriptions
+4. **Batch Processing**: Process multiple merchants in one session with skip/back options
+5. **Automatic Processing**: Adds mappings to `new_mappings.toml` and processes them
+6. **Re-enrichment**: Offers to re-run categorization with new mappings
+7. **Progress Tracking**: Shows before/after improvement
+
+**Example workflow:**
+
+```
+--- Top Uncategorized Transactions ---
+Found 12 unique uncategorized merchants:
+
+1. LOCAL COFFEE SHOP DOWNTOWN (8 occurrences)
+2. REGIONAL GROCERY STORE (5 occurrences)
+3. ABC HARDWARE (4 occurrences)
+...
+
+Would you like to create mappings for these transactions? (y/n): y
+
+--- Interactive Mapping Builder ---
+
+[1/12] Transaction: "LOCAL COFFEE SHOP DOWNTOWN #123"
+Occurrences: 8 transaction(s)
+
+Suggested keyword(s): local coffee shop
+Suggested name: Local Coffee Shop
+
+Edit keyword(s) [Enter to accept, 'skip' to skip]:
+Edit name [Enter to accept, 'skip' to skip, 'back' to restart]:
+
+Select PRIMARY category:
+  1. BANK_FEES                    - Banking fees and charges
+  2. ENTERTAINMENT                - Recreation and entertainment
+  3. FOOD_AND_DRINK               - Food and beverage purchases
+  ...
+Enter number (or 'q' to cancel): 3
+
+Select FOOD_AND_DRINK subcategory:
+  1. COFFEE                       - Coffee shops and cafes
+  2. FAST_FOOD                    - Fast food and quick service
+  3. RESTAURANT                   - Dining at restaurants
+  ...
+Enter number (or 'q' to cancel): 1
+
+Select scope:
+  1. public  - National/regional chain (shareable)
+  2. private - Local business or personal (kept private)
+Enter number (or 'q' to go back): 2
+
+Create this mapping? (y/n/back): y
+
+✓ Added to new_mappings.toml:
+  "local coffee shop" = { name = "Local Coffee Shop", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "private" }
+
+[Continue with next transaction...]
+
+======================================================================
+Mapping Builder Summary:
+  Mappings created: 8
+  Transactions skipped: 4
+  Total processed: 12
+======================================================================
+
+New mappings have been added to new_mappings.toml
+They need to be processed to take effect.
+
+Would you like to run the mapping processor now? (y/n): y
+
+[Mapping processor runs, validates, and integrates mappings...]
+
+✓ Mapping processor completed successfully!
+Your new mappings are now active.
+
+--- Next Steps ---
+
+Would you like to re-run enrichment with the new mappings? (y/n): y
+
+[Re-running enrichment...]
+
+--- Updated Analysis ---
+Total Transactions: 150
+Successfully Categorized: 145 (96.7%)
+Uncategorized: 5 (3.3%)
+
+Categorization improved by 16.7%!
+```
+
+**Key features:**
+- **Smart Suggestions**: Automatically extracts clean keywords and names from transaction descriptions
+- **Category Descriptions**: Each category and subcategory shows a description to help with selection
+- **Flexible Navigation**: Skip transactions (`skip`), go back to fix mistakes (`back`), or quit anytime (`q`)
+- **Safe Processing**: Mappings are added to `new_mappings.toml` first, then validated and processed
+- **Immediate Feedback**: Re-run enrichment to see improvements right away
+
+**Tips:**
+- Use the Interactive Mapping Builder regularly to maintain high categorization rates
+- Process new uncategorized merchants as they appear each month
+- Skip merchants you're unsure about - you can always categorize them later
+- Use `back` if you select the wrong category to restart that transaction
+
 ### Mapping Processing & Management
 
 The `add-mappings` command provides a comprehensive workflow:
@@ -179,6 +292,7 @@ money-mapper/
 │   ├── cli.py                      # Command-line interface
 │   ├── statement_parser.py         # PDF parsing logic
 │   ├── transaction_enricher.py     # Categorization logic
+│   ├── interactive_mapper.py       # Interactive mapping builder
 │   ├── utils.py                    # Shared utilities
 │   ├── config_manager.py           # Configuration management
 │   ├── setup_wizard.py             # First-run setup wizard

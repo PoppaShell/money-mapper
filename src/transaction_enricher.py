@@ -9,6 +9,7 @@ using configurable mappings and the Plaid Personal Finance Category taxonomy.
 import os
 import re
 import sys
+import json
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Dict, List, Optional, Tuple
@@ -175,6 +176,8 @@ def enrich_transaction(transaction: Dict, private_mappings: Dict, public_mapping
         privacy_config = config_manager.get_privacy_settings()
 
         # Redact the description in the enriched output
+        # NOTE: We do NOT store original_description in enriched output to preserve privacy
+        # The interactive mapper loads original descriptions from parsed_transactions.json
         enriched['description'] = sanitize_description(
             description,
             sanitization_patterns=None,  # Legacy patterns not used here
@@ -183,7 +186,7 @@ def enrich_transaction(transaction: Dict, private_mappings: Dict, public_mapping
     except Exception as e:
         if debug:
             print(f"Warning: Could not apply privacy redaction: {e}")
-        # If redaction fails, keep original description
+        # If redaction fails, keep original description (no redaction applied)
 
     return enriched
 
@@ -519,6 +522,77 @@ def analyze_categorization_accuracy(file_path: str, verbose: bool = False, debug
             desc = transaction.get('description', '')[:40]
             merchant = transaction.get('merchant_name', 'N/A')
             print(f"  '{desc}' -> '{merchant}'")
+
+    # NEW: Offer Interactive Mapping Builder for uncategorized transactions
+    uncategorized_list = [t for t in transactions if t.get('category') == 'UNCATEGORIZED']
+
+    if uncategorized_list:
+        from interactive_mapper import run_mapping_wizard, get_transaction_frequency
+
+        print(f"\n--- Top Uncategorized Transactions ---")
+        print("Analyzing transaction frequency...")
+
+        # Get frequency and show top transactions
+        frequency = get_transaction_frequency(uncategorized_list)
+        top_transactions = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:25]
+
+        print(f"\nFound {len(top_transactions)} unique uncategorized merchant(s):\n")
+        for i, (desc, count) in enumerate(top_transactions, 1):
+            print(f"{i:2}. {desc} ({count} occurrence{'s' if count > 1 else ''})")
+
+        response = input("\nWould you like to create mappings for these transactions? (y/n): ").strip().lower()
+        if response == 'y':
+            # Load original descriptions from parsed transactions file (before privacy redaction)
+            # The enriched file has redacted descriptions, but we need originals for the wizard
+            config = get_config_manager()
+            parsed_file = config.get_default_file_path('parsed_transactions')
+
+            # Load parsed transactions and create a map of redacted -> original descriptions
+            try:
+                with open(parsed_file, 'r') as f:
+                    parsed_transactions = json.load(f)
+
+                # Build a lookup map: (amount, account_number, date) -> original_description
+                original_desc_map = {}
+                for pt in parsed_transactions:
+                    key = (pt.get('amount'), pt.get('account_number'), pt.get('date'))
+                    original_desc_map[key] = pt.get('description', '')
+
+                # Enrich uncategorized transactions with original descriptions
+                for ut in uncategorized_list:
+                    key = (ut.get('amount'), ut.get('account_number'), ut.get('date'))
+                    if key in original_desc_map:
+                        ut['original_description'] = original_desc_map[key]
+                    else:
+                        # Fallback to redacted description if we can't find original
+                        ut['original_description'] = ut.get('description', '')
+
+            except Exception as e:
+                if debug:
+                    print(f"Warning: Could not load original descriptions: {e}")
+                # If we can't load originals, use redacted descriptions
+                for ut in uncategorized_list:
+                    ut['original_description'] = ut.get('description', '')
+
+            # Run the mapping wizard (it will handle processing the mappings)
+            created = run_mapping_wizard(uncategorized_list, debug=debug)
+
+            if created > 0:
+                # Ask if user wants to re-run enrichment with the newly processed mappings
+                print(f"\n--- Next Steps ---")
+                response = input("\nWould you like to re-run enrichment with the new mappings? (y/n): ").strip().lower()
+                if response == 'y':
+                    # Get the input file (parsed transactions)
+                    config = get_config_manager()
+                    parsed_file = config.get_default_file_path('parsed_transactions')
+                    enriched_file = file_path
+
+                    print(f"\nRe-running enrichment...")
+                    process_transaction_enrichment(parsed_file, enriched_file, debug=debug)
+
+                    print(f"\n--- Updated Analysis ---")
+                    # Re-run the analysis (recursively call this function)
+                    analyze_categorization_accuracy(enriched_file, verbose=verbose, debug=debug)
 
 
 def generate_enrichment_report(transactions: List[Dict], output_file: str = None) -> str:
