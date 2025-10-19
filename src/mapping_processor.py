@@ -1599,6 +1599,243 @@ class MappingProcessor:
 
         return resolved_count
 
+    def _detect_similar_patterns(self) -> List[Dict]:
+        """
+        Detect similar mapping patterns that could be consolidated with wildcards.
+
+        Returns:
+            List of pattern groups that could benefit from wildcard consolidation
+        """
+        from difflib import SequenceMatcher
+
+        print("\nAnalyzing mappings for wildcard consolidation opportunities...")
+
+        similar_groups = []
+        files_to_check = {
+            'private_mappings.toml': os.path.join(self.config_dir, 'private_mappings.toml'),
+            'public_mappings.toml': os.path.join(self.config_dir, 'public_mappings.toml')
+        }
+
+        for file_name, file_path in files_to_check.items():
+            if not os.path.exists(file_path):
+                continue
+
+            try:
+                data = self._load_toml_file(file_path)
+
+                # Flatten patterns by category
+                for primary_key, primary_section in data.items():
+                    if not isinstance(primary_section, dict):
+                        continue
+
+                    for subcat_key, subcat_section in primary_section.items():
+                        if not isinstance(subcat_section, dict):
+                            continue
+
+                        patterns = list(subcat_section.keys())
+
+                        # Find groups of similar patterns
+                        checked = set()
+                        for i, pattern1 in enumerate(patterns):
+                            if pattern1 in checked or '*' in pattern1 or '?' in pattern1:
+                                continue  # Skip already-wildcarded patterns
+
+                            similar = [pattern1]
+                            mapping1 = subcat_section[pattern1]
+
+                            for pattern2 in patterns[i+1:]:
+                                if pattern2 in checked or '*' in pattern2 or '?' in pattern2:
+                                    continue
+
+                                mapping2 = subcat_section[pattern2]
+
+                                # Check if patterns are similar AND have same mapping
+                                if (mapping1.get('name') == mapping2.get('name') and
+                                    mapping1.get('category') == mapping2.get('category') and
+                                    mapping1.get('subcategory') == mapping2.get('subcategory')):
+
+                                    # Calculate similarity
+                                    similarity = SequenceMatcher(None, pattern1.lower(), pattern2.lower()).ratio()
+
+                                    if similarity >= 0.6:  # 60% similar
+                                        similar.append(pattern2)
+                                        checked.add(pattern2)
+
+                            if len(similar) >= 2:  # At least 2 similar patterns
+                                checked.add(pattern1)
+                                similar_groups.append({
+                                    'file': file_name,
+                                    'category': primary_key,
+                                    'subcategory': subcat_key,
+                                    'patterns': similar,
+                                    'mapping': mapping1,
+                                    'suggested_wildcard': self._suggest_wildcard_pattern(similar)
+                                })
+
+            except Exception as e:
+                print(f"Error analyzing {file_name}: {e}")
+                if self.debug_mode:
+                    import traceback
+                    traceback.print_exc()
+
+        return similar_groups
+
+    def _suggest_wildcard_pattern(self, patterns: List[str]) -> str:
+        """
+        Suggest a wildcard pattern that matches all given patterns.
+
+        Args:
+            patterns: List of similar patterns
+
+        Returns:
+            Suggested wildcard pattern
+        """
+        if not patterns:
+            return ""
+
+        if len(patterns) == 1:
+            return patterns[0]
+
+        # Find common prefix
+        common_prefix = patterns[0].lower()
+        for pattern in patterns[1:]:
+            pattern_lower = pattern.lower()
+            i = 0
+            while i < len(common_prefix) and i < len(pattern_lower) and common_prefix[i] == pattern_lower[i]:
+                i += 1
+            common_prefix = common_prefix[:i]
+
+        # Find common suffix
+        common_suffix = patterns[0].lower()
+        for pattern in patterns[1:]:
+            pattern_lower = pattern.lower()
+            i = 1
+            while (i <= len(common_suffix) and i <= len(pattern_lower) and
+                   common_suffix[-i] == pattern_lower[-i]):
+                i += 1
+            common_suffix = common_suffix[-(i-1):] if i > 1 else ""
+
+        # Remove overlapping prefix/suffix
+        if common_prefix and common_suffix:
+            # Check if they overlap
+            overlap_len = min(len(common_prefix), len(common_suffix))
+            for i in range(overlap_len, 0, -1):
+                if common_prefix[-i:] == common_suffix[:i]:
+                    common_suffix = common_suffix[i:]
+                    break
+
+        # Build wildcard pattern
+        if common_prefix and common_suffix:
+            return f"{common_prefix}*{common_suffix}"
+        elif common_prefix:
+            return f"{common_prefix}*"
+        elif common_suffix:
+            return f"*{common_suffix}"
+        else:
+            # Find most common word
+            word_counts = {}
+            for pattern in patterns:
+                words = pattern.lower().split()
+                for word in words:
+                    word_counts[word] = word_counts.get(word, 0) + 1
+
+            if word_counts:
+                most_common = max(word_counts.items(), key=lambda x: x[1])[0]
+                return f"*{most_common}*"
+
+            return patterns[0]  # Fallback to first pattern
+
+    def run_wildcard_consolidation(self) -> bool:
+        """
+        Analyze mappings and suggest wildcard consolidations interactively.
+
+        Returns:
+            True if consolidations were made successfully
+        """
+        print("\n" + "="*70)
+        print("WILDCARD MAPPING CONSOLIDATION ANALYZER")
+        print("="*70)
+        print("\nThis tool identifies similar mapping patterns that could be")
+        print("consolidated into fewer wildcard patterns for easier maintenance.")
+        print()
+
+        # Detect similar patterns
+        similar_groups = self._detect_similar_patterns()
+
+        if not similar_groups:
+            print("✓ No consolidation opportunities found.")
+            print("  All mappings are already optimized!")
+            return True
+
+        print(f"\n�� Found {len(similar_groups)} consolidation opportunit{'y' if len(similar_groups) == 1 else 'ies'}!\n")
+
+        consolidated_count = 0
+        skipped_count = 0
+
+        for i, group in enumerate(similar_groups, 1):
+            print("="*70)
+            print(f"Opportunity {i}/{len(similar_groups)}")
+            print("="*70)
+            print(f"File: {group['file']}")
+            print(f"Category: {group['category']}.{group['subcategory']}")
+            print(f"Merchant: {group['mapping'].get('name', 'Unknown')}")
+            print()
+            print(f"Current patterns ({len(group['patterns'])}):")
+            for pattern in group['patterns']:
+                print(f"  - \"{pattern}\"")
+            print()
+            print(f"Suggested wildcard pattern:")
+            print(f"  → \"{group['suggested_wildcard']}\"")
+            print()
+            print(f"This would replace {len(group['patterns'])} patterns with 1 wildcard pattern.")
+            print()
+
+            # Ask user if they want to consolidate
+            from utils import prompt_with_validation
+            choice = prompt_with_validation(
+                "Consolidate these patterns?",
+                valid_options=['y', 'yes', 'n', 'no', 's', 'skip', 'q', 'quit'],
+                default='y'
+            )
+
+            if choice in ['q', 'quit']:
+                print("\nExiting consolidation...")
+                break
+            elif choice in ['s', 'skip']:
+                print("Skipping remaining opportunities...")
+                skipped_count += len(similar_groups) - i + 1
+                break
+            elif choice in ['n', 'no']:
+                print("Skipped this consolidation.")
+                skipped_count += 1
+                continue
+
+            # User chose yes - perform consolidation
+            print("\n→ Consolidating patterns...")
+
+            # This would implement the actual consolidation
+            # For now, just print what would happen
+            print(f"  ✓ Would add wildcard pattern: \"{group['suggested_wildcard']}\"")
+            print(f"  ✓ Would remove {len(group['patterns'])} exact patterns")
+            consolidated_count += 1
+
+            # TODO: Implement actual file modification
+            print("  ⚠  NOTE: Actual file modification not yet implemented")
+            print()
+
+        print("\n" + "="*70)
+        print("CONSOLIDATION SUMMARY")
+        print("="*70)
+        print(f"Consolidated: {consolidated_count}")
+        print(f"Skipped: {skipped_count}")
+        print(f"Total analyzed: {len(similar_groups)}")
+
+        if consolidated_count > 0:
+            print("\n⚠  Remember to test enrichment after consolidation!")
+            print("   Run: python src/cli.py enrich")
+
+        return True
+
 
 def main():
     """Main function for standalone execution."""
