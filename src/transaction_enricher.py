@@ -516,14 +516,15 @@ def fuzzy_match_similarity(text1: str, text2: str) -> float:
     return SequenceMatcher(None, text1, text2).ratio()
 
 
-def analyze_categorization_accuracy(file_path: str, verbose: bool = False, debug: bool = False) -> None:
+def analyze_categorization_accuracy(file_path: str, verbose: bool = False, debug: bool = False, skip_interactive: bool = False) -> None:
     """
     Analyze the accuracy and completeness of transaction categorization.
-    
+
     Args:
         file_path: Path to enriched transactions JSON file
         verbose: Enable verbose output with examples
         debug: Enable debug output with detailed analysis
+        skip_interactive: Skip interactive mapping prompts (for use in pipelines)
     """
     # Load transactions
     transactions = load_transactions_from_json(file_path)
@@ -563,35 +564,17 @@ def analyze_categorization_accuracy(file_path: str, verbose: bool = False, debug
         percentage = (count / len(transactions)) * 100
         print(f"  {method}: {count} ({percentage:.1f}%)")
     
-    # Category distribution
+    # Category distribution (only show if verbose or debug)
     if verbose or debug:
         categories = {}
         for transaction in transactions:
             category = transaction.get('category', 'UNCATEGORIZED')
             categories[category] = categories.get(category, 0) + 1
-        
+
         print(f"\nTop Categories:")
         for category, count in sorted(categories.items(), key=lambda x: x[1], reverse=True)[:10]:
             percentage = (count / len(transactions)) * 100
             print(f"  {category}: {count} ({percentage:.1f}%)")
-    
-    # Show examples if verbose
-    if verbose:
-        print(f"\nUncategorized Examples:")
-        uncategorized_examples = [t for t in transactions if t.get('category') == 'UNCATEGORIZED'][:5]
-        for transaction in uncategorized_examples:
-            desc = transaction.get('description', '')[:50]
-            amount = transaction.get('amount', 0)
-            print(f"  ${amount:8.2f} - {desc}")
-        
-        print(f"\nHigh Confidence Examples:")
-        high_conf_examples = [t for t in transactions if t.get('confidence', 0) >= 0.9][:5]
-        for transaction in high_conf_examples:
-            desc = transaction.get('description', '')[:30]
-            category = transaction.get('category', '')
-            confidence = transaction.get('confidence', 0)
-            method = transaction.get('categorization_method', '')
-            print(f"  {category} ({confidence:.2f}, {method}) - {desc}")
     
     # Debug information
     if debug:
@@ -617,74 +600,84 @@ def analyze_categorization_accuracy(file_path: str, verbose: bool = False, debug
             merchant = transaction.get('merchant_name', 'N/A')
             print(f"  '{desc}' -> '{merchant}'")
 
-    # NEW: Offer Interactive Mapping Builder for uncategorized transactions
-    uncategorized_list = [t for t in transactions if t.get('category') == 'UNCATEGORIZED']
+    # Offer Interactive Mapping Builder for uncategorized transactions (unless skipped)
+    if not skip_interactive:
+        uncategorized_list = [t for t in transactions if t.get('category') == 'UNCATEGORIZED']
 
-    if uncategorized_list:
-        from interactive_mapper import run_mapping_wizard, get_transaction_frequency
+        if uncategorized_list:
+            from interactive_mapper import run_mapping_wizard, get_transaction_frequency
 
-        print(f"\n--- Top Uncategorized Transactions ---")
-        print("Analyzing transaction frequency...")
+            print(f"\n--- Top Uncategorized Transactions ---")
+            print("Analyzing transaction frequency...")
 
-        # Get frequency and show top transactions
-        frequency = get_transaction_frequency(uncategorized_list)
-        top_transactions = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:25]
+            # Get frequency and show top transactions
+            frequency = get_transaction_frequency(uncategorized_list)
+            top_transactions = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:25]
 
-        print(f"\nFound {len(top_transactions)} unique uncategorized merchant(s):\n")
-        for i, (desc, count) in enumerate(top_transactions, 1):
-            print(f"{i:2}. {desc} ({count} occurrence{'s' if count > 1 else ''})")
+            print(f"\nFound {len(top_transactions)} unique uncategorized merchant(s):\n")
+            for i, (desc, count) in enumerate(top_transactions, 1):
+                print(f"{i:2}. {desc} ({count} occurrence{'s' if count > 1 else ''})")
 
-        if prompt_yes_no("\nWould you like to create mappings for these transactions?", default=True):
-            # Load original descriptions from parsed transactions file (before privacy redaction)
-            # The enriched file has redacted descriptions, but we need originals for the wizard
-            config = get_config_manager()
-            parsed_file = config.get_default_file_path('parsed_transactions')
+            if prompt_yes_no("\nWould you like to create mappings for these transactions?", default=True):
+                # Load original descriptions from parsed transactions file (before privacy redaction)
+                # The enriched file has redacted descriptions, but we need originals for the wizard
+                config = get_config_manager()
+                parsed_file = config.get_default_file_path('parsed_transactions')
 
-            # Load parsed transactions and create a map of redacted -> original descriptions
-            try:
-                with open(parsed_file, 'r') as f:
-                    parsed_transactions = json.load(f)
+                # Load parsed transactions and create a map of redacted -> original descriptions
+                try:
+                    with open(parsed_file, 'r') as f:
+                        parsed_transactions = json.load(f)
 
-                # Build a lookup map: (amount, account_number, date) -> original_description
-                original_desc_map = {}
-                for pt in parsed_transactions:
-                    key = (pt.get('amount'), pt.get('account_number'), pt.get('date'))
-                    original_desc_map[key] = pt.get('description', '')
+                    # Build a lookup map: (amount, account_number, date) -> original_description
+                    original_desc_map = {}
+                    for pt in parsed_transactions:
+                        key = (pt.get('amount'), pt.get('account_number'), pt.get('date'))
+                        original_desc_map[key] = pt.get('description', '')
 
-                # Enrich uncategorized transactions with original descriptions
-                for ut in uncategorized_list:
-                    key = (ut.get('amount'), ut.get('account_number'), ut.get('date'))
-                    if key in original_desc_map:
-                        ut['original_description'] = original_desc_map[key]
-                    else:
-                        # Fallback to redacted description if we can't find original
+                    # Enrich uncategorized transactions with original descriptions
+                    for ut in uncategorized_list:
+                        key = (ut.get('amount'), ut.get('account_number'), ut.get('date'))
+                        if key in original_desc_map:
+                            ut['original_description'] = original_desc_map[key]
+                        else:
+                            # Fallback to redacted description if we can't find original
+                            ut['original_description'] = ut.get('description', '')
+
+                except Exception as e:
+                    if debug:
+                        print(f"Warning: Could not load original descriptions: {e}")
+                    # If we can't load originals, use redacted descriptions
+                    for ut in uncategorized_list:
                         ut['original_description'] = ut.get('description', '')
 
-            except Exception as e:
-                if debug:
-                    print(f"Warning: Could not load original descriptions: {e}")
-                # If we can't load originals, use redacted descriptions
-                for ut in uncategorized_list:
-                    ut['original_description'] = ut.get('description', '')
+                # Run the mapping wizard (it will handle processing the mappings)
+                created = run_mapping_wizard(uncategorized_list, debug=debug)
 
-            # Run the mapping wizard (it will handle processing the mappings)
-            created = run_mapping_wizard(uncategorized_list, debug=debug)
+                if created > 0:
+                    # Ask if user wants to re-run enrichment with the newly processed mappings
+                    print(f"\n--- Next Steps ---")
+                    if prompt_yes_no("\nWould you like to re-run enrichment with the new mappings?", default=True):
+                        # Get the input file (parsed transactions)
+                        config = get_config_manager()
+                        parsed_file = config.get_default_file_path('parsed_transactions')
+                        enriched_file = file_path
 
-            if created > 0:
-                # Ask if user wants to re-run enrichment with the newly processed mappings
-                print(f"\n--- Next Steps ---")
-                if prompt_yes_no("\nWould you like to re-run enrichment with the new mappings?", default=True):
-                    # Get the input file (parsed transactions)
-                    config = get_config_manager()
-                    parsed_file = config.get_default_file_path('parsed_transactions')
-                    enriched_file = file_path
+                        print(f"\nRe-running enrichment...")
+                        process_transaction_enrichment(parsed_file, enriched_file, debug=debug)
 
-                    print(f"\nRe-running enrichment...")
-                    process_transaction_enrichment(parsed_file, enriched_file, debug=debug)
+                        print(f"\n--- Updated Results ---")
+                        # Show updated summary (no recursive call - just reload and show stats)
+                        updated_transactions = load_transactions_from_json(enriched_file)
+                        if updated_transactions:
+                            categorized_after = sum(1 for t in updated_transactions if t.get('category') and t.get('category') != 'UNCATEGORIZED')
+                            uncategorized_after = len(updated_transactions) - categorized_after
+                            categorization_rate_after = (categorized_after / len(updated_transactions)) * 100
 
-                    print(f"\n--- Updated Analysis ---")
-                    # Re-run the analysis (recursively call this function)
-                    analyze_categorization_accuracy(enriched_file, verbose=verbose, debug=debug)
+                            print(f"Total transactions: {len(updated_transactions)}")
+                            print(f"Categorized: {categorized_after} ({categorization_rate_after:.1f}%)")
+                            print(f"Uncategorized: {uncategorized_after} ({100 - categorization_rate_after:.1f}%)")
+                            print(f"\nImprovement: {categorized_after - categorized} additional transaction(s) categorized")
 
 
 def generate_enrichment_report(transactions: List[Dict], output_file: str = None) -> str:

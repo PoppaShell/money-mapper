@@ -172,6 +172,120 @@ The [Plaid PFC (Personal Finance Categories)](https://plaid.com/docs/transaction
 "shell gas" = { name = "Shell", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
 ```
 
+**Wildcard Pattern Support:**
+
+Money Mapper supports wildcard patterns to match multiple variations of merchant names efficiently:
+
+- `*` - Matches any sequence of characters (including none)
+- `?` - Matches exactly one character
+
+**Wildcard Examples:**
+```toml
+# Match all Starbucks locations
+"starbucks*" = { name = "Starbucks", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
+# Matches: "starbucks", "starbucks #1234", "starbucks downtown", "starbucks 5th ave"
+
+# Match variations with minor differences
+"joe?s*pizza" = { name = "Joe's Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "private" }
+# Matches: "joe's pizza", "joes pizza", "joe's pizza downtown"
+
+# Match specific prefix and suffix
+"shell*gas" = { name = "Shell", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
+# Matches: "shell gas", "shell 123 gas", "shell downtown gas station"
+```
+
+**Pattern Matching Priority:**
+1. Exact matches are checked first (highest priority)
+2. Wildcard patterns are checked second
+3. Fuzzy matching is used as fallback (if enabled)
+
+**Best Practices:**
+- Use wildcards to consolidate similar patterns (e.g., `"starbucks*"` instead of 20+ exact variations)
+- Be specific enough to avoid false matches (e.g., `"shell*gas"` not just `"shell*"`)
+- Test patterns with the analyzer to verify they match expected transactions
+- Use the Wildcard Consolidation Analyzer (CLI Option 6) to find consolidation opportunities automatically
+
+### Wildcard Consolidation Analyzer
+
+The Wildcard Consolidation Analyzer automatically finds opportunities to replace multiple exact-match patterns with efficient wildcard patterns.
+
+**Access via:**
+- CLI Option 6: "Manage merchant mappings" → Answer "yes" to wildcard consolidation analysis
+- Runs automatically after adding new mappings through the Interactive Mapper
+
+**How it works:**
+
+1. **Pattern Analysis**: Scans all existing mappings for similar patterns (60% similarity threshold)
+2. **Smart Suggestions**: Automatically generates wildcard patterns that cover all variations
+3. **Interactive Review**: Shows each consolidation opportunity with before/after comparison
+4. **Flexible Editing**: Accept suggestion, edit pattern manually, or skip
+5. **Automatic Processing**: Processes wildcards and detects duplicates immediately
+6. **Duplicate Cleanup**: Offers to remove exact patterns now covered by wildcards
+
+**Example Output:**
+```
+=== WILDCARD CONSOLIDATION OPPORTUNITIES ===
+Found 49 consolidation opportunities (potential reduction: 53.7%)
+
+Opportunity 1/49:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+File: private_mappings.toml
+Category: FOOD_AND_DRINK.FOOD_AND_DRINK_COFFEE
+Merchant: Starbucks (public)
+
+Current patterns (5):
+  1. "starbucks"
+  2. "starbucks #1234"
+  3. "starbucks 5th ave"
+  4. "starbucks downtown"
+  5. "starbucks pike place"
+
+Suggested wildcard: "starbucks*"
+This will replace 5 patterns with 1 wildcard pattern (80% reduction)
+
+Action for this pattern? [y/yes/e/edit/n/no/s/skip/q/quit, Enter=yes]: y
+
+→ Adding wildcard to new_mappings.toml...
+  ✓ Added wildcard pattern: "starbucks*"
+  ✓ Will replace 5 pattern(s) when processed
+
+[Process continues for all opportunities...]
+
+======================================================================
+CONSOLIDATION SUMMARY
+======================================================================
+Wildcards added: 42
+Skipped: 7
+Total analyzed: 49
+
+✓ Added 42 wildcard pattern(s) to new_mappings.toml
+
+======================================================================
+PROCESSING WILDCARD MAPPINGS
+======================================================================
+=== PROCESSING NEW MAPPINGS ===
+SUCCESS: Added 42 mappings to private_mappings.toml
+✓ Processed 42 wildcard pattern(s)
+
+RE-CHECKING FOR DUPLICATES:
+=== DETECTING DUPLICATE MAPPINGS ===
+Found 127 duplicate pattern(s):
+  - 127 pattern(s) covered by wildcard(s)
+
+Resolve duplicates interactively? [y/n, Enter=yes]: y
+
+[Interactive duplicate resolution - removes exact patterns now covered by wildcards]
+
+✓ Resolved 127 duplicate patterns
+✓ Mapping management complete!
+```
+
+**Benefits:**
+- Reduces mapping file size by 50%+ in typical cases
+- Automatically matches new location variations without manual updates
+- Simplifies maintenance - one wildcard instead of dozens of exact patterns
+- Improves categorization coverage for merchant chains with multiple locations
+
 ### Interactive Mapping Builder
 
 The Interactive Mapping Builder provides a guided workflow to quickly categorize uncategorized transactions without manually editing files.
