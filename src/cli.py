@@ -338,27 +338,33 @@ def enrich_transactions_interactive(input_file: Optional[str] = None):
         print(f"\nError enriching transactions: {e}")
 
 
-def analyze_interactive(file_path: Optional[str] = None):
-    """Interactive mode for analyzing categorization accuracy."""
-    print("\n--- Categorization Analysis ---")
-    
+def analyze_interactive(file_path: Optional[str] = None, allow_mapping: bool = True):
+    """Interactive mode for analyzing categorization accuracy with verbose details.
+
+    Args:
+        file_path: Path to enriched transactions file
+        allow_mapping: If True, offers to create mappings for uncategorized transactions
+    """
+    print("\n--- Detailed Categorization Analysis ---")
+
     # Get config manager
     config = get_config_manager()
-    
+
     # Get file path
     if not file_path:
         default_file = config.get_default_file_path('enriched_transactions')
         file_path = input(f"Enter enriched transactions file [{default_file}]: ").strip()
         if not file_path:
             file_path = default_file
-    
+
     # Validate file
     if not validate_json_file(file_path):
         return
 
-    # Run analysis with basic output (use CLI flags --verbose or --debug for more detail)
+    # Run analysis with verbose output
+    # skip_interactive is the inverse of allow_mapping
     print(f"\nAnalyzing categorization accuracy...")
-    analyze_categorization_accuracy(file_path, verbose=False, debug=False)
+    analyze_categorization_accuracy(file_path, verbose=True, debug=False, skip_interactive=not allow_mapping)
 
 
 def manage_mappings_interactive():
@@ -467,16 +473,25 @@ def run_full_pipeline_interactive():
         print(f"\nStep 2: Enriching transactions...")
         process_transaction_enrichment(parsed_file, enriched_file, debug=False)
         print(f"Enrichment complete!")
-        
-        # Step 3: Analysis
-        print(f"\nStep 3: Analyzing results...")
-        analyze_categorization_accuracy(enriched_file, verbose=False, debug=False)
-        
-        print(f"\nPipeline complete! Check '{enriched_file}' for final results.")
-        
-        # Ask if user wants detailed analysis
+
+        print(f"\nPipeline complete! Results saved to '{enriched_file}'")
+
+        # Offer detailed analysis first (optional)
         if confirm_action("\nWould you like to run detailed analysis?"):
-            analyze_interactive(enriched_file)
+            # Run analysis with verbose output and interactive mapping prompts
+            analyze_categorization_accuracy(enriched_file, verbose=True, debug=False, skip_interactive=False)
+        else:
+            # User skipped analysis, but still offer mapping opportunity
+            # Load transactions to check if there are uncategorized ones
+            transactions = load_transactions_from_json(enriched_file)
+            if transactions:
+                uncategorized_count = sum(1 for t in transactions if t.get('category') == 'UNCATEGORIZED')
+
+                if uncategorized_count > 0:
+                    print(f"\nFound {uncategorized_count} uncategorized transaction(s)")
+                    if confirm_action("Would you like to create mappings for uncategorized transactions?"):
+                        # Run analysis with interactive mapping (skip verbose details since they declined analysis)
+                        analyze_categorization_accuracy(enriched_file, verbose=False, debug=False, skip_interactive=False)
         
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")

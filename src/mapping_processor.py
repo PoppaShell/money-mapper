@@ -475,7 +475,7 @@ class MappingProcessor:
 # - Keep patterns generic (avoid location-specific terms)'''
     
     def _detect_duplicates(self) -> List[Dict]:
-        """Detect duplicate mappings across all files."""
+        """Detect duplicate mappings across all files, including wildcard-covered patterns."""
         print("=== DETECTING DUPLICATE MAPPINGS ===")
 
         duplicates = []
@@ -484,6 +484,7 @@ class MappingProcessor:
 
         # Create pattern-to-location mapping
         all_patterns = {}
+        wildcard_patterns = {}  # Separate tracking for wildcards
 
         # Index private mappings (handle nested structure: PRIMARY -> SUBCATEGORY -> patterns)
         for primary_key, primary_section in private_data.items():
@@ -495,9 +496,19 @@ class MappingProcessor:
                             if not isinstance(mapping, dict):
                                 continue
 
+                            pattern_info = {
+                                'file': 'private_mappings.toml',
+                                'section': section_key,
+                                'mapping': mapping,
+                                'primary': primary_key,
+                                'subcategory': subcategory_key
+                            }
+
+                            # Check for exact duplicates
                             if pattern in all_patterns:
                                 duplicates.append({
                                     'pattern': pattern,
+                                    'type': 'exact_duplicate',
                                     'existing_file': all_patterns[pattern]['file'],
                                     'existing_section': all_patterns[pattern]['section'],
                                     'existing_mapping': all_patterns[pattern]['mapping'],
@@ -510,13 +521,12 @@ class MappingProcessor:
                                     'duplicate_subcategory': subcategory_key
                                 })
                             else:
-                                all_patterns[pattern] = {
-                                    'file': 'private_mappings.toml',
-                                    'section': section_key,
-                                    'mapping': mapping,
-                                    'primary': primary_key,
-                                    'subcategory': subcategory_key
-                                }
+                                all_patterns[pattern] = pattern_info
+                                # Track wildcard patterns separately
+                                if '*' in pattern or '?' in pattern:
+                                    if section_key not in wildcard_patterns:
+                                        wildcard_patterns[section_key] = []
+                                    wildcard_patterns[section_key].append((pattern, pattern_info))
 
         # Index public mappings (handle nested structure: PRIMARY -> SUBCATEGORY -> patterns)
         for primary_key, primary_section in public_data.items():
@@ -528,9 +538,19 @@ class MappingProcessor:
                             if not isinstance(mapping, dict):
                                 continue
 
+                            pattern_info = {
+                                'file': 'public_mappings.toml',
+                                'section': section_key,
+                                'mapping': mapping,
+                                'primary': primary_key,
+                                'subcategory': subcategory_key
+                            }
+
+                            # Check for exact duplicates
                             if pattern in all_patterns:
                                 duplicates.append({
                                     'pattern': pattern,
+                                    'type': 'exact_duplicate',
                                     'existing_file': all_patterns[pattern]['file'],
                                     'existing_section': all_patterns[pattern]['section'],
                                     'existing_mapping': all_patterns[pattern]['mapping'],
@@ -543,20 +563,69 @@ class MappingProcessor:
                                     'duplicate_subcategory': subcategory_key
                                 })
                             else:
-                                all_patterns[pattern] = {
-                                    'file': 'public_mappings.toml',
-                                    'section': section_key,
-                                    'mapping': mapping,
-                                    'primary': primary_key,
-                                    'subcategory': subcategory_key
-                                }
+                                all_patterns[pattern] = pattern_info
+                                # Track wildcard patterns separately
+                                if '*' in pattern or '?' in pattern:
+                                    if section_key not in wildcard_patterns:
+                                        wildcard_patterns[section_key] = []
+                                    wildcard_patterns[section_key].append((pattern, pattern_info))
+
+        # Now check for patterns covered by wildcards in the same category
+        from transaction_enricher import wildcard_pattern_match
+
+        for pattern, pattern_info in all_patterns.items():
+            # Skip wildcards themselves
+            if '*' in pattern or '?' in pattern:
+                continue
+
+            section_key = pattern_info['section']
+
+            # Check against wildcards in the same section
+            if section_key in wildcard_patterns:
+                for wildcard, wildcard_info in wildcard_patterns[section_key]:
+                    # Check if this exact pattern matches the wildcard
+                    if wildcard_pattern_match(pattern, wildcard):
+                        # Check if they map to the same merchant
+                        pattern_merchant = pattern_info['mapping'].get('name', '')
+                        wildcard_merchant = wildcard_info['mapping'].get('name', '')
+
+                        if pattern_merchant.lower() == wildcard_merchant.lower():
+                            duplicates.append({
+                                'pattern': pattern,
+                                'type': 'wildcard_covered',
+                                'wildcard': wildcard,
+                                'existing_file': wildcard_info['file'],
+                                'existing_section': wildcard_info['section'],
+                                'existing_mapping': wildcard_info['mapping'],
+                                'existing_primary': wildcard_info['primary'],
+                                'existing_subcategory': wildcard_info['subcategory'],
+                                'duplicate_file': pattern_info['file'],
+                                'duplicate_section': pattern_info['section'],
+                                'duplicate_mapping': pattern_info['mapping'],
+                                'duplicate_primary': pattern_info['primary'],
+                                'duplicate_subcategory': pattern_info['subcategory']
+                            })
 
         if duplicates:
-            print(f"Found {len(duplicates)} duplicate patterns:")
+            exact_dups = [d for d in duplicates if d.get('type') == 'exact_duplicate']
+            wildcard_dups = [d for d in duplicates if d.get('type') == 'wildcard_covered']
+
+            print(f"Found {len(duplicates)} duplicate pattern(s):")
+            if exact_dups:
+                print(f"  - {len(exact_dups)} exact duplicate(s)")
+            if wildcard_dups:
+                print(f"  - {len(wildcard_dups)} pattern(s) covered by wildcard(s)")
+
             for i, dup in enumerate(duplicates, 1):
-                print(f"\n{i}. Pattern: '{dup['pattern']}'")
-                print(f"   File 1: {dup['existing_file']} [{dup['existing_section']}]")
-                print(f"   File 2: {dup['duplicate_file']} [{dup['duplicate_section']}]")
+                if dup['type'] == 'exact_duplicate':
+                    print(f"\n{i}. Exact duplicate: '{dup['pattern']}'")
+                    print(f"   File 1: {dup['existing_file']} [{dup['existing_section']}]")
+                    print(f"   File 2: {dup['duplicate_file']} [{dup['duplicate_section']}]")
+                elif dup['type'] == 'wildcard_covered':
+                    print(f"\n{i}. Pattern covered by wildcard:")
+                    print(f"   Exact pattern: '{dup['pattern']}' in {dup['duplicate_file']}")
+                    print(f"   Wildcard pattern: '{dup['wildcard']}' in {dup['existing_file']}")
+                    print(f"   Section: [{dup['existing_section']}]")
         else:
             print("No duplicate patterns found")
 
@@ -1330,12 +1399,45 @@ class MappingProcessor:
             else:
                 print("✓ No duplicate patterns found")
 
+            # Step 6: Wildcard consolidation opportunities
+            print(f"\nWILDCARD CONSOLIDATION:")
+            wildcards_added = 0
+            if self._confirm_action("\nAnalyze mappings for wildcard consolidation opportunities?"):
+                wildcards_added = self.run_wildcard_consolidation()
+
+                # If wildcards were added, process them automatically
+                if wildcards_added > 0:
+                    print("\n" + "="*70)
+                    print("PROCESSING WILDCARD MAPPINGS")
+                    print("="*70)
+
+                    # Process the new wildcard mappings
+                    if self._process_new_mappings():
+                        print(f"✓ Processed {wildcards_added} wildcard pattern(s)")
+
+                        # Re-detect and resolve duplicates (wildcards likely created duplicates)
+                        print(f"\nRE-CHECKING FOR DUPLICATES:")
+                        duplicates = self._detect_duplicates()
+                        if duplicates:
+                            print(f"Found {len(duplicates)} duplicate patterns")
+
+                            if self.config.get_processing_setting('interactive_conflicts'):
+                                if self._confirm_action("\nResolve duplicates interactively?"):
+                                    resolved_count = self._interactive_resolve_duplicates(duplicates)
+                                    print(f"✓ Resolved {resolved_count} duplicate patterns")
+                        else:
+                            print("✓ No duplicates found")
+                    else:
+                        print("✗ Failed to process wildcard mappings")
+
             # Summary
             print("\n" + "=" * 60)
             print("MAPPING MANAGEMENT COMPLETE")
 
-            if new_mappings_processed:
+            if new_mappings_processed or wildcards_added > 0:
                 print("\n✓ New mappings integrated")
+                if wildcards_added > 0:
+                    print(f"✓ {wildcards_added} wildcard pattern(s) added")
 
             # Count remaining issues
             remaining_validation = len([issue for issue in validation_issues if not getattr(issue, 'fixed', False)])
@@ -1553,16 +1655,25 @@ class MappingProcessor:
 
         for i, dup in enumerate(duplicates, 1):
             print(f"\nDuplicate {i}/{len(duplicates)}:")
-            print(f"Pattern: '{dup['pattern']}'")
-            print(f"\n1. Keep in {dup['existing_file']} [{dup['existing_section']}]")
-            print(f"   Mapping: {dup['existing_mapping']}")
-            print(f"\n2. Keep in {dup['duplicate_file']} [{dup['duplicate_section']}]")
-            print(f"   Mapping: {dup['duplicate_mapping']}")
 
-            while True:
-                choice = input("\nKeep which mapping? (1/2/s to skip): ").strip()
-                if choice == '1':
-                    # Keep existing, remove duplicate
+            if dup.get('type') == 'wildcard_covered':
+                # Special handling for patterns covered by wildcards
+                print(f"Exact pattern: '{dup['pattern']}'")
+                print(f"Covered by wildcard: '{dup['wildcard']}'")
+                print(f"\nWildcard '{dup['wildcard']}' in {dup['existing_file']} [{dup['existing_section']}]")
+                print(f"Exact pattern '{dup['pattern']}' in {dup['duplicate_file']} [{dup['duplicate_section']}]")
+                print(f"\nBoth map to merchant: {dup['existing_mapping'].get('name', 'Unknown')}")
+                print("\nRecommendation: Remove the exact pattern (it's redundant)")
+
+                from utils import prompt_with_validation
+                choice = prompt_with_validation(
+                    "Remove exact pattern?",
+                    valid_options=['y', 'yes', 'n', 'no', 's', 'skip'],
+                    default='y'
+                )
+
+                if choice in ['y', 'yes']:
+                    # Remove the exact pattern, keep wildcard
                     file_to_modify = os.path.join(self.config_dir, dup['duplicate_file'])
                     if self._remove_pattern_from_file(
                         file_to_modify,
@@ -1570,32 +1681,59 @@ class MappingProcessor:
                         dup['duplicate_primary'],
                         dup['duplicate_subcategory']
                     ):
-                        print(f"✓ Removed duplicate from {dup['duplicate_file']}")
+                        print(f"✓ Removed exact pattern from {dup['duplicate_file']}")
                         resolved_count += 1
                         dup['resolved'] = True
                     else:
-                        print(f"✗ Failed to remove duplicate")
-                    break
-                elif choice == '2':
-                    # Keep duplicate, remove existing
-                    file_to_modify = os.path.join(self.config_dir, dup['existing_file'])
-                    if self._remove_pattern_from_file(
-                        file_to_modify,
-                        dup['pattern'],
-                        dup['existing_primary'],
-                        dup['existing_subcategory']
-                    ):
-                        print(f"✓ Removed duplicate from {dup['existing_file']}")
-                        resolved_count += 1
-                        dup['resolved'] = True
-                    else:
-                        print(f"✗ Failed to remove duplicate")
-                    break
-                elif choice.lower() == 's':
-                    print("Skipped duplicate resolution")
-                    break
+                        print(f"✗ Failed to remove pattern")
                 else:
-                    print("Please enter '1', '2', or 's'")
+                    print("Skipped - keeping both patterns")
+
+            else:
+                # Exact duplicate handling
+                print(f"Pattern: '{dup['pattern']}'")
+                print(f"\n1. Keep in {dup['existing_file']} [{dup['existing_section']}]")
+                print(f"   Mapping: {dup['existing_mapping']}")
+                print(f"\n2. Keep in {dup['duplicate_file']} [{dup['duplicate_section']}]")
+                print(f"   Mapping: {dup['duplicate_mapping']}")
+
+                while True:
+                    choice = input("\nKeep which mapping? (1/2/s to skip): ").strip()
+                    if choice == '1':
+                        # Keep existing, remove duplicate
+                        file_to_modify = os.path.join(self.config_dir, dup['duplicate_file'])
+                        if self._remove_pattern_from_file(
+                            file_to_modify,
+                            dup['pattern'],
+                            dup['duplicate_primary'],
+                            dup['duplicate_subcategory']
+                        ):
+                            print(f"✓ Removed duplicate from {dup['duplicate_file']}")
+                            resolved_count += 1
+                            dup['resolved'] = True
+                        else:
+                            print(f"✗ Failed to remove duplicate")
+                        break
+                    elif choice == '2':
+                        # Keep duplicate, remove existing
+                        file_to_modify = os.path.join(self.config_dir, dup['existing_file'])
+                        if self._remove_pattern_from_file(
+                            file_to_modify,
+                            dup['pattern'],
+                            dup['existing_primary'],
+                            dup['existing_subcategory']
+                        ):
+                            print(f"✓ Removed duplicate from {dup['existing_file']}")
+                            resolved_count += 1
+                            dup['resolved'] = True
+                        else:
+                            print(f"✗ Failed to remove duplicate")
+                        break
+                    elif choice.lower() == 's':
+                        print("Skipped duplicate resolution")
+                        break
+                    else:
+                        print("Please enter '1', '2', or 's'")
 
         return resolved_count
 
@@ -1745,6 +1883,98 @@ class MappingProcessor:
 
             return patterns[0]  # Fallback to first pattern
 
+    def _add_wildcard_to_new_mappings(self, wildcard: str, category: str,
+                                       subcategory: str, merchant_name: str) -> bool:
+        """
+        Add a wildcard pattern to new_mappings.toml for later processing.
+
+        Args:
+            wildcard: The wildcard pattern to add
+            category: Primary category
+            subcategory: Secondary category
+            merchant_name: Merchant name for the mapping
+
+        Returns:
+            True if added successfully
+        """
+        new_mappings_path = os.path.join(self.config_dir, 'new_mappings.toml')
+
+        try:
+            # Load existing new_mappings or create empty dict (flat structure)
+            if os.path.exists(new_mappings_path):
+                data = self._load_toml_file(new_mappings_path)
+            else:
+                data = {}
+
+            # Add the wildcard pattern directly to flat structure with all required fields
+            data[wildcard] = {
+                "name": merchant_name,
+                "category": category,
+                "subcategory": subcategory,
+                "scope": "private" if "private" in str(self.private_mappings) else "public"
+            }
+
+            # Rewrite the entire file in FLAT format (processor expects no sections)
+            header = '''# New Financial Transaction Mappings - Input Template
+#
+# Add new transaction mappings below. Run 'python cli.py add-mappings' to process.
+# This file will be automatically processed and cleared after successful import.
+#
+# REQUIRED FIELDS:
+# - name: Clean display name for the merchant
+# - category: Primary PFC category (see list below)
+# - subcategory: Detailed PFC subcategory
+# - scope: "public" for national chains, "private" for local businesses
+#
+# VALIDATION:
+# - Patterns will be checked for duplicates across all mapping files
+# - Categories will be validated against official PFC taxonomy
+# - Scope will determine target file (private_mappings.toml vs public_mappings.toml)
+#
+# AVAILABLE PRIMARY CATEGORIES:
+# BANK_FEES, ENTERTAINMENT, FOOD_AND_DRINK, GENERAL_MERCHANDISE, GENERAL_SERVICES,
+# GOVERNMENT_AND_NON_PROFIT, HOME_IMPROVEMENT, INCOME, LOAN_PAYMENTS, MEDICAL,
+# PERSONAL_CARE, RENT_AND_UTILITIES, TRANSFER_IN, TRANSFER_OUT, TRANSPORTATION, TRAVEL
+#
+# EXAMPLES:
+# "starbucks" = { name = "Starbucks", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
+# "joes pizza downtown" = { name = "Joe's Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "private" }
+# "shell gas" = { name = "Shell", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
+#
+# ADD NEW ENTRIES BELOW THIS LINE:
+# ============================================================================
+'''
+
+            with open(new_mappings_path, 'w', encoding='utf-8') as f:
+                f.write(header + "\n\n")
+
+                # Write in FLAT format - all patterns at root level with full fields
+                # Sort patterns by category/subcategory for organization, then alphabetically
+                pattern_list = []
+                for pattern, mapping_data in data.items():
+                    if isinstance(mapping_data, dict):
+                        # Use category.subcategory as sort key for grouping
+                        sort_key = f"{mapping_data.get('category', '')}.{mapping_data.get('subcategory', '')}"
+                        pattern_list.append((sort_key, pattern, mapping_data))
+
+                # Write all patterns sorted by category/subcategory, then pattern name
+                for sort_key, pattern, mapping_data in sorted(pattern_list, key=lambda x: (x[0], x[1])):
+                    f.write(f'"{pattern}" = {{ ')
+                    f.write(f'name = "{mapping_data.get("name", "")}", ')
+                    f.write(f'category = "{mapping_data.get("category", "")}", ')
+                    f.write(f'subcategory = "{mapping_data.get("subcategory", "")}", ')
+                    f.write(f'scope = "{mapping_data.get("scope", "")}"')
+                    f.write(' }\n')
+
+            return True
+
+        except Exception as e:
+            print(f"  ✗ Error adding to new_mappings.toml: {e}")
+            if self.debug_mode:
+                import traceback
+                traceback.print_exc()
+            return False
+
     def run_wildcard_consolidation(self) -> bool:
         """
         Analyze mappings and suggest wildcard consolidations interactively.
@@ -1793,8 +2023,8 @@ class MappingProcessor:
             # Ask user if they want to consolidate
             from utils import prompt_with_validation
             choice = prompt_with_validation(
-                "Consolidate these patterns?",
-                valid_options=['y', 'yes', 'n', 'no', 's', 'skip', 'q', 'quit'],
+                "Action for this pattern?",
+                valid_options=['y', 'yes', 'e', 'edit', 'n', 'no', 's', 'skip', 'q', 'quit'],
                 default='y'
             )
 
@@ -1810,31 +2040,51 @@ class MappingProcessor:
                 skipped_count += 1
                 continue
 
-            # User chose yes - perform consolidation
-            print("\n→ Consolidating patterns...")
+            # Determine the final wildcard pattern to use
+            final_wildcard = group['suggested_wildcard']
 
-            # This would implement the actual consolidation
-            # For now, just print what would happen
-            print(f"  ✓ Would add wildcard pattern: \"{group['suggested_wildcard']}\"")
-            print(f"  ✓ Would remove {len(group['patterns'])} exact patterns")
-            consolidated_count += 1
+            if choice in ['e', 'edit']:
+                # Allow user to modify the suggested pattern
+                print(f"\nCurrent suggestion: \"{final_wildcard}\"")
+                print("Enter your custom wildcard pattern (or press Enter to use suggestion):")
+                print("Wildcards: * = any characters, ? = single character")
+                custom_pattern = input("→ ").strip()
 
-            # TODO: Implement actual file modification
-            print("  ⚠  NOTE: Actual file modification not yet implemented")
-            print()
+                if custom_pattern:
+                    final_wildcard = custom_pattern
+                    print(f"Using custom pattern: \"{final_wildcard}\"")
+                else:
+                    print(f"Using suggested pattern: \"{final_wildcard}\"")
+
+            # Add wildcard to new_mappings.toml
+            print("\n→ Adding wildcard to new_mappings.toml...")
+
+            success = self._add_wildcard_to_new_mappings(
+                wildcard=final_wildcard,
+                category=group['category'],
+                subcategory=group['subcategory'],
+                merchant_name=group['mapping'].get('name', 'Unknown')
+            )
+
+            if success:
+                consolidated_count += 1
+                print(f"  ✓ Added wildcard pattern: \"{final_wildcard}\"")
+                print(f"  ✓ Will replace {len(group['patterns'])} pattern(s) when processed\n")
+            else:
+                print(f"  ✗ Failed to add pattern. Skipping...\n")
+                skipped_count += 1
 
         print("\n" + "="*70)
         print("CONSOLIDATION SUMMARY")
         print("="*70)
-        print(f"Consolidated: {consolidated_count}")
+        print(f"Wildcards added: {consolidated_count}")
         print(f"Skipped: {skipped_count}")
         print(f"Total analyzed: {len(similar_groups)}")
 
         if consolidated_count > 0:
-            print("\n⚠  Remember to test enrichment after consolidation!")
-            print("   Run: python src/cli.py enrich")
+            print(f"\n✓ Added {consolidated_count} wildcard pattern(s) to new_mappings.toml")
 
-        return True
+        return consolidated_count  # Return count instead of True
 
 
 def main():

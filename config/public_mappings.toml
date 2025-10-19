@@ -115,12 +115,8 @@
 "boundaries coffee" = { name = "Boundaries Coffee", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
 "caribou coffee" = { name = "Caribou Coffee", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
 "coffee bean" = { name = "Coffee Bean & Tea Leaf", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
-"dunkin" = { name = "Dunkin'", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
-"dunkin donuts" = { name = "Dunkin'", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
 "dutch bros" = { name = "Dutch Bros", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
 "dutchbros" = { name = "Dutch Bros Coffee", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
-"einstein bagels" = { name = "Einstein Bros. Bagels", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
-"einsteins bagels" = { name = "Einstein Bros. Bagels", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
 "peets coffee" = { name = "Peet's Coffee", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
 "snooze" = { name = "Snooze Eatery", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
 "starbucks" = { name = "Starbucks", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public" }
@@ -135,8 +131,6 @@
 "bagelmania" = { name = "Bagelmania", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "blaze pizza" = { name = "Blaze Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "bojangles" = { name = "Bojangles", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"braums" = { name = "Braum's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"braums store" = { name = "Braum's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "burger king" = { name = "Burger King", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "casey s" = { name = "Casey's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "chick-fil-a" = { name = "Chick-fil-A", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
@@ -148,15 +142,11 @@
 "culvers" = { name = "Culver's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "dairy queen" = { name = "Dairy Queen", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "del taco" = { name = "Del Taco", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"domino's" = { name = "Domino's Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"dominos" = { name = "Domino's Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "dq " = { name = "Dairy Queen", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "dq-" = { name = "Dairy Queen", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "first watch" = { name = "First Watch", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "five guys" = { name = "Five Guys", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "golden chick" = { name = "Golden Chick", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"in n out" = { name = "In-N-Out Burger", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"in-n-out" = { name = "In-N-Out Burger", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "jack in the box" = { name = "Jack in the Box", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "jersey mikes" = { name = "Jersey Mike's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "jimmy johns" = { name = "Jimmy John's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
@@ -165,10 +155,6 @@
 "little caesars" = { name = "Little Caesars", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "maple street biscuit" = { name = "Maple Street Biscuit Company", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "mcalisters" = { name = "McAlister's Deli", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"mcdonald" = { name = "McDonald's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"mcdonald f" = { name = "McDonald's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"mcdonalds" = { name = "McDonald's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"mcdonalds f" = { name = "McDonald's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "mod pizza" = { name = "Mod Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "panda" = { name = "Panda Express", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "panda express" = { name = "Panda Express", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
@@ -177,26 +163,16 @@
 "popeyes" = { name = "Popeyes", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "qdoba" = { name = "Qdoba", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "raising canes" = { name = "Raising Cane's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"rally's" = { name = "Rally's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"rallys" = { name = "Rally's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "rodeo goat" = { name = "Rodeo Goat", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "salad and go" = { name = "Salad and Go", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"schlotzsky" = { name = "Schlotzsky's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"schlotzskys" = { name = "Schlotzsky's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "shake shack" = { name = "Shake Shack", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "shipley do" = { name = "Shipley Donuts", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "shipleys donuts" = { name = "Shipley's Donuts", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "slim chickens" = { name = "Slim Chickens", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "smashburger" = { name = "Smashburger", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"sonic" = { name = "Sonic Drive-In", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"sonic drive" = { name = "Sonic Drive-In", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "subway" = { name = "Subway", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "swig" = { name = "Swig", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"taco bell" = { name = "Taco Bell", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "taco bueno" = { name = "Taco Bueno", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"tacobell" = { name = "Taco Bell", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"wendy's" = { name = "Wendy's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
-"wendys" = { name = "Wendy's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "whataburger" = { name = "Whataburger", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "which wich" = { name = "Which Wich", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "wingstop" = { name = "Wingstop", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
@@ -221,15 +197,9 @@
 "piggly wiggly" = { name = "Piggly Wiggly", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
 "publix" = { name = "Publix", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
 "safeway" = { name = "Safeway", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
-"sams club" = { name = "Sam's Club", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
-"samsclub" = { name = "Sam's Club", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
 "stop shop" = { name = "Stop & Shop", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
 "target" = { name = "Target", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
 "tom thumb" = { name = "Tom Thumb", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
-"trader joe" = { name = "Trader Joe's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
-"trader joes" = { name = "Trader Joe's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
-"wal-mart" = { name = "Walmart", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
-"walmart" = { name = "Walmart", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
 "walmart.com" = { name = "Walmart.com", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
 "whole foods" = { name = "Whole Foods Market", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
 "winndixie" = { name = "Winn-Dixie", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_GROCERIES", scope = "public" }
@@ -256,20 +226,14 @@
 [FOOD_AND_DRINK.FOOD_AND_DRINK_RESTAURANT]
 # Full-service restaurants and dining
 "applebees" = { name = "Applebee's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"bj's restaurant" = { name = "BJ's Restaurant", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"bjs restaurant" = { name = "BJ's Restaurant", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "brass tap" = { name = "Brass Tap", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "buca di beppo" = { name = "Buca di Beppo", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"cheesecake fact" = { name = "The Cheesecake Factory", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"cheesecake factory" = { name = "The Cheesecake Factory", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "chilis" = { name = "Chili's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "chuys" = { name = "Chuy's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "cicis" = { name = "Cicis Pizza", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_FAST_FOOD", scope = "public" }
 "coal vines" = { name = "Coal Vines", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "cracker barrel" = { name = "Cracker Barrel", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "dd " = { name = "DoorDash", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"denny" = { name = "Denny's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"dennys" = { name = "Denny's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "doordash" = { name = "DoorDash", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "ernesto" = { name = "Ernesto's Fine Mexican", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "fast furious japanese" = { name = "F&F Japanese Grill", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
@@ -281,8 +245,6 @@
 "grubhub" = { name = "Grubhub", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "happy dragon" = { name = "Happy Dragon Restaurant", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "hooters" = { name = "Hooters", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"ihob" = { name = "IHOP", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"ihop" = { name = "IHOP", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "johnny rockets" = { name = "Johnny Rockets", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "la la land kind cafe" = { name = "La La Land Kind Cafe", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "lazy dog restaurant" = { name = "Lazy Dog Restaurant & Bar", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
@@ -293,8 +255,6 @@
 "on the border" = { name = "On The Border", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "outback steakhouse" = { name = "Outback Steakhouse", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "pan asian express" = { name = "Pan Asian Express", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"papa john" = { name = "Papa John's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
-"papa johns" = { name = "Papa John's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "pei wei" = { name = "Pei Wei Asian Kitchen", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "pf changs" = { name = "P.F. Chang's", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
 "pizza hut" = { name = "Pizza Hut", category = "FOOD_AND_DRINK", subcategory = "FOOD_AND_DRINK_RESTAURANT", scope = "public" }
@@ -316,13 +276,9 @@
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS]
 # Bookstores, newsstands, and magazine retailers
 "barnes noble" = { name = "Barnes & Noble", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS", scope = "public" }
-"books million" = { name = "Books-A-Million", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS", scope = "public" }
-"booksamillion" = { name = "Books-A-Million", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS", scope = "public" }
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES]
 # Clothing stores, fashion retailers, and accessories
-"altar'd state" = { name = "Altar'd State", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
-"altard state" = { name = "Altar'd State", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "banana republic" = { name = "Banana Republic", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "carters" = { name = "Carter's", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "city gear" = { name = "City Gear", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
@@ -330,9 +286,6 @@
 "dsw" = { name = "DSW Shoes", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "gap" = { name = "Gap", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "kept clothing" = { name = "Kept Clothing", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
-"kohl" = { name = "Kohl's", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
-"kohl's" = { name = "Kohl's", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
-"kohls" = { name = "Kohl's", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "lane bryant" = { name = "Lane Bryant", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "lanebryantcom bensalem" = { name = "LanebryantCom Bensalem", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "lids" = { name = "Lids", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
@@ -350,8 +303,6 @@
 "rue21" = { name = "rue21", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "shein" = { name = "Shein", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "t.j. maxx" = { name = "T.J. Maxx", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
-"tj maxx" = { name = "TJ Maxx", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
-"tjmaxx" = { name = "TJ Maxx", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "torrid" = { name = "Torrid", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 "ugg" = { name = "UGG", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES", scope = "public" }
 
@@ -375,10 +326,6 @@
 # Discount stores, dollar stores, and outlet retailers
 "99 cent store" = { name = "99 Cents Only", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
 "burkes outlet" = { name = "Burke's Outlet", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
-"dollar general" = { name = "Dollar General", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
-"dollar tree" = { name = "Dollar Tree", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
-"dollar-general" = { name = "Dollar General", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
-"dollartree" = { name = "Dollar Tree", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
 "family dollar" = { name = "Family Dollar", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
 "five below" = { name = "Five Below", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
 "ollies bargain outlet" = { name = "Ollie's Bargain Outlet", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_DISCOUNT_STORES", scope = "public" }
@@ -414,10 +361,6 @@
 "etsy" = { name = "Etsy", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES", scope = "public" }
 "nike.com" = { name = "Nike.com", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES", scope = "public" }
 "target.com" = { name = "Target.com", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES", scope = "public" }
-"temu" = { name = "Temu", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES", scope = "public" }
-"temu.com" = { name = "Temu", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES", scope = "public" }
-"tiktok merchant" = { name = "TikTok Shop", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES", scope = "public" }
-"tiktok shop" = { name = "TikTok Shop", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES", scope = "public" }
 "wadaaa" = { name = "WADAAA", category = "GENERAL_MERCHANDISE", subcategory = "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES", scope = "public" }
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE]
@@ -606,8 +549,6 @@
 "home depot des" = { name = "Home Depot", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT", scope = "public" }
 "online banking payment to crd" = { name = "Credit Card Payment", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT", scope = "public" }
 "online payment" = { name = "Credit Card Payment", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT", scope = "public" }
-"synchrony bank" = { name = "Synchrony Bank", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT", scope = "public" }
-"synchrony bank des:payment" = { name = "Synchrony Bank", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT", scope = "public" }
 "target debit crd des:ach tran" = { name = "Target Credit Card Payment", category = "LOAN_PAYMENTS", subcategory = "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT", scope = "public" }
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_MORTGAGE_PAYMENT]
@@ -721,8 +662,6 @@
 "circle k" = { name = "Circle K", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
 "citgo" = { name = "Citgo", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
 "exxon" = { name = "ExxonMobil", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
-"love's" = { name = "Love's Travel Stops", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
-"loves" = { name = "Love's Travel Stops", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
 "marathon" = { name = "Marathon", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
 "mobil" = { name = "Mobil", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
 "murphy" = { name = "Murphy USA", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_GAS", scope = "public" }
@@ -743,8 +682,6 @@
 "desert cab" = { name = "Desert Cab", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES", scope = "public" }
 "lyft" = { name = "Lyft", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES", scope = "public" }
 "taxi ycs" = { name = "Yellow Checker Star Transportation", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES", scope = "public" }
-"uber" = { name = "Uber", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES", scope = "public" }
-"uber trip" = { name = "Uber", category = "TRANSPORTATION", subcategory = "TRANSPORTATION_TAXIS_AND_RIDE_SHARES", scope = "public" }
 
 [TRANSPORTATION.TRANSPORTATION_TOLLS]
 # Toll roads, bridge tolls, and electronic toll collection
@@ -755,16 +692,10 @@
 [TRAVEL.TRAVEL_FLIGHTS]
 # Airlines, flight bookings, and air travel services
 "alaska airlines" = { name = "Alaska Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
-"american ai" = { name = "American Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
 "american air" = { name = "American Air", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
-"american airlines" = { name = "American Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
 "delta" = { name = "Delta Air Lines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
 "frontier" = { name = "Frontier Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
 "jetblue" = { name = "JetBlue Airways", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
-"southwes" = { name = "Southwest Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
-"southwest" = { name = "Southwest Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
-"spirit airl" = { name = "Spirit Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
-"spirit airlines" = { name = "Spirit Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
 "united airlines" = { name = "United Airlines", category = "TRAVEL", subcategory = "TRAVEL_FLIGHTS", scope = "public" }
 
 [TRAVEL.TRAVEL_LODGING]

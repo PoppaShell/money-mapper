@@ -576,7 +576,8 @@ def run_mapping_wizard(
             print("="*70)
 
             try:
-                success = processor.run_full_processing()
+                # Use run_combined_processing() which offers interactive duplicate resolution
+                success = processor.run_combined_processing()
                 if success:
                     print("\n✓ Mapping processor completed successfully!")
                     print("Your new mappings are now active.")
