@@ -225,7 +225,9 @@ def parse_statement_text(text: str, config: Dict, debug: bool = False) -> List[D
         transaction['account_type'] = statement_type
 
         # Add masked account number if available
-        if masked_account:
+        # For credit cards: use account_suffix (from transaction line) instead of account_number (from header)
+        # For checking/savings: use account_number (they don't have per-transaction suffix)
+        if masked_account and statement_type != 'credit':
             transaction['account_number'] = masked_account
 
         # Standardize date format
@@ -412,19 +414,35 @@ def extract_credit_transactions(text: str, patterns: Dict, debug: bool = False, 
             for match in matches:
                 try:
                     # Credit card patterns can have different formats
-                    # Common formats: (date, description, amount) or (trans_date, post_date, description, amount)
+                    # Formats:
+                    #   3 groups: (date, description, amount) - Single date fallback
+                    #   4 groups: (trans_date, post_date, description, amount) - Two dates without ref numbers
+                    #   6 groups: (trans_date, post_date, description, ref#, acct#, amount) - Full BoA format
                     if len(match) == 3:
                         # Format: (date, description, amount)
                         # Single date - use for both transaction and posting date
                         date, description, amount_str = match
                         transaction_date = date
                         posting_date = None  # No separate posting date
+                        reference_number = None
+                        account_suffix = None
                     elif len(match) == 4:
                         # Format: (trans_date, post_date, description, amount)
                         transaction_date = match[0]  # When purchase was made
                         posting_date = match[1]      # When it posted to account
                         description = match[2]
                         amount_str = match[3]
+                        reference_number = None
+                        account_suffix = None
+                    elif len(match) == 6:
+                        # Format: (trans_date, post_date, description, ref#, acct#, amount)
+                        # Full BoA credit card format with reference numbers
+                        transaction_date = match[0]  # When purchase was made
+                        posting_date = match[1]      # When it posted to account
+                        description = match[2]       # Clean description (no ref numbers)
+                        reference_number = match[3]  # 4-digit reference number
+                        account_suffix = match[4]    # Last 4 digits of card
+                        amount_str = match[5]        # Transaction amount
                     else:
                         if debug:
                             print(f"    WARNING: Unexpected match format with {len(match)} groups: {match}")
@@ -455,6 +473,13 @@ def extract_credit_transactions(text: str, patterns: Dict, debug: bool = False, 
                         post_month = int(posting_date.strip().split('/')[0])
                         post_year = determine_transaction_year(post_month, statement_period)
                         transaction['posting_date'] = f"{posting_date.strip()}/{post_year}"  # MM/DD/YYYY
+
+                    # Add reference numbers if captured (BoA format)
+                    # These are kept separate from description and not displayed by default
+                    if reference_number:
+                        transaction['reference_number'] = reference_number
+                    if account_suffix:
+                        transaction['account_suffix'] = account_suffix
 
                     transactions.append(transaction)
                     

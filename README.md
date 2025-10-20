@@ -470,10 +470,11 @@ money-mapper/
     "date": "01/15",
     "transaction_date": "01/15/2025",
     "posting_date": "01/17/2025",
-    "description": "GROCERY STORE #1234",
+    "description": "GROCERY STORE DALLAS TX",
     "amount": -127.43,
     "account_type": "credit",
-    "account_number": "****5678",
+    "reference_number": "4321",
+    "account_suffix": "5678",
     "source_file": "statement_2025_01.pdf"
 }
 ```
@@ -494,10 +495,12 @@ money-mapper/
 - `date`: Original date format from statement (MM/DD or YYYY-MM-DD)
 - `transaction_date`: Full date when purchase was made (MM/DD/YYYY) - credit cards only
 - `posting_date`: Full date when transaction posted to account (MM/DD/YYYY) - credit cards with dual dates only
-- `description`: Transaction description with normalized whitespace
+- `description`: Transaction description with normalized whitespace (reference numbers extracted separately)
 - `amount`: Transaction amount (negative = expense, positive = income)
 - `account_type`: Type of account (credit, checking, savings)
-- `account_number`: Masked account number showing only last 4 digits (e.g., "****1234")
+- `account_number`: Masked account number from statement header (e.g., "****1234") - checking/savings only
+- `reference_number`: 4-digit transaction reference number - credit cards only (Bank of America)
+- `account_suffix`: Last 4 digits of card used for transaction - credit cards only (replaces account_number for credit cards)
 - `source_file`: Original PDF statement filename
 
 ### Enriched Transactions (`output/enriched_transactions.json`)
@@ -506,10 +509,11 @@ money-mapper/
     "date": "01/15",
     "transaction_date": "01/15/2025",
     "posting_date": "01/17/2025",
-    "description": "GROCERY STORE #1234",
+    "description": "GROCERY STORE DALLAS TX",
     "amount": -127.43,
     "account_type": "credit",
-    "account_number": "****5678",
+    "reference_number": "4321",
+    "account_suffix": "5678",
     "source_file": "statement_2025_01.pdf",
     "merchant_name": "Grocery Store",
     "category": "FOOD_AND_DRINK",
