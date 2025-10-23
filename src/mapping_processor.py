@@ -1884,7 +1884,8 @@ class MappingProcessor:
             return patterns[0]  # Fallback to first pattern
 
     def _add_wildcard_to_new_mappings(self, wildcard: str, category: str,
-                                       subcategory: str, merchant_name: str) -> bool:
+                                       subcategory: str, merchant_name: str,
+                                       source_file: str = None) -> bool:
         """
         Add a wildcard pattern to new_mappings.toml for later processing.
 
@@ -1893,6 +1894,7 @@ class MappingProcessor:
             category: Primary category
             subcategory: Secondary category
             merchant_name: Merchant name for the mapping
+            source_file: Source file name (e.g., 'private_mappings.toml' or 'public_mappings.toml')
 
         Returns:
             True if added successfully
@@ -1907,11 +1909,17 @@ class MappingProcessor:
                 data = {}
 
             # Add the wildcard pattern directly to flat structure with all required fields
+            # Determine scope from source_file if provided, otherwise default to private
+            if source_file:
+                scope = "public" if "public" in source_file else "private"
+            else:
+                scope = "private"
+
             data[wildcard] = {
                 "name": merchant_name,
                 "category": category,
                 "subcategory": subcategory,
-                "scope": "private" if "private" in str(self.private_mappings) else "public"
+                "scope": scope
             }
 
             # Rewrite the entire file in FLAT format (processor expects no sections)
@@ -2063,7 +2071,8 @@ class MappingProcessor:
                 wildcard=final_wildcard,
                 category=group['category'],
                 subcategory=group['subcategory'],
-                merchant_name=group['mapping'].get('name', 'Unknown')
+                merchant_name=group['mapping'].get('name', 'Unknown'),
+                source_file=group['file']
             )
 
             if success:
