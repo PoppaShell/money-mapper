@@ -7,8 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Interactive prompts now display output correctly before requesting input ([#21](https://github.com/PoppaShell/money-mapper/issues/21))
+  - Added flush=True to all print() statements before input() calls across 5 files
+  - Fixes output buffering issues on Windows and other environments
+  - Verified with comprehensive test suite (8/8 tests passed)
+  - Affects interactive_mapper.py, utils.py, setup_wizard.py, mapping_processor.py, cli.py
+
+### Added
+- Comprehensive development workflow documentation in docs/ directory ([#26](https://github.com/PoppaShell/money-mapper/issues/26))
+  - docs/DEVELOPMENT.md with complete workflow guide emphasizing testing-first approach
+  - docs/RELEASE_NOTES_TEMPLATE.md for standardized releases
+  - Updated README.md with Documentation section
+
 ### Changed
 - Updated development workflow to be issue-driven with comprehensive CLAUDE.md documentation
+- Enforced testing-first workflow in DEVELOPMENT.md and CLAUDE.md
+  - Clear numbered steps: Code → Test → Document → Commit
+  - Added warning: "NEVER update CHANGELOG, README, or commit UNTIL testing passes!"
 
 ## [0.5.0] - 2025-10-25
 

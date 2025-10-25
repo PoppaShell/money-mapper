@@ -148,7 +148,7 @@ def configure_privacy_settings(config_dir: str = "config") -> bool:
         return False
 
     print()
-    print("Enter information to redact (press Enter to skip any section):")
+    print("Enter information to redact (press Enter to skip any section):", flush=True)
     print()
 
     # Collect privacy keywords

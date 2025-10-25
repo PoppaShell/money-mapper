@@ -211,28 +211,33 @@ https://github.com/PoppaShell/money-mapper/issues/23
 
 ## Pre-Commit Checklist
 
+**CRITICAL: Follow this order strictly - Testing BEFORE Documentation**
+
 Before committing code, verify:
 
-### Code Quality
+### 1. Code Quality (First)
 - [ ] Code follows project style guidelines
 - [ ] No Unicode characters or emojis (Windows compatibility)
 - [ ] No debug print statements or commented-out code
 - [ ] Functions have clear, descriptive names
 - [ ] Complex logic has explanatory comments
 
-### Testing
-- [ ] Changes tested manually
+### 2. Testing (Second - BEFORE updating docs!)
+- [ ] Changes tested manually (run the affected workflows)
 - [ ] Relevant test scripts run successfully
 - [ ] No new errors or warnings introduced
 - [ ] Edge cases considered and tested
+- [ ] User confirmed functionality works as expected
 
-### Documentation
+**STOP: Do not proceed until testing is complete and passing!**
+
+### 3. Documentation (Third - AFTER testing passes)
 - [ ] CHANGELOG.md updated in `[Unreleased]` section
 - [ ] Code comments updated if behavior changed
 - [ ] README.md updated if user-facing changes
 - [ ] TOML config files updated if needed
 
-### Git Workflow
+### 4. Git Workflow (Final)
 - [ ] GitHub issue exists for this work
 - [ ] Commit message follows conventions
 - [ ] Issue referenced in commit message

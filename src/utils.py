@@ -819,7 +819,7 @@ def prompt_yes_no(message: str, default: bool = True) -> bool:
             return False
         else:
             default_text = "yes" if default else "no"
-            print(f"Invalid input. Please enter 'y' for yes or 'n' for no (or press Enter for {default_text}).")
+            print(f"Invalid input. Please enter 'y' for yes or 'n' for no (or press Enter for {default_text}).", flush=True)
 
 
 def prompt_with_validation(message: str, valid_options: List[str], default: str = None,
@@ -870,4 +870,4 @@ def prompt_with_validation(message: str, valid_options: List[str], default: str 
                 return response
 
         # Invalid input - show helpful message and re-prompt
-        print(f"Invalid input. Please enter one of: {', '.join(valid_options)}")
+        print(f"Invalid input. Please enter one of: {', '.join(valid_options)}", flush=True)
