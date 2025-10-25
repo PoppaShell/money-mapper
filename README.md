@@ -652,6 +652,12 @@ fuzzy_redaction_threshold = 0.85     # Similarity threshold (0.0-1.0)
 - **Configurable**: Easy to customize redaction rules
 - **Non-invasive**: Only redacts configured keywords (except default patterns)
 
+## Documentation
+
+- **[Development Workflow](docs/DEVELOPMENT.md)** - Issue-driven development, CHANGELOG maintenance, commit conventions, and release process
+- **[Release Notes Template](docs/RELEASE_NOTES_TEMPLATE.md)** - Template for creating GitHub releases
+- **[CHANGELOG](CHANGELOG.md)** - Complete project history and version changes
+
 ## Development
 
 ### Code Standards
