@@ -37,34 +37,40 @@
 # ============================================================================
 
 [BANK_FEES.BANK_FEES_ATM_FEES]
+description = "Fees incurred for out-of-network ATMs"
 keywords = [
     "atm fee", "atm surcharge", "foreign atm", "out of network atm", "withdrawal fee"
 ]
 
 [BANK_FEES.BANK_FEES_FOREIGN_TRANSACTION_FEES]
+description = "Fees incurred on non-domestic transactions"
 keywords = [
     "currency conversion", "foreign purchase fee", "foreign transaction", 
     "international fee", "international transaction"
 ]
 
 [BANK_FEES.BANK_FEES_INSUFFICIENT_FUNDS]
+description = "Fees relating to insufficient funds"
 keywords = [
     "bounced check", "insufficient balance", "insufficient funds", "nsf", "returned item"
 ]
 
 [BANK_FEES.BANK_FEES_INTEREST_CHARGE]
+description = "Fees incurred for interest on purchases, including not-paid-in-full or interest on cash advances"
 keywords = [
     "cash advance interest", "finance charge", "interest charge", "late fee", 
     "penalty interest", "purchase interest"
 ]
 
 [BANK_FEES.BANK_FEES_OVERDRAFT_FEES]
+description = "Fees incurred when an account is in overdraft"
 keywords = [
     "courtesy pay", "od fee", "overdraft", "overdraft charge", "overdraft fee", 
     "overdraft protection"
 ]
 
 [BANK_FEES.BANK_FEES_OTHER_BANK_FEES]
+description = "Other miscellaneous bank fees"
 keywords = [
     "account fee", "bank fee", "check order", "maintenance fee", "monthly fee", 
     "service charge", "service fee", "wire fee"
@@ -75,18 +81,21 @@ keywords = [
 # ============================================================================
 
 [ENTERTAINMENT.ENTERTAINMENT_CASINOS_AND_GAMBLING]
+description = "Gambling, casinos, and sports betting"
 keywords = [
     "bet365", "caesars", "casino", "draftkings", "fanduel", "gambling", "lottery", 
     "mgm", "poker", "slots", "sports betting"
 ]
 
 [ENTERTAINMENT.ENTERTAINMENT_MUSIC_AND_AUDIO]
+description = "Digital and in-person music purchases, including music streaming services"
 keywords = [
     "amazon music", "apple music", "audio", "audible", "music", "pandora", 
     "podcast", "spotify", "tidal", "youtube music"
 ]
 
 [ENTERTAINMENT.ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS]
+description = "Purchases made at sporting events, music venues, concerts, museums, and amusement parks"
 keywords = [
     "amusement park", "aquarium", "arena", "concert", "disney", "museum", 
     "six flags", "sporting event", "stadium", "stubhub", "theme park", 
@@ -94,6 +103,7 @@ keywords = [
 ]
 
 [ENTERTAINMENT.ENTERTAINMENT_TV_AND_MOVIES]
+description = "In home movie streaming services and movie theaters"
 keywords = [
     "amc", "cinema", "cinemark", "disney+", "hbo max", "hulu", "movie", 
     "movie theater", "netflix", "paramount+", "peacock", "prime video", 
@@ -101,12 +111,14 @@ keywords = [
 ]
 
 [ENTERTAINMENT.ENTERTAINMENT_VIDEO_GAMES]
+description = "Digital and in-person video game purchases"
 keywords = [
     "blizzard", "epic games", "game store", "gaming", "nintendo", "playstation", 
     "steam", "twitch", "video game", "xbox"
 ]
 
 [ENTERTAINMENT.ENTERTAINMENT_OTHER_ENTERTAINMENT]
+description = "Other miscellaneous entertainment purchases, including night life and adult entertainment"
 keywords = [
     "adult entertainment", "arcade", "bar", "bowling", "entertainment", 
     "karaoke", "mini golf", "nightclub", "pub", "recreation"
@@ -117,18 +129,21 @@ keywords = [
 # ============================================================================
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_BEER_WINE_AND_LIQUOR]
+description = "Beer, Wine & Liquor Stores"
 keywords = [
     "abc store", "alcohol", "beer", "beer store", "brewery", "liquor", 
     "liquor store", "spirits", "wine", "wine shop"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_COFFEE]
+description = "Purchases at coffee shops or cafes"
 keywords = [
     "cafe", "caribou coffee", "coffee", "coffee bean", "coffee shop", 
     "dunkin", "espresso", "peets", "starbucks", "tim hortons"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_FAST_FOOD]
+description = "Dining expenses for fast food chains"
 keywords = [
     "arbys", "burger king", "chick-fil-a", "chipotle", "dairy queen", 
     "drive thru", "fast food", "jack in the box", "kfc", "mcdonalds", 
@@ -136,6 +151,7 @@ keywords = [
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_GROCERIES]
+description = "Purchases for fresh produce and groceries, including farmers' markets"
 keywords = [
     "aldi", "costco", "food", "food lion", "food store", "grocery", "h-e-b", 
     "kroger", "market", "publix", "safeway", "sams club", "supermarket", 
@@ -143,6 +159,7 @@ keywords = [
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_RESTAURANT]
+description = "Dining expenses for restaurants, bars, gastropubs, and diners"
 keywords = [
     "bar and grill", "bistro", "chinese", "diner", "doordash", "eatery", 
     "gastropub", "grill", "italian", "kitchen", "mexican", "restaurant", 
@@ -150,11 +167,13 @@ keywords = [
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_VENDING_MACHINES]
+description = "Purchases made at vending machine operators"
 keywords = [
     "canteen", "micro market", "vending", "vending machine"
 ]
 
 [FOOD_AND_DRINK.FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK]
+description = "Other miscellaneous food and drink, including desserts, juice bars, and delis"
 keywords = [
     "bakery", "candy store", "catering", "deli", "dessert", "food truck", 
     "frozen yogurt", "ice cream", "juice bar", "smoothie"
@@ -165,66 +184,77 @@ keywords = [
 # ============================================================================
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS]
+description = "Books, magazines, and news "
 keywords = [
     "barnes noble", "book shop", "books", "bookstore", "comic book", 
     "library", "magazines", "newspapers"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES]
+description = "Apparel, shoes, and jewelry"
 keywords = [
     "accessories", "apparel", "boutique", "clothing", "dress shop", 
     "fashion", "jewelry", "shoe store", "shoes"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_CONVENIENCE_STORES]
+description = "Purchases at convenience stores"
 keywords = [
     "7-eleven", "circle k", "convenience", "corner store", "gas station mart", 
     "quick trip", "sheetz", "speedway", "wawa"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_DEPARTMENT_STORES]
+description = "Retail stores with wide ranges of consumer goods, typically specializing in clothing and home goods"
 keywords = [
     "bloomingdales", "department store", "dillards", "jcpenney", "kohls", 
     "macys", "neiman marcus", "nordstrom", "sears"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_DISCOUNT_STORES]
+description = "Stores selling goods at a discounted price"
 keywords = [
     "99 cents", "bargain", "discount", "dollar general", "dollar tree", 
     "family dollar", "outlet", "thrift"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ELECTRONICS]
+description = "Electronics stores and websites"
 keywords = [
     "apple store", "best buy", "computer", "electronics", "laptop", 
     "microsoft store", "phone", "radio shack", "tablet", "tv"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES]
+description = "Photo, gifts, cards, and floral stores"
 keywords = [
     "card shop", "flower shop", "florist", "gift shop", "gifts", 
     "hallmark", "novelty", "party supply", "photo"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OFFICE_SUPPLIES]
+description = "Stores that specialize in office goods"
 keywords = [
     "business supplies", "copy center", "office depot", "office supplies", 
     "officemax", "printing", "staples"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_ONLINE_MARKETPLACES]
+description = "Multi-purpose e-commerce platforms such as Etsy, Ebay and Amazon"
 keywords = [
     "amazon", "e-commerce", "ebay", "etsy", "marketplace", "online shopping", 
     "target.com", "walmart.com"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_PET_SUPPLIES]
+description = "Pet supplies and pet food"
 keywords = [
     "animal supplies", "cat food", "dog food", "pet food", "pet store", 
     "pet supplies", "petco", "petsmart", "veterinary"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SPORTING_GOODS]
+description = "Sporting goods, camping gear, and outdoor equipment"
 keywords = [
     "academy sports", "athletic", "bass pro shops", "big 5", "cabelas", 
     "camping", "dicks sporting goods", "fishing", "hunting", "outdoor", 
@@ -232,18 +262,21 @@ keywords = [
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_SUPERSTORES]
+description = "Superstores such as Target and Walmart, selling both groceries and general merchandise"
 keywords = [
     "big box", "bjs", "costco", "fred meyer", "meijer", "sams club", 
     "superstore", "target", "walmart", "warehouse club"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_TOBACCO_AND_VAPE]
+description = "Purchases for tobacco and vaping products"
 keywords = [
     "cigar", "cigarette", "e-cigarette", "smoke shop", "tobacco", 
     "tobacco shop", "vape", "vapor"
 ]
 
 [GENERAL_MERCHANDISE.GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE]
+description = "Other miscellaneous merchandise, including toys, hobbies, and arts and crafts"
 keywords = [
     "art supplies", "craft", "fabric", "general merchandise", "hardware", 
     "hobby", "toy store", "toys", "variety store"
@@ -254,36 +287,42 @@ keywords = [
 # ============================================================================
 
 [GENERAL_SERVICES.GENERAL_SERVICES_ACCOUNTING_AND_FINANCIAL_PLANNING]
+description = "Financial planning, and tax and accounting services"
 keywords = [
     "accountant", "cpa", "financial advisor", "financial planning", 
     "h&r block", "tax preparation", "tax service", "turbotax"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_AUTOMOTIVE]
+description = "Oil changes, car washes, repairs, and towing"
 keywords = [
     "auto repair", "brake", "car service", "car wash", "mechanic", 
     "oil change", "smog check", "tire"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_CHILDCARE]
+description = "Babysitters and daycare"
 keywords = [
     "after school", "babysitter", "child care", "childcare", "daycare", 
     "nanny", "preschool"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_CONSULTING_AND_LEGAL]
+description = "Consulting and legal services"
 keywords = [
     "attorney", "consultant", "consulting", "law firm", "lawyer", 
     "legal", "legal services"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_EDUCATION]
+description = "Elementary, high school, professional schools, and college tuition"
 keywords = [
     "college", "education", "online course", "school", "student fees", 
     "textbooks", "training", "tuition", "university"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_INSURANCE]
+description = "Insurance for auto, home, and healthcare"
 keywords = [
     "auto insurance", "car insurance", "health insurance", "home insurance", 
     "homeowners insurance", "insurance", "life insurance", "renters insurance", 
@@ -291,18 +330,21 @@ keywords = [
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_POSTAGE_AND_SHIPPING]
+description = "Mail, packaging, and shipping services"
 keywords = [
     "dhl", "fedex", "freight", "mailing", "package", "postage", 
     "shipping", "ups", "usps"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_STORAGE]
+description = "Storage services and facilities"
 keywords = [
     "mini storage", "public storage", "self storage", "storage", 
     "storage unit", "u-haul storage"
 ]
 
 [GENERAL_SERVICES.GENERAL_SERVICES_OTHER_GENERAL_SERVICES]
+description = "Other miscellaneous services, including advertising and cloud storage "
 keywords = [
     "advertising", "cloud storage", "domain", "marketing", "saas", 
     "services", "software", "subscription", "web hosting"
@@ -313,24 +355,28 @@ keywords = [
 # ============================================================================
 
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_DONATIONS]
+description = "Charitable, political, and religious donations"
 keywords = [
     "charity", "church", "donation", "goodwill", "nonprofit", "red cross", 
     "religious", "salvation army", "tithing", "united way"
 ]
 
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES]
+description = "Government departments and agencies, such as driving licences, and passport renewal"
 keywords = [
     "city", "county", "court", "dmv", "federal", "government", "irs", 
     "license", "medicare", "permit", "social security", "state"
 ]
 
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_TAX_PAYMENT]
+description = "Tax payments, including income and property taxes"
 keywords = [
     "estimated tax", "income tax", "irs payment", "local tax", "property tax", 
     "sales tax", "state tax", "tax", "tax payment"
 ]
 
 [GOVERNMENT_AND_NON_PROFIT.GOVERNMENT_AND_NON_PROFIT_OTHER_GOVERNMENT_AND_NON_PROFIT]
+description = "Other miscellaneous government and non-profit agencies"
 keywords = [
     "government agency", "government services", "municipal", "non-profit", 
     "public service", "public utility"
@@ -341,30 +387,35 @@ keywords = [
 # ============================================================================
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_FURNITURE]
+description = "Furniture, bedding, and home accessories"
 keywords = [
     "ashley furniture", "bedding", "crate barrel", "furniture", "home accessories", 
     "home decor", "ikea", "mattress", "pottery barn", "rooms to go", "sleep number"
 ]
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_HARDWARE]
+description = "Building materials, hardware stores, paint, and wallpaper"
 keywords = [
     "ace hardware", "building materials", "hardware", "home depot", "lowes", 
     "lumber", "menards", "paint", "tools"
 ]
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE]
+description = "Plumbing, lighting, gardening, and roofing"
 keywords = [
     "contractor", "electrician", "handyman", "hvac", "landscaping", 
     "lawn care", "maintenance", "plumber", "repair", "roofing"
 ]
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_SECURITY]
+description = "Home security system purchases"
 keywords = [
     "adt", "alarm", "home security", "monitoring", "nest", "ring", 
     "security system", "surveillance"
 ]
 
 [HOME_IMPROVEMENT.HOME_IMPROVEMENT_OTHER_HOME_IMPROVEMENT]
+description = "Other miscellaneous home purchases, including pool installation and pest control"
 keywords = [
     "cleaning service", "home improvement", "maid service", "pest control", 
     "pool service", "remodeling", "renovation"
@@ -375,36 +426,42 @@ keywords = [
 # ============================================================================
 
 [INCOME.INCOME_DIVIDENDS]
+description = "Dividends from investment accounts"
 keywords = [
     "distribution", "div", "dividend", "dividends", "etf dividend", 
     "investment dividend", "mutual fund dividend", "stock dividend"
 ]
 
 [INCOME.INCOME_INTEREST_EARNED]
+description = "Income from interest on savings accounts"
 keywords = [
     "account interest", "accrued interest", "deposit interest", "int earned", 
     "interest", "interest earned", "interest payment", "savings interest"
 ]
 
 [INCOME.INCOME_RETIREMENT_PENSION]
+description = "Income from pension payments "
 keywords = [
     "pension", "pension payment", "retirement", "retirement benefits", 
     "retirement payment", "social security", "ss payment", "ssa"
 ]
 
 [INCOME.INCOME_TAX_REFUND]
+description = "Income from tax refunds"
 keywords = [
     "federal tax refund", "irs refund", "irs treas", "refund", "state tax refund", 
     "tax refund", "tax return", "treasury"
 ]
 
 [INCOME.INCOME_UNEMPLOYMENT]
+description = "Income from unemployment benefits, including unemployment insurance and healthcare"
 keywords = [
     "state unemployment", "ui benefits", "unemployment", "unemployment benefits", 
     "unemployment comp", "unemployment insurance"
 ]
 
 [INCOME.INCOME_WAGES]
+description = "Income from salaries, gig-economy work, and tips earned"
 keywords = [
     "contractor payment", "dd", "dir dep", "direct deposit", "directdep", 
     "earnings", "freelance", "gig work", "pay", "paycheck", "payroll", 
@@ -412,6 +469,7 @@ keywords = [
 ]
 
 [INCOME.INCOME_OTHER_INCOME]
+description = "Other miscellaneous income, including alimony, social security, child support, and rental"
 keywords = [
     "alimony", "bonus", "cash back", "cashback", "child support", "miscellaneous income", 
     "other income", "rental income", "rent payment received", "reward", "side income"
@@ -422,36 +480,42 @@ keywords = [
 # ============================================================================
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_CAR_PAYMENT]
+description = "Car loans and leases"
 keywords = [
     "auto loan", "auto payment", "car lease", "car loan", "car payment", 
     "ford credit", "honda financial", "toyota financial", "vehicle payment"
 ]
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_CREDIT_CARD_PAYMENT]
+description = "Payments to a credit card. These are positive amounts for credit card subtypes and negative for depository subtypes"
 keywords = [
     "amex payment", "autopay", "card payment", "cc payment", "credit card payment", 
     "discover payment", "mastercard payment", "visa payment"
 ]
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_MORTGAGE_PAYMENT]
+description = "Payments on mortgages"
 keywords = [
     "chase home", "home loan", "loancare", "mortgage", "mortgage payment", 
     "quicken loans", "rocket mortgage", "wells fargo home"
 ]
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_PERSONAL_LOAN_PAYMENT]
+description = "Personal loans, including cash advances and buy now pay later repayments"
 keywords = [
     "affirm", "afterpay", "bnpl", "buy now pay later", "cash advance", 
     "klarna", "loan payment", "personal loan", "sezzle"
 ]
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT]
+description = "Payments on student loans. For college tuition, refer to \"General Services - Education\""
 keywords = [
     "college loan", "education loan", "fedloan", "great lakes", "navient", 
     "nelnet", "sallie mae", "student loan"
 ]
 
 [LOAN_PAYMENTS.LOAN_PAYMENTS_OTHER_PAYMENT]
+description = "Other miscellaneous debt payments"
 keywords = [
     "debt payment", "installment payment", "loan pymt", "misc debt", "other loan"
 ]
@@ -461,42 +525,49 @@ keywords = [
 # ============================================================================
 
 [MEDICAL.MEDICAL_DENTAL_CARE]
+description = "Dentists and general dental care"
 keywords = [
     "dental", "dental care", "dental clinic", "dentist", "orthodonist", 
     "teeth cleaning"
 ]
 
 [MEDICAL.MEDICAL_EYE_CARE]
+description = "Optometrists, contacts, and glasses stores"
 keywords = [
     "contacts", "eye care", "eye doctor", "glasses", "optometrist", "vision", 
     "vision center"
 ]
 
 [MEDICAL.MEDICAL_NURSING_CARE]
+description = "Nursing care and facilities"
 keywords = [
     "assisted living", "care facility", "home health", "nursing", 
     "nursing care", "nursing home"
 ]
 
 [MEDICAL.MEDICAL_PHARMACIES_AND_SUPPLEMENTS]
+description = "Pharmacies and nutrition shops"
 keywords = [
     "cvs", "drugs", "medication", "pharmacy", "prescription", "rite aid", 
     "supplements", "vitamins", "walgreens"
 ]
 
 [MEDICAL.MEDICAL_PRIMARY_CARE]
+description = "Doctors and physicians"
 keywords = [
     "clinic", "doctor", "family practice", "health", "hospital", 
     "internal medicine", "medical", "medical center", "physician", "urgent care"
 ]
 
 [MEDICAL.MEDICAL_VETERINARY_SERVICES]
+description = "Prevention and care procedures for animals"
 keywords = [
     "animal care", "animal hospital", "pet care", "pet clinic", "vet", 
     "veterinarian", "veterinary"
 ]
 
 [MEDICAL.MEDICAL_OTHER_MEDICAL]
+description = "Other miscellaneous medical, including blood work, hospitals, and ambulances"
 keywords = [
     "ambulance", "blood work", "ct scan", "emergency room", "healthcare", 
     "lab", "medical", "mri", "therapy", "x-ray"
@@ -507,24 +578,28 @@ keywords = [
 # ============================================================================
 
 [PERSONAL_CARE.PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS]
+description = "Gyms, fitness centers, and workout classes"
 keywords = [
     "24 hour fitness", "anytime fitness", "crossfit", "fitness", "golds gym", 
     "gym", "la fitness", "pilates", "planet fitness", "ymca", "yoga"
 ]
 
 [PERSONAL_CARE.PERSONAL_CARE_HAIR_AND_BEAUTY]
+description = "Manicures, haircuts, waxing, spa/massages, and bath and beauty products "
 keywords = [
     "barber", "beauty", "cosmetics", "facial", "hair", "makeup", "manicure", 
     "massage", "nails", "pedicure", "salon", "spa"
 ]
 
 [PERSONAL_CARE.PERSONAL_CARE_LAUNDRY_AND_DRY_CLEANING]
+description = "Wash and fold, and dry cleaning expenses"
 keywords = [
     "cleaning", "dry clean", "dry cleaner", "laundromat", "laundry", "wash", 
     "wash and fold"
 ]
 
 [PERSONAL_CARE.PERSONAL_CARE_OTHER_PERSONAL_CARE]
+description = "Other miscellaneous personal care, including mental health apps and services"
 keywords = [
     "counseling", "meditation app", "mental health", "personal care", 
     "psychologist", "therapist", "therapy", "wellness"
@@ -535,42 +610,49 @@ keywords = [
 # ============================================================================
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_GAS_AND_ELECTRICITY]
+description = "Gas and electricity bills"
 keywords = [
     "con edison", "duke energy", "electric", "electricity", "energy", 
     "gas", "heating", "natural gas", "pge", "power", "utility"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_INTERNET_AND_CABLE]
+description = "Internet and cable bills"
 keywords = [
     "att", "broadband", "cable", "comcast", "cox", "directv", "dish", 
     "internet", "spectrum", "verizon", "wifi"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_RENT]
+description = "Rent payment"
 keywords = [
     "apartment", "housing", "landlord", "lease", "property management", 
     "rent", "rental"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_SEWAGE_AND_WASTE_MANAGEMENT]
+description = "Sewage and garbage disposal bills"
 keywords = [
     "garbage", "recycling", "sanitation", "sewage", "sewer", "trash", 
     "waste", "waste management"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_TELEPHONE]
+description = "Cell phone bills"
 keywords = [
     "att wireless", "cellular", "cell phone", "mobile", "phone", "sprint", 
     "telephone", "t-mobile", "verizon wireless"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_WATER]
+description = "Water bills"
 keywords = [
     "municipal water", "water", "water bill", "water department", 
     "water service", "water utility"
 ]
 
 [RENT_AND_UTILITIES.RENT_AND_UTILITIES_OTHER_UTILITIES]
+description = "Other miscellaneous utility bills"
 keywords = [
     "city services", "municipal services", "other utility", "public utilities", 
     "utilities", "utility"
@@ -581,36 +663,42 @@ keywords = [
 # ============================================================================
 
 [TRANSFER_IN.TRANSFER_IN_CASH_ADVANCES_AND_LOANS]
+description = "Loans and cash advances deposited into a bank account"
 keywords = [
     "advance", "cash advance", "credit line advance", "line of credit", 
     "loan deposit", "payday loan", "personal loan"
 ]
 
 [TRANSFER_IN.TRANSFER_IN_DEPOSIT]
+description = "Cash, checks, and ATM deposits into a bank account"
 keywords = [
     "atm deposit", "bank deposit", "cash deposit", "check deposit", 
     "deposit", "mobile deposit", "remote deposit"
 ]
 
 [TRANSFER_IN.TRANSFER_IN_INVESTMENT_AND_RETIREMENT_FUNDS]
+description = "Inbound transfers to an investment or retirement account"
 keywords = [
     "401k contribution", "brokerage transfer", "investment account", 
     "investment transfer", "ira contribution", "retirement transfer"
 ]
 
 [TRANSFER_IN.TRANSFER_IN_SAVINGS]
+description = "Inbound transfers to a savings account"
 keywords = [
     "save transfer", "savings account transfer", "savings deposit", 
     "savings transfer", "transfer to savings"
 ]
 
 [TRANSFER_IN.TRANSFER_IN_ACCOUNT_TRANSFER]
+description = "General inbound transfers from another account"
 keywords = [
     "account transfer", "ach transfer", "bank transfer", "internal transfer", 
     "online transfer", "transfer", "transfer in", "wire transfer"
 ]
 
 [TRANSFER_IN.TRANSFER_IN_OTHER_TRANSFER_IN]
+description = "Other miscellaneous inbound transactions"
 keywords = [
     "credit transfer", "inbound transfer", "misc transfer", "other transfer"
 ]
@@ -620,30 +708,35 @@ keywords = [
 # ============================================================================
 
 [TRANSFER_OUT.TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS]
+description = "Transfers to an investment or retirement account, including investment apps such as Acorns, Betterment"
 keywords = [
     "401k", "acorns", "betterment", "brokerage", "fidelity", "investment", 
     "ira", "retirement", "robinhood", "schwab", "vanguard"
 ]
 
 [TRANSFER_OUT.TRANSFER_OUT_SAVINGS]
+description = "Outbound transfers to savings accounts"
 keywords = [
     "emergency fund", "save", "savings account", "savings transfer", 
     "transfer to savings"
 ]
 
 [TRANSFER_OUT.TRANSFER_OUT_WITHDRAWAL]
+description = "Withdrawals from a bank account"
 keywords = [
     "atm", "atm withdrawal", "bank withdrawal", "cash out", "cash withdrawal", 
     "withdrawal"
 ]
 
 [TRANSFER_OUT.TRANSFER_OUT_ACCOUNT_TRANSFER]
+description = "General outbound transfers to another account"
 keywords = [
     "account transfer", "ach transfer", "bank transfer", "online transfer", 
     "transfer", "transfer out", "wire transfer"
 ]
 
 [TRANSFER_OUT.TRANSFER_OUT_OTHER_TRANSFER_OUT]
+description = "Other miscellaneous outbound transactions"
 keywords = [
     "debit transfer", "misc transfer", "other transfer", "outbound transfer"
 ]
@@ -653,42 +746,49 @@ keywords = [
 # ============================================================================
 
 [TRANSPORTATION.TRANSPORTATION_BIKES_AND_SCOOTERS]
+description = "Bike and scooter rentals"
 keywords = [
     "bicycle rental", "bike rental", "bike share", "bird", "e-scooter", 
     "lime", "scooter", "spin"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_GAS]
+description = "Purchases at a gas station"
 keywords = [
     "arco", "bp", "chevron", "exxon", "fuel", "gas", "gas station", 
     "gasoline", "mobil", "petrol", "shell", "texaco"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_PARKING]
+description = "Parking fees and expenses"
 keywords = [
     "garage", "meter", "park", "parking", "parking fee", "parking garage", 
     "parking lot", "valet"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_PUBLIC_TRANSIT]
+description = "Public transportation, including rail and train, buses, and metro"
 keywords = [
     "bart", "bus", "light rail", "metro", "mta", "public transport", 
     "subway", "train", "transit", "wmata"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_TAXIS_AND_RIDE_SHARES]
+description = "Taxi and ride share services"
 keywords = [
     "cab", "lyft", "rideshare", "ride share", "taxi", "transportation", 
     "uber", "yellow cab"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_TOLLS]
+description = "Toll expenses"
 keywords = [
     "bridge toll", "ezpass", "fastrak", "highway toll", "sunpass", "toll", 
     "toll road", "turnpike"
 ]
 
 [TRANSPORTATION.TRANSPORTATION_OTHER_TRANSPORTATION]
+description = "Other miscellaneous transportation expenses"
 keywords = [
     "boat", "charter", "ferry", "helicopter", "transport service", "transportation"
 ]
@@ -698,24 +798,28 @@ keywords = [
 # ============================================================================
 
 [TRAVEL.TRAVEL_FLIGHTS]
+description = "Airline expenses"
 keywords = [
     "airline", "alaska air", "american airlines", "delta", "flight", 
     "frontier", "jetblue", "southwest", "spirit", "united"
 ]
 
 [TRAVEL.TRAVEL_LODGING]
+description = "Hotels, motels, and hosted accommodation such as Airbnb"
 keywords = [
     "airbnb", "booking.com", "expedia", "hilton", "hotel", "hotels.com", 
     "hyatt", "inn", "lodging", "marriott", "motel", "resort", "vrbo"
 ]
 
 [TRAVEL.TRAVEL_RENTAL_CARS]
+description = "Rental cars, charter buses, and trucks"
 keywords = [
     "alamo", "avis", "budget", "car rental", "enterprise", "hertz", 
     "national", "rental car", "zipcar"
 ]
 
 [TRAVEL.TRAVEL_OTHER_TRAVEL]
+description = "Other miscellaneous travel expenses"
 keywords = [
     "cruise", "luggage", "passport", "tour", "travel", "travel agency", 
     "vacation", "visa"

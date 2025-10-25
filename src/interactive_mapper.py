@@ -116,7 +116,7 @@ def suggest_name(description: str) -> str:
 
 def load_category_taxonomy() -> Tuple[Dict[str, List[str]], Dict[str, str], Dict[str, str]]:
     """
-    Load category taxonomy and descriptions from official Plaid PFC CSV file.
+    Load category taxonomy and descriptions from plaid_categories.toml file.
 
     Returns:
         Tuple of:
@@ -142,14 +142,11 @@ def load_category_taxonomy() -> Tuple[Dict[str, List[str]], Dict[str, str], Dict
             ...
         }
     """
-    csv_path = os.path.join(os.path.dirname(__file__), '..', 'claude',
-                            'transactions-personal-finance-category-taxonomy.csv')
-
     taxonomy = {}
     detailed_descriptions = {}
     primary_descriptions = {}
 
-    # Manual PRIMARY category descriptions (Plaid CSV only has DETAILED descriptions)
+    # Manual PRIMARY category descriptions
     primary_desc_map = {
         'BANK_FEES': 'Banking fees and charges',
         'ENTERTAINMENT': 'Recreation and entertainment',
@@ -169,34 +166,28 @@ def load_category_taxonomy() -> Tuple[Dict[str, List[str]], Dict[str, str], Dict
         'TRAVEL': 'Travel and lodging'
     }
 
-    try:
-        with open(csv_path, 'r') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                primary = row['PRIMARY']
-                detailed = row['DETAILED']
-                description = row.get('DESCRIPTION', '')
+    # Load from plaid_categories.toml (now includes descriptions)
+    plaid = load_config('config/plaid_categories.toml')
 
-                if primary not in taxonomy:
-                    taxonomy[primary] = []
-                    primary_descriptions[primary] = primary_desc_map.get(primary, '')
+    # TOML creates nested dicts: {PRIMARY: {DETAILED: {description: ..., keywords: [...]}}}
+    for primary, subcategories in plaid.items():
+        if not isinstance(subcategories, dict):
+            continue
 
-                taxonomy[primary].append(detailed)
-                detailed_descriptions[detailed] = description
+        # Add primary category
+        if primary not in taxonomy:
+            taxonomy[primary] = []
+            primary_descriptions[primary] = primary_desc_map.get(primary, '')
 
-    except FileNotFoundError:
-        # Fallback to loading from plaid_categories.toml if CSV not found
-        print("Warning: Plaid CSV not found, falling back to plaid_categories.toml")
-        plaid = load_config('config/plaid_categories.toml')
+        # Add detailed subcategories
+        for detailed, category_data in subcategories.items():
+            taxonomy[primary].append(detailed)
 
-        for full_category in plaid.keys():
-            if '.' in full_category:
-                primary, detailed = full_category.split('.', 1)
-                if primary not in taxonomy:
-                    taxonomy[primary] = []
-                    primary_descriptions[primary] = primary_desc_map.get(primary, '')
-                taxonomy[primary].append(full_category)  # Use full name
-                detailed_descriptions[full_category] = ''  # No description available
+            # Get description from TOML if available
+            if isinstance(category_data, dict) and 'description' in category_data:
+                detailed_descriptions[detailed] = category_data['description']
+            else:
+                detailed_descriptions[detailed] = ''
 
     return taxonomy, detailed_descriptions, primary_descriptions
 
