@@ -1,9 +1,21 @@
+# Virtual environment
+.venv/
+
+# Backup directory
 backups/
-claude/
-claude.md
+
+# Output files
 output/
+
+# Python cache files
 src/__pycache__/
+
+# Financial statements (sensitive data)
 statements/
+
+# Claude Code directory & CLAUDE.md files
+.claude/
+*CLAUDE.md
 
 # Private configuration files (user-specific, not versioned)
 config/private_settings.toml
