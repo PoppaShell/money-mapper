@@ -952,7 +952,7 @@ class MappingProcessor:
                 print(f"  (k) Keep existing in {conflict['file']} and skip new mapping")
                 print(f"  (r) Replace - Remove from {conflict['file']} and add new mapping")
                 print(f"  (u) Update existing mapping's scope to '{new_scope}' and merge details")
-                print(f"  (a) Abort entire operation")
+                print(f"  (a) Abort entire operation", flush=True)
 
                 while True:
                     choice = input("\nResolve cross-file duplicate (k/r/u/a): ").lower().strip()
@@ -979,7 +979,7 @@ class MappingProcessor:
                 print(f"\nOptions:")
                 print(f"  (s) Skip - Keep existing mapping, don't add new one")
                 print(f"  (o) Overwrite - Replace existing mapping with new details")
-                print(f"  (a) Abort entire operation")
+                print(f"  (a) Abort entire operation", flush=True)
 
                 while True:
                     choice = input("\nResolve same-file duplicate (s/o/a): ").lower().strip()
@@ -1506,8 +1506,8 @@ class MappingProcessor:
         if missing_field == 'scope':
             print(f"\nMissing scope field. This mapping should be:")
             print("1. 'private' - Local business, personal service, or employer")
-            print("2. 'public' - National chain or well-known service")
-            
+            print("2. 'public' - National chain or well-known service", flush=True)
+
             while True:
                 choice = input("Enter scope (private/public): ").lower().strip()
                 if choice in ['private', 'public']:
@@ -1536,8 +1536,8 @@ class MappingProcessor:
         print(f"Expected scope for {file_name}: '{expected_scope}'")
         print(f"1. Fix scope to '{expected_scope}'")
         print(f"2. Move mapping to correct file")
-        print(f"3. Skip this issue")
-        
+        print(f"3. Skip this issue", flush=True)
+
         while True:
             choice = input("Enter choice (1/2/3): ").strip()
             if choice == '1':
@@ -1569,8 +1569,8 @@ class MappingProcessor:
         
         print("\nOptions:")
         print("1. Enter new category and subcategory")
-        print("2. Skip this issue")
-        
+        print("2. Skip this issue", flush=True)
+
         while True:
             choice = input("Enter choice (1/2): ").strip()
             if choice == '1':
@@ -1695,7 +1695,7 @@ class MappingProcessor:
                 print(f"\n1. Keep in {dup['existing_file']} [{dup['existing_section']}]")
                 print(f"   Mapping: {dup['existing_mapping']}")
                 print(f"\n2. Keep in {dup['duplicate_file']} [{dup['duplicate_section']}]")
-                print(f"   Mapping: {dup['duplicate_mapping']}")
+                print(f"   Mapping: {dup['duplicate_mapping']}", flush=True)
 
                 while True:
                     choice = input("\nKeep which mapping? (1/2/s to skip): ").strip()
@@ -2047,7 +2047,7 @@ class MappingProcessor:
                 # Allow user to modify the suggested pattern
                 print(f"\nCurrent suggestion: \"{final_wildcard}\"")
                 print("Enter your custom wildcard pattern (or press Enter to use suggestion):")
-                print("Wildcards: * = any characters, ? = single character")
+                print("Wildcards: * = any characters, ? = single character", flush=True)
                 custom_pattern = input("→ ").strip()
 
                 if custom_pattern:

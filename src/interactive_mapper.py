@@ -209,9 +209,9 @@ def display_category_menu(taxonomy: Dict[str, List[str]], primary_descriptions: 
     for i, category in enumerate(categories, 1):
         desc = primary_descriptions.get(category, '')
         if desc:
-            print(f"  {i:2}. {category:<25} - {desc}")
+            print(f"  {i:2}. {category:<25} - {desc}", flush=True)
         else:
-            print(f"  {i:2}. {category}")
+            print(f"  {i:2}. {category}", flush=True)
 
     while True:
         try:
@@ -261,9 +261,9 @@ def display_subcategory_menu(primary: str, taxonomy: Dict[str, List[str]], descr
             # Truncate long descriptions to fit nicely
             if len(desc) > 45:
                 desc = desc[:42] + '...'
-            print(f"  {i:2}. {display_name:<35} - {desc}")
+            print(f"  {i:2}. {display_name:<35} - {desc}", flush=True)
         else:
-            print(f"  {i:2}. {display_name}")
+            print(f"  {i:2}. {display_name}", flush=True)
 
     while True:
         try:
@@ -287,9 +287,9 @@ def display_scope_menu() -> Optional[str]:
     Returns:
         'public' or 'private', or None if cancelled
     """
-    print("\nSelect scope:")
-    print("  1. public  - National/regional chain (shareable)")
-    print("  2. private - Local business or personal (kept private)")
+    print("\nSelect scope:", flush=True)
+    print("  1. public  - National/regional chain (shareable)", flush=True)
+    print("  2. private - Local business or personal (kept private)", flush=True)
 
     while True:
         choice = input("\nEnter number (or 'q' to go back): ").strip()
@@ -467,8 +467,8 @@ def run_mapping_wizard(
 
         # Mapping creation loop - allows user to go back and change selections
         while True:
-            print(f"\nSuggested keyword(s): {suggested_keyword}")
-            print(f"Suggested name: {suggested_name}")
+            print(f"\nSuggested keyword(s): {suggested_keyword}", flush=True)
+            print(f"Suggested name: {suggested_name}", flush=True)
 
             # Get keyword (allow editing)
             keyword_input = input(f"\nEdit keyword(s) [Enter to accept, 'skip' to skip]: ").strip()

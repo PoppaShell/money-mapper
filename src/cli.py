@@ -239,8 +239,8 @@ def parse_statements_interactive():
 
     print(f"Current configuration:")
     print(f"  Input directory: {default_dir}")
-    print(f"  Output file: {default_output}")
-    
+    print(f"  Output file: {default_output}", flush=True)
+
     # Allow user to override defaults
     directory = input(f"\nEnter directory containing PDF files (Enter for default): ").strip()
     if not directory:
@@ -296,15 +296,15 @@ def enrich_transactions_interactive(input_file: Optional[str] = None):
     # Show current configuration and allow overrides
     if not input_file:
         default_input = config.get_default_file_path('parsed_transactions')
-        print(f"Current input file: {default_input}")
+        print(f"Current input file: {default_input}", flush=True)
 
         input_file = input(f"Enter input file name (Enter for default): ").strip()
         if not input_file:
             input_file = default_input
 
     default_output = config.get_default_file_path('enriched_transactions')
-    print(f"Current output file: {default_output}")
-    
+    print(f"Current output file: {default_output}", flush=True)
+
     output_file = input(f"Enter output file name (Enter for default): ").strip()
     if not output_file:
         output_file = default_output
@@ -430,8 +430,8 @@ def run_full_pipeline_interactive():
     print(f"Current configuration:")
     print(f"  Input directory: {default_dir}")
     print(f"  Parsed output: {parsed_file}")
-    print(f"  Enriched output: {enriched_file}")
-    
+    print(f"  Enriched output: {enriched_file}", flush=True)
+
     # Allow user to override input directory
     directory = input(f"\nEnter directory containing PDF files (Enter for default): ").strip()
     if not directory:
@@ -865,7 +865,7 @@ Examples:
         print("4. Review categorization results")
         print("5. Check configuration files")
         print("6. Manage merchant mappings")
-        print("7. Exit")
+        print("7. Exit", flush=True)
 
         while True:
             choice = input("\nEnter your choice (1-7): ").strip()
