@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Dependency validation to setup wizard and improved error messages ([#22](https://github.com/PoppaShell/money-mapper/issues/22))
+  - Setup wizard now checks dependencies BEFORE other setup steps
+  - Clear error messages when dependencies are missing (toml, pandas, pypdf)
+  - Option to continue setup despite missing dependencies (not recommended)
+  - New check_dependencies() and format_dependency_status() utility functions in utils.py
+  - New check-deps CLI command to verify all required packages
+  - Improved import error messages with installation instructions for toml and pypdf
+  - Verified with comprehensive test suite (13/13 tests passed)
+- Comprehensive development workflow documentation in docs/ directory ([#26](https://github.com/PoppaShell/money-mapper/issues/26))
+  - docs/DEVELOPMENT.md with complete workflow guide emphasizing testing-first approach
+  - docs/RELEASE_NOTES_TEMPLATE.md for standardized releases
+  - Updated README.md with Documentation section
+- Additional wildcard patterns to public_mappings.toml ([#17](https://github.com/PoppaShell/money-mapper/issues/17))
+  - 35+ wildcard patterns for national chains (McDonald's, Taco Bell, Walmart, etc.)
+  - Consolidated duplicate patterns (e.g., "tractor supply*" replaces 3 exact matches)
+  - Improved coverage for fast food, groceries, and retail stores
+
 ### Fixed
 - Interactive prompts now display output correctly before requesting input ([#21](https://github.com/PoppaShell/money-mapper/issues/21))
   - Added flush=True to all print() statements before input() calls across 5 files
@@ -19,16 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed bug where all wildcards defaulted to scope="private" regardless of source
   - Added source_file parameter to _add_wildcard_to_new_mappings() method
   - Verified with comprehensive test suite (3/3 tests passed)
-
-### Added
-- Comprehensive development workflow documentation in docs/ directory ([#26](https://github.com/PoppaShell/money-mapper/issues/26))
-  - docs/DEVELOPMENT.md with complete workflow guide emphasizing testing-first approach
-  - docs/RELEASE_NOTES_TEMPLATE.md for standardized releases
-  - Updated README.md with Documentation section
-- Additional wildcard patterns to public_mappings.toml ([#17](https://github.com/PoppaShell/money-mapper/issues/17))
-  - 35+ wildcard patterns for national chains (McDonald's, Taco Bell, Walmart, etc.)
-  - Consolidated duplicate patterns (e.g., "tractor supply*" replaces 3 exact matches)
-  - Improved coverage for fast food, groceries, and retail stores
 
 ### Changed
 - Updated development workflow to be issue-driven with comprehensive CLAUDE.md documentation

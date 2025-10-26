@@ -23,7 +23,10 @@ from config_manager import get_config_manager
 try:
     import pypdf
 except ImportError:
-    print("Error: pypdf is required. Install with: pip install pypdf")
+    print("\nERROR: The 'pypdf' package is required to read PDF statements.")
+    print("Please install it with: pip install pypdf")
+    print("Or install all dependencies: pip install -r requirements.txt")
+    print()
     exit(1)
 
 
@@ -871,3 +874,76 @@ def prompt_with_validation(message: str, valid_options: List[str], default: str 
 
         # Invalid input - show helpful message and re-prompt
         print(f"Invalid input. Please enter one of: {', '.join(valid_options)}", flush=True)
+
+
+def check_dependencies(packages: Optional[List[str]] = None) -> Tuple[bool, List[str]]:
+    """
+    Check if required dependencies are installed.
+
+    Args:
+        packages: List of package names to check. If None, checks default required packages.
+
+    Returns:
+        Tuple of (all_present, missing_packages)
+        - all_present: True if all dependencies are installed
+        - missing_packages: List of package names that are missing
+    """
+    # Default required packages
+    if packages is None:
+        packages = ['toml', 'pandas', 'pypdf']
+
+    missing = []
+
+    for package in packages:
+        try:
+            __import__(package)
+        except ImportError:
+            missing.append(package)
+
+    return (len(missing) == 0, missing)
+
+
+def format_dependency_status() -> List[Tuple[str, Optional[str], bool]]:
+    """
+    Get detailed status of all required dependencies including version numbers.
+
+    Returns:
+        List of tuples: (package_name, version_or_none, is_installed)
+    """
+    required_packages = ['toml', 'pandas', 'pypdf']
+    status = []
+
+    for package in required_packages:
+        try:
+            module = __import__(package)
+            # Try to get version
+            version = None
+            if hasattr(module, '__version__'):
+                version = module.__version__
+            elif hasattr(module, 'VERSION'):
+                version = module.VERSION
+            status.append((package, version, True))
+        except ImportError:
+            status.append((package, None, False))
+
+    return status
+
+
+def handle_toml_import_error() -> None:
+    """
+    Display helpful error message when toml package is missing.
+    """
+    print("\nERROR: The 'toml' package is required to save mappings.")
+    print("Please install it with: pip install toml")
+    print("Or install all dependencies: pip install -r requirements.txt")
+    print()
+
+
+def handle_pypdf_import_error() -> None:
+    """
+    Display helpful error message when pypdf package is missing.
+    """
+    print("\nERROR: The 'pypdf' package is required to read PDF statements.")
+    print("Please install it with: pip install pypdf")
+    print("Or install all dependencies: pip install -r requirements.txt")
+    print()
