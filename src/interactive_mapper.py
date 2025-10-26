@@ -353,7 +353,12 @@ def create_mapping_entry(
         current_entries[keyword] = mapping_value
 
         # Write back to file, preserving the header
-        import toml
+        try:
+            import toml
+        except ImportError:
+            from utils import handle_toml_import_error
+            handle_toml_import_error()
+            return False
 
         # Read the header from the file
         header_lines = []

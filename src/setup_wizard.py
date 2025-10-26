@@ -16,7 +16,7 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config_manager import get_config_manager
-from utils import prompt_yes_no
+from utils import prompt_yes_no, check_dependencies
 
 
 def check_first_run() -> bool:
@@ -48,12 +48,41 @@ def run_setup_wizard(config_dir: str = "config") -> bool:
     print("Let's set up your private configuration files.")
     print()
 
+    # Step 0: Check dependencies FIRST (before any other setup)
+    print("-" * 60)
+    print("Checking Dependencies")
+    print("-" * 60)
+    print()
+
+    deps_ok, missing = check_dependencies()
+    if not deps_ok:
+        print("ERROR: Missing required dependencies:")
+        for pkg in missing:
+            print(f"  - {pkg}")
+        print()
+        print("Please install with: pip install -r requirements.txt")
+        print()
+
+        if not prompt_yes_no("Continue anyway? (not recommended)", default=False):
+            print()
+            print("Setup cancelled. Please install dependencies and try again.")
+            return False
+
+        print()
+        print("WARNING: Continuing without all dependencies may cause errors.")
+        print()
+    else:
+        print("All required dependencies are installed.")
+        print()
+
     # Step 1: Create private config files from templates
     if not create_private_configs_from_templates(config_dir):
         print("Error: Failed to create private configuration files.")
         return False
 
-    print("\n✓ Private configuration files created successfully!")
+    print("\n" + "=" * 60)
+    print("Private configuration files created successfully!")
+    print("=" * 60)
 
     # Step 2: Configure privacy settings
     print("\n" + "-" * 60)
@@ -203,7 +232,12 @@ def save_privacy_settings(config_dir: str, names: list, employers: list,
     Returns:
         True if successful, False otherwise
     """
-    import toml  # We need toml for writing (tomllib is read-only)
+    try:
+        import toml  # We need toml for writing (tomllib is read-only)
+    except ImportError:
+        from utils import handle_toml_import_error
+        handle_toml_import_error()
+        return False
 
     private_settings_file = os.path.join(config_dir, "private_settings.toml")
 

@@ -517,6 +517,7 @@ Examples:
   %(prog)s check-mappings             # Validate existing mappings only
   %(prog)s add-mappings              # Manage transaction mappings
   %(prog)s add-mappings --config config --debug  # Debug mapping management
+  %(prog)s check-deps                # Check required dependencies
         """
     )
     
@@ -577,6 +578,9 @@ Examples:
     setup_parser = subparsers.add_parser('setup', help='Run first-time setup wizard')
     setup_parser.add_argument('--config',
                              help='Configuration directory (default: config)')
+
+    # Check dependencies command
+    check_deps_parser = subparsers.add_parser('check-deps', help='Check required dependencies')
 
     args = parser.parse_args()
 
@@ -838,6 +842,43 @@ Examples:
             if args.debug:
                 import traceback
                 traceback.print_exc()
+            sys.exit(1)
+
+    elif args.command == 'check-deps':
+        # Check dependencies
+        from utils import format_dependency_status
+
+        print("\n" + "=" * 60)
+        print("Dependency Status Check")
+        print("=" * 60)
+        print()
+        print("Checking required dependencies...")
+        print()
+
+        deps_status = format_dependency_status()
+        all_installed = True
+
+        for package, version, installed in deps_status:
+            if installed:
+                version_str = f"({version})" if version else "(version unknown)"
+                print(f"  [OK] {package} {version_str}")
+            else:
+                print(f"  [MISSING] {package} - NOT INSTALLED")
+                all_installed = False
+
+        print()
+        print("=" * 60)
+
+        if all_installed:
+            print("All required dependencies are installed.")
+            print("=" * 60)
+        else:
+            print("Some dependencies are missing!")
+            print("=" * 60)
+            print()
+            print("Install missing dependencies with:")
+            print("  pip install -r requirements.txt")
+            print()
             sys.exit(1)
 
     elif args.command == 'setup':
