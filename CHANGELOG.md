@@ -13,12 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixes output buffering issues on Windows and other environments
   - Verified with comprehensive test suite (8/8 tests passed)
   - Affects interactive_mapper.py, utils.py, setup_wizard.py, mapping_processor.py, cli.py
+- Wildcard consolidation now correctly assigns scope based on source file ([#17](https://github.com/PoppaShell/money-mapper/issues/17))
+  - Wildcards from public_mappings.toml correctly assigned scope="public"
+  - Wildcards from private_mappings.toml correctly assigned scope="private"
+  - Fixed bug where all wildcards defaulted to scope="private" regardless of source
+  - Added source_file parameter to _add_wildcard_to_new_mappings() method
+  - Verified with comprehensive test suite (3/3 tests passed)
 
 ### Added
 - Comprehensive development workflow documentation in docs/ directory ([#26](https://github.com/PoppaShell/money-mapper/issues/26))
   - docs/DEVELOPMENT.md with complete workflow guide emphasizing testing-first approach
   - docs/RELEASE_NOTES_TEMPLATE.md for standardized releases
   - Updated README.md with Documentation section
+- Additional wildcard patterns to public_mappings.toml ([#17](https://github.com/PoppaShell/money-mapper/issues/17))
+  - 35+ wildcard patterns for national chains (McDonald's, Taco Bell, Walmart, etc.)
+  - Consolidated duplicate patterns (e.g., "tractor supply*" replaces 3 exact matches)
+  - Improved coverage for fast food, groceries, and retail stores
 
 ### Changed
 - Updated development workflow to be issue-driven with comprehensive CLAUDE.md documentation
@@ -33,10 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added description fields to all 104 categories in plaid_categories.toml
   - Fixed TOML parsing to handle nested dictionary structure
   - Switched from CSV to TOML as primary taxonomy source
-- Wildcard consolidation now correctly assigns scope based on source file ([#17](https://github.com/PoppaShell/money-mapper/issues/17))
-  - Wildcards from public_mappings.toml → public scope
-  - Wildcards from private_mappings.toml → private scope
-  - Fixed bug where all wildcards defaulted to private scope
 
 ## [0.4.0] - 2025-10-20
 
