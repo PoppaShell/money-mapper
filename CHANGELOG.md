@@ -24,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 35+ wildcard patterns for national chains (McDonald's, Taco Bell, Walmart, etc.)
   - Consolidated duplicate patterns (e.g., "tractor supply*" replaces 3 exact matches)
   - Improved coverage for fast food, groceries, and retail stores
+- 70+ new merchant mappings to public_mappings.toml
+  - Expanded fast food coverage (Cava, Crave Cookies, Dunkin, In-N-Out, NafNaf, Papa Johns, Roots Chicken Shak, Sonic, Wendys)
+  - Additional grocery stores (H-E-B variants, Winn-Dixie)
+  - Restaurant chains (BJs, Hideaway Pizza, IHOP, Hungry Howies, various regional chains)
+  - Clothing retailers (ALTARD STATE, Kohls, Tecovas, TJ Maxx, The Childrens Place)
+  - Electronics (Best Buy online, Hak5)
+  - Gift shops and specialty stores
+  - Bank fees (Overdraft Protection)
+  - Wildcard patterns for better matching flexibility
 
 ### Fixed
 - Interactive prompts now display output correctly before requesting input ([#21](https://github.com/PoppaShell/money-mapper/issues/21))
