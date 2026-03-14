@@ -261,7 +261,7 @@ class MappingProcessor:
 
         try:
             # Group backups by original filename
-            backups_by_file = {}
+            backups_by_file: dict[str, list[tuple[str, float]]] = {}
 
             for filename in os.listdir(self.backup_dir):
                 if not filename.startswith("backup_"):
@@ -759,8 +759,8 @@ class MappingProcessor:
             return False
 
         # Separate by scope
-        private_additions = {}
-        public_additions = {}
+        private_additions: dict[str, dict[str, object]] = {}
+        public_additions: dict[str, dict[str, object]] = {}
 
         # Handle flat structure: pattern -> mapping dict directly at root
         for pattern, mapping in new_data.items():
@@ -854,7 +854,7 @@ class MappingProcessor:
 
         # Build a flat index of all existing patterns for fast lookup
         # Format: { pattern: [(file, section, mapping), ...] }
-        existing_patterns = {}
+        existing_patterns: dict[str, list[str]] = {}
 
         # Index private mappings
         for primary_key, primary_section in existing_private.items():
@@ -1232,7 +1232,7 @@ class MappingProcessor:
 
     def _report_validation_fixes(self, issues: list[dict]) -> None:
         """Report what validation fixes would be applied."""
-        fix_types = {}
+        fix_types: dict[str, int] = {}
         for issue in issues:
             fix_type = issue["type"]
             fix_types[fix_type] = fix_types.get(fix_type, 0) + 1
@@ -1965,7 +1965,7 @@ class MappingProcessor:
             return f"*{common_suffix}"
         else:
             # Find most common word
-            word_counts = {}
+            word_counts: dict[str, int] = {}
             for pattern in patterns:
                 words = pattern.lower().split()
                 for word in words:
