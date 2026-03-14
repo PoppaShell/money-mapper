@@ -600,6 +600,9 @@ def get_processing_stats(transactions: list[dict]) -> dict:
 
     for transaction in transactions:
         confidence = transaction.get("confidence", 0.0)
+        # Handle None values
+        if confidence is None:
+            confidence = 0.0
         method = transaction.get("categorization_method", "unknown")
 
         # Count confidence levels
