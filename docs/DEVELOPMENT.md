@@ -4,14 +4,231 @@ This document outlines the development practices and workflows for Money Mapper.
 
 ## Table of Contents
 
+- [Code Style Guidelines](#code-style-guidelines)
+- [Running Tools Locally](#running-tools-locally)
+- [Testing Requirements](#testing-requirements)
 - [Issue-Driven Development](#issue-driven-development)
 - [Issue Creation Guidelines](#issue-creation-guidelines)
 - [CHANGELOG Maintenance](#changelog-maintenance)
 - [Commit Message Conventions](#commit-message-conventions)
 - [Pre-Commit Checklist](#pre-commit-checklist)
 - [Release Process](#release-process)
-- [Testing Requirements](#testing-requirements)
-- [Code Style Guidelines](#code-style-guidelines)
+
+---
+
+## Code Style Guidelines
+
+Money Mapper follows PEP 8 with these conventions:
+
+### Style Rules
+
+- **Line length:** 100 characters (enforced by ruff)
+- **Indentation:** 4 spaces (never tabs)
+- **Imports:** Organized in groups (standard library, third-party, local) - auto-sorted by ruff
+- **Quotes:** Double quotes for strings (enforced by ruff)
+- **Naming:**
+  - Functions/variables: `snake_case`
+  - Classes: `PascalCase`
+  - Constants: `UPPER_SNAKE_CASE`
+
+### Type Hints
+
+All functions should have type hints:
+
+```python
+from typing import Optional, List, Dict
+
+def load_transactions(file_path: str) -> List[Dict[str, str]]:
+    """Load transactions from file.
+    
+    Args:
+        file_path: Path to transaction file
+        
+    Returns:
+        List of transaction dictionaries
+    """
+    pass
+```
+
+### Comments
+
+- Explain **why**, not what
+- Keep comments up-to-date with code
+- No Unicode/emojis (Windows CP1252 compatibility)
+
+### No Unicode Characters
+
+- Use ASCII text only
+- No emojis or special symbols
+- Test on Windows before committing
+
+---
+
+## Running Tools Locally
+
+### Before Every Commit
+
+Run these checks to ensure code quality:
+
+```bash
+# Linting and formatting
+ruff check src/
+ruff format src/
+
+# Type checking
+mypy src/
+
+# Security scanning
+bandit -r src/ -ll
+
+# Run tests with coverage
+pytest tests/ --cov=src/money_mapper --cov-report=term-miss
+```
+
+### Installing Pre-commit Hooks
+
+Pre-commit hooks run automatically before every commit:
+
+```bash
+# One-time setup
+pre-commit install
+
+# Now every git commit will run checks automatically
+git commit -m "Your message"
+# Checks run automatically, commit blocked if violations found
+```
+
+### Auto-fixing Style Issues
+
+Ruff can automatically fix many style issues:
+
+```bash
+# Fix all fixable issues
+ruff check src/ --fix
+
+# Format all code to 100 char line length
+ruff format src/
+
+# Both together
+ruff check src/ --fix && ruff format src/
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run specific test file
+pytest tests/test_utils.py -v
+
+# Run with coverage report
+pytest tests/ --cov=src/money_mapper --cov-report=html
+
+# Open coverage report
+open htmlcov/index.html  # macOS
+xdg-open htmlcov/index.html  # Linux
+start htmlcov/index.html  # Windows
+```
+
+### Type Checking
+
+```bash
+# Check for type errors
+mypy src/
+
+# Show all errors with codes
+mypy src/ --show-error-codes
+
+# Check specific module
+mypy src/money_mapper/utils.py
+```
+
+### Security Scanning
+
+```bash
+# Scan for security issues
+bandit -r src/ -v  # Verbose
+
+# Only show medium and high severity
+bandit -r src/ -ll
+```
+
+---
+
+## Testing Requirements
+
+All code changes must include tests.
+
+### Test Structure
+
+Tests are organized in `/tests/` directory, mirroring the module structure:
+
+```
+tests/
+├── conftest.py              # Shared fixtures
+├── fixtures/                # Test data
+│   ├── sample_transactions.json
+│   ├── sample_mappings.toml
+│   └── sample_statements/
+│       └── checking_2024_01.csv
+├── test_utils.py
+├── test_config_manager.py
+├── test_statement_parser.py
+├── test_transaction_enricher.py
+├── test_mapping_processor.py
+└── test_cli.py
+```
+
+### Test Coverage
+
+- **Minimum coverage:** 60%
+- **Target coverage:** 80%+
+- CI/CD blocks merges if coverage falls below threshold
+
+### Writing Tests
+
+Use pytest framework:
+
+```python
+import pytest
+from money_mapper.utils import load_transactions_from_json
+
+class TestLoadTransactions:
+    """Test transaction loading functionality."""
+    
+    def test_load_valid_file(self, sample_transactions, temp_output_dir):
+        """Test loading valid transaction JSON file."""
+        test_file = temp_output_dir / "transactions.json"
+        # Write and test
+        assert len(loaded) == 4
+        
+    def test_load_empty_file(self, temp_output_dir):
+        """Test loading empty file."""
+        test_file = temp_output_dir / "empty.json"
+        # Test empty case
+        assert loaded == []
+```
+
+### Available Fixtures
+
+From `conftest.py`:
+
+- `test_data_dir` — Path to test fixtures directory
+- `sample_transactions` — 4 test transactions loaded from JSON
+- `sample_mappings` — Test merchant mappings from TOML
+- `temp_config_dir` — Temporary config directory for tests
+- `temp_output_dir` — Temporary output directory for tests
+- `sample_csv_checking` — Path to sample checking account CSV
+
+### CI/CD Testing
+
+GitHub Actions runs tests on every push and PR:
+
+- Python 3.11 and 3.12
+- Full linting (ruff), type checking (mypy), security (bandit)
+- All tests with 60%+ coverage requirement
+- Coverage uploaded to Codecov
 
 ---
 

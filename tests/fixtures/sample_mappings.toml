@@ -1,0 +1,30 @@
+[FOOD_AND_DRINK_COFFEE]
+patterns = [
+  "STARBUCKS*",
+  "PEETS COFFEE*",
+  "DUNKIN*"
+]
+scope = "public"
+
+[GENERAL_MERCHANDISE_ONLINE_MARKETPLACES]
+patterns = [
+  "AMAZON*",
+  "EBAY*"
+]
+scope = "public"
+
+[FOOD_AND_DRINK_GROCERIES]
+patterns = [
+  "WHOLE FOODS*",
+  "KROGER*",
+  "SAFEWAY*"
+]
+scope = "public"
+
+[INCOME_WAGES]
+patterns = [
+  "PAYROLL*",
+  "SALARY*",
+  "DIRECT DEPOSIT*"
+]
+scope = "public"
