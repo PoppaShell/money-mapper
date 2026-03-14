@@ -1,0 +1,1 @@
+"""Money Mapper test suite."""

@@ -10,22 +10,16 @@ Uses the official Plaid Personal Finance Category (PFC) taxonomy with 16 PRIMARY
 categories and 104 DETAILED subcategories.
 """
 
-import re
 import os
-import sys
-import csv
-from typing import Dict, List, Tuple, Optional
+import re
 from collections import Counter
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from config_manager import get_config_manager
-from utils import load_config, prompt_yes_no, prompt_with_validation
-from mapping_processor import MappingProcessor
+from money_mapper.config_manager import get_config_manager
+from money_mapper.mapping_processor import MappingProcessor
+from money_mapper.utils import load_config, prompt_with_validation, prompt_yes_no
 
 
-def get_transaction_frequency(transactions: List[Dict]) -> Dict[str, int]:
+def get_transaction_frequency(transactions: list[dict]) -> dict[str, int]:
     """
     Count occurrences of each unique transaction description.
 
@@ -35,7 +29,7 @@ def get_transaction_frequency(transactions: List[Dict]) -> Dict[str, int]:
     Returns:
         Dictionary mapping description to occurrence count, sorted by frequency
     """
-    descriptions = [t.get('description', '') for t in transactions if t.get('description')]
+    descriptions = [t.get("description", "") for t in transactions if t.get("description")]
     frequency = Counter(descriptions)
 
     # Return as sorted dict (most common first)
@@ -64,20 +58,20 @@ def suggest_keyword(description: str) -> str:
 
     # Remove common suffixes and patterns
     patterns_to_remove = [
-        r'\s*#\d+',          # Store numbers like #123
-        r'\s*store\s+\d+',   # "store 1234"
-        r'\s*\d{3,}',        # Any 3+ digit numbers
-        r'\s*-\s*\d+',       # Dash numbers like -123
+        r"\s*#\d+",  # Store numbers like #123
+        r"\s*store\s+\d+",  # "store 1234"
+        r"\s*\d{3,}",  # Any 3+ digit numbers
+        r"\s*-\s*\d+",  # Dash numbers like -123
     ]
 
     for pattern in patterns_to_remove:
-        keyword = re.sub(pattern, '', keyword, flags=re.IGNORECASE)
+        keyword = re.sub(pattern, "", keyword, flags=re.IGNORECASE)
 
     # Remove special characters (keep letters, spaces, apostrophes, hyphens)
-    keyword = re.sub(r'[^a-z\s\'\-]', '', keyword)
+    keyword = re.sub(r"[^a-z\s\'\-]", "", keyword)
 
     # Clean up multiple spaces
-    keyword = re.sub(r'\s+', ' ', keyword).strip()
+    keyword = re.sub(r"\s+", " ", keyword).strip()
 
     return keyword
 
@@ -103,10 +97,10 @@ def suggest_name(description: str) -> str:
     name = suggest_keyword(description)
 
     # Remove common redundant words
-    redundant = ['store', 'location', 'branch']
+    redundant = ["store", "location", "branch"]
     words = name.split()
     words = [w for w in words if w.lower() not in redundant]
-    name = ' '.join(words)
+    name = " ".join(words)
 
     # Convert to title case
     name = name.title()
@@ -114,7 +108,7 @@ def suggest_name(description: str) -> str:
     return name
 
 
-def load_category_taxonomy() -> Tuple[Dict[str, List[str]], Dict[str, str], Dict[str, str]]:
+def load_category_taxonomy() -> tuple[dict[str, list[str]], dict[str, str], dict[str, str]]:
     """
     Load category taxonomy and descriptions from plaid_categories.toml file.
 
@@ -148,26 +142,26 @@ def load_category_taxonomy() -> Tuple[Dict[str, List[str]], Dict[str, str], Dict
 
     # Manual PRIMARY category descriptions
     primary_desc_map = {
-        'BANK_FEES': 'Banking fees and charges',
-        'ENTERTAINMENT': 'Recreation and entertainment',
-        'FOOD_AND_DRINK': 'Food and beverage purchases',
-        'GENERAL_MERCHANDISE': 'Retail and merchandise',
-        'GENERAL_SERVICES': 'Professional and personal services',
-        'GOVERNMENT_AND_NON_PROFIT': 'Government, taxes, and donations',
-        'HOME_IMPROVEMENT': 'Home and garden',
-        'INCOME': 'Income and earnings',
-        'LOAN_PAYMENTS': 'Debt payments and loans',
-        'MEDICAL': 'Healthcare and medical',
-        'PERSONAL_CARE': 'Personal care and wellness',
-        'RENT_AND_UTILITIES': 'Housing and utilities',
-        'TRANSFER_IN': 'Incoming transfers and deposits',
-        'TRANSFER_OUT': 'Outgoing transfers and withdrawals',
-        'TRANSPORTATION': 'Transportation and automotive',
-        'TRAVEL': 'Travel and lodging'
+        "BANK_FEES": "Banking fees and charges",
+        "ENTERTAINMENT": "Recreation and entertainment",
+        "FOOD_AND_DRINK": "Food and beverage purchases",
+        "GENERAL_MERCHANDISE": "Retail and merchandise",
+        "GENERAL_SERVICES": "Professional and personal services",
+        "GOVERNMENT_AND_NON_PROFIT": "Government, taxes, and donations",
+        "HOME_IMPROVEMENT": "Home and garden",
+        "INCOME": "Income and earnings",
+        "LOAN_PAYMENTS": "Debt payments and loans",
+        "MEDICAL": "Healthcare and medical",
+        "PERSONAL_CARE": "Personal care and wellness",
+        "RENT_AND_UTILITIES": "Housing and utilities",
+        "TRANSFER_IN": "Incoming transfers and deposits",
+        "TRANSFER_OUT": "Outgoing transfers and withdrawals",
+        "TRANSPORTATION": "Transportation and automotive",
+        "TRAVEL": "Travel and lodging",
     }
 
     # Load from plaid_categories.toml (now includes descriptions)
-    plaid = load_config('config/plaid_categories.toml')
+    plaid = load_config("config/plaid_categories.toml")
 
     # TOML creates nested dicts: {PRIMARY: {DETAILED: {description: ..., keywords: [...]}}}
     for primary, subcategories in plaid.items():
@@ -177,22 +171,24 @@ def load_category_taxonomy() -> Tuple[Dict[str, List[str]], Dict[str, str], Dict
         # Add primary category
         if primary not in taxonomy:
             taxonomy[primary] = []
-            primary_descriptions[primary] = primary_desc_map.get(primary, '')
+            primary_descriptions[primary] = primary_desc_map.get(primary, "")
 
         # Add detailed subcategories
         for detailed, category_data in subcategories.items():
             taxonomy[primary].append(detailed)
 
             # Get description from TOML if available
-            if isinstance(category_data, dict) and 'description' in category_data:
-                detailed_descriptions[detailed] = category_data['description']
+            if isinstance(category_data, dict) and "description" in category_data:
+                detailed_descriptions[detailed] = category_data["description"]
             else:
-                detailed_descriptions[detailed] = ''
+                detailed_descriptions[detailed] = ""
 
     return taxonomy, detailed_descriptions, primary_descriptions
 
 
-def display_category_menu(taxonomy: Dict[str, List[str]], primary_descriptions: Dict[str, str]) -> Optional[str]:
+def display_category_menu(
+    taxonomy: dict[str, list[str]], primary_descriptions: dict[str, str]
+) -> str | None:
     """
     Display PRIMARY category menu and get user selection.
 
@@ -207,7 +203,7 @@ def display_category_menu(taxonomy: Dict[str, List[str]], primary_descriptions: 
 
     categories = sorted(taxonomy.keys())
     for i, category in enumerate(categories, 1):
-        desc = primary_descriptions.get(category, '')
+        desc = primary_descriptions.get(category, "")
         if desc:
             print(f"  {i:2}. {category:<25} - {desc}", flush=True)
         else:
@@ -216,7 +212,7 @@ def display_category_menu(taxonomy: Dict[str, List[str]], primary_descriptions: 
     while True:
         try:
             choice = input("\nEnter number (or 'q' to cancel): ").strip()
-            if choice.lower() == 'q':
+            if choice.lower() == "q":
                 return None
 
             num = int(choice)
@@ -228,7 +224,9 @@ def display_category_menu(taxonomy: Dict[str, List[str]], primary_descriptions: 
             print("Invalid input. Please enter a number.")
 
 
-def display_subcategory_menu(primary: str, taxonomy: Dict[str, List[str]], descriptions: Dict[str, str]) -> Optional[str]:
+def display_subcategory_menu(
+    primary: str, taxonomy: dict[str, list[str]], descriptions: dict[str, str]
+) -> str | None:
     """
     Display DETAILED subcategory menu for a PRIMARY category and get user selection.
 
@@ -250,17 +248,17 @@ def display_subcategory_menu(primary: str, taxonomy: Dict[str, List[str]], descr
 
     for i, subcategory in enumerate(subcategories, 1):
         # Remove PRIMARY_ prefix for cleaner display but keep format
-        if subcategory.startswith(primary + '_'):
-            display_name = subcategory[len(primary) + 1:]  # Remove "PRIMARY_" prefix
+        if subcategory.startswith(primary + "_"):
+            display_name = subcategory[len(primary) + 1 :]  # Remove "PRIMARY_" prefix
         else:
             display_name = subcategory
 
         # Get description
-        desc = descriptions.get(subcategory, '')
+        desc = descriptions.get(subcategory, "")
         if desc:
             # Truncate long descriptions to fit nicely
             if len(desc) > 45:
-                desc = desc[:42] + '...'
+                desc = desc[:42] + "..."
             print(f"  {i:2}. {display_name:<35} - {desc}", flush=True)
         else:
             print(f"  {i:2}. {display_name}", flush=True)
@@ -268,7 +266,7 @@ def display_subcategory_menu(primary: str, taxonomy: Dict[str, List[str]], descr
     while True:
         try:
             choice = input("\nEnter number (or 'q' to go back): ").strip()
-            if choice.lower() == 'q':
+            if choice.lower() == "q":
                 return None
 
             num = int(choice)
@@ -280,7 +278,7 @@ def display_subcategory_menu(primary: str, taxonomy: Dict[str, List[str]], descr
             print("Invalid input. Please enter a number.")
 
 
-def display_scope_menu() -> Optional[str]:
+def display_scope_menu() -> str | None:
     """
     Display scope selection menu and get user choice.
 
@@ -293,13 +291,13 @@ def display_scope_menu() -> Optional[str]:
 
     while True:
         choice = input("\nEnter number (or 'q' to go back): ").strip()
-        if choice.lower() == 'q':
+        if choice.lower() == "q":
             return None
 
-        if choice == '1':
-            return 'public'
-        elif choice == '2':
-            return 'private'
+        if choice == "1":
+            return "public"
+        elif choice == "2":
+            return "private"
         else:
             print("Please enter 1 or 2")
 
@@ -311,7 +309,7 @@ def create_mapping_entry(
     detailed: str,
     scope: str,
     processor: MappingProcessor,
-    debug: bool = False
+    debug: bool = False,
 ) -> bool:
     """
     Create and save a new mapping entry to new_mappings.toml.
@@ -330,12 +328,7 @@ def create_mapping_entry(
     """
     try:
         # Create mapping in the simple flat format used by new_mappings.toml
-        mapping_value = {
-            "name": name,
-            "category": primary,
-            "subcategory": detailed,
-            "scope": scope
-        }
+        mapping_value = {"name": name, "category": primary, "subcategory": detailed, "scope": scope}
 
         # Get path to new_mappings.toml
         file_path = processor.new_mappings_file
@@ -357,32 +350,37 @@ def create_mapping_entry(
             import toml
         except ImportError:
             from utils import handle_toml_import_error
+
             handle_toml_import_error()
             return False
 
         # Read the header from the file
         header_lines = []
         if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 for line in f:
-                    if line.strip() and not line.strip().startswith('[') and not line.strip().startswith('"'):
+                    if (
+                        line.strip()
+                        and not line.strip().startswith("[")
+                        and not line.strip().startswith('"')
+                    ):
                         header_lines.append(line.rstrip())
                     else:
                         break  # Stop at first non-comment/non-blank line
 
         # Write header + entries
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             # Write header
             if header_lines:
-                f.write('\n'.join(header_lines))
-                f.write('\n\n')
+                f.write("\n".join(header_lines))
+                f.write("\n\n")
 
             # Write entries
             toml.dump(current_entries, f)
 
         if debug:
             print(f"\nDEBUG: Added mapping to {file_path}")
-            print(f"  \"{keyword}\" = {mapping_value}")
+            print(f'  "{keyword}" = {mapping_value}')
 
         return True
 
@@ -390,14 +388,13 @@ def create_mapping_entry(
         print(f"\nError creating mapping: {e}")
         if debug:
             import traceback
+
             traceback.print_exc()
         return False
 
 
 def run_mapping_wizard(
-    uncategorized_transactions: List[Dict],
-    config_dir: str = 'config',
-    debug: bool = False
+    uncategorized_transactions: list[dict], config_dir: str = "config", debug: bool = False
 ) -> int:
     """
     Interactive workflow to build mappings for uncategorized transactions.
@@ -415,7 +412,7 @@ def run_mapping_wizard(
         return 0
 
     # Initialize
-    config_manager = get_config_manager(config_dir)
+    get_config_manager(config_dir)
     processor = MappingProcessor(config_dir=config_dir, debug_mode=debug)
     taxonomy, detailed_descriptions, primary_descriptions = load_category_taxonomy()
 
@@ -423,15 +420,17 @@ def run_mapping_wizard(
     # Build a map of descriptions to their original unredacted versions
     description_originals = {}
     for t in uncategorized_transactions:
-        redacted_desc = t.get('description', '')
-        original_desc = t.get('original_description', redacted_desc)  # Fallback to redacted if no original
+        redacted_desc = t.get("description", "")
+        original_desc = t.get(
+            "original_description", redacted_desc
+        )  # Fallback to redacted if no original
         if redacted_desc and original_desc:
             description_originals[redacted_desc] = original_desc
 
     frequency = get_transaction_frequency(uncategorized_transactions)
     top_transactions = list(frequency.items())[:25]  # Top 25
 
-    print(f"\n--- Interactive Mapping Builder ---")
+    print("\n--- Interactive Mapping Builder ---")
     print(f"Found {len(top_transactions)} unique uncategorized merchant(s) to process\n")
 
     mappings_created = 0
@@ -441,29 +440,29 @@ def run_mapping_wizard(
         # Use original unredacted description (fallback to redacted if unavailable)
         original_desc = description_originals.get(description, description)
 
-        print(f"\n{'='*70}")
-        print(f"[{idx}/{len(top_transactions)}] Transaction: \"{original_desc}\"")
+        print(f"\n{'=' * 70}")
+        print(f'[{idx}/{len(top_transactions)}] Transaction: "{original_desc}"')
         print(f"Occurrences: {count} transaction(s)")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         # Ask if user wants to create a mapping for this transaction
         action = prompt_with_validation(
             "\nCreate mapping for this transaction?",
-            valid_options=['y', 'yes', 'n', 'no', 's', 'skip', 'q', 'quit'],
-            default='y'
+            valid_options=["y", "yes", "n", "no", "s", "skip", "q", "quit"],
+            default="y",
         )
 
-        if action in ['n', 'no']:
+        if action in ["n", "no"]:
             print("Skipping this transaction...")
             skipped += 1
             continue
-        elif action in ['s', 'skip']:
+        elif action in ["s", "skip"]:
             print("Skipping remaining transactions...")
-            skipped += (len(top_transactions) - idx + 1)
+            skipped += len(top_transactions) - idx + 1
             break
-        elif action in ['q', 'quit']:
+        elif action in ["q", "quit"]:
             print("Exiting mapping builder...")
-            skipped += (len(top_transactions) - idx + 1)
+            skipped += len(top_transactions) - idx + 1
             break
 
         # Use original description for suggestions (not the redacted one)
@@ -476,20 +475,22 @@ def run_mapping_wizard(
             print(f"Suggested name: {suggested_name}", flush=True)
 
             # Get keyword (allow editing)
-            keyword_input = input(f"\nEdit keyword(s) [Enter to accept, 'skip' to skip]: ").strip()
-            if keyword_input.lower() == 'skip':
+            keyword_input = input("\nEdit keyword(s) [Enter to accept, 'skip' to skip]: ").strip()
+            if keyword_input.lower() == "skip":
                 print("Skipping this transaction...")
                 skipped += 1
                 break
             keyword = keyword_input if keyword_input else suggested_keyword
 
             # Get name (allow editing)
-            name_input = input(f"Edit name [Enter to accept, 'skip' to skip, 'back' to restart]: ").strip()
-            if name_input.lower() == 'skip':
+            name_input = input(
+                "Edit name [Enter to accept, 'skip' to skip, 'back' to restart]: "
+            ).strip()
+            if name_input.lower() == "skip":
                 print("Skipping this transaction...")
                 skipped += 1
                 break
-            elif name_input.lower() == 'back':
+            elif name_input.lower() == "back":
                 print("Restarting mapping for this transaction...")
                 continue  # Restart the while loop
             name = name_input if name_input else suggested_name
@@ -513,22 +514,20 @@ def run_mapping_wizard(
                 continue  # Restart the while loop
 
             # Confirm before creating
-            print(f"\nReview mapping:")
-            print(f"  Keyword: \"{keyword}\"")
-            print(f"  Name: \"{name}\"")
+            print("\nReview mapping:")
+            print(f'  Keyword: "{keyword}"')
+            print(f'  Name: "{name}"')
             print(f"  Category: {primary}")
             print(f"  Subcategory: {detailed}")
             print(f"  Scope: {scope}")
 
             confirm = prompt_with_validation(
-                "\nCreate this mapping?",
-                valid_options=['y', 'yes', 'n', 'no', 'back'],
-                default='y'
+                "\nCreate this mapping?", valid_options=["y", "yes", "n", "no", "back"], default="y"
             )
-            if confirm == 'back':
+            if confirm == "back":
                 print("Going back...")
                 continue  # Restart the while loop
-            elif confirm in ['n', 'no']:
+            elif confirm in ["n", "no"]:
                 print("Cancelled. Skipping this transaction...")
                 skipped += 1
                 break
@@ -539,8 +538,10 @@ def run_mapping_wizard(
             )
 
             if success:
-                print(f"\n✓ Added to new_mappings.toml:")
-                print(f"  \"{keyword}\" = {{ name = \"{name}\", category = \"{primary}\", subcategory = \"{detailed}\", scope = \"{scope}\" }}")
+                print("\n✓ Added to new_mappings.toml:")
+                print(
+                    f'  "{keyword}" = {{ name = "{name}", category = "{primary}", subcategory = "{detailed}", scope = "{scope}" }}'
+                )
                 mappings_created += 1
             else:
                 print("\n✗ Failed to create mapping")
@@ -553,23 +554,23 @@ def run_mapping_wizard(
             break
 
     # Summary
-    print(f"\n{'='*70}")
-    print(f"Mapping Builder Summary:")
+    print(f"\n{'=' * 70}")
+    print("Mapping Builder Summary:")
     print(f"  Mappings created: {mappings_created}")
     print(f"  Transactions skipped: {skipped}")
     print(f"  Total processed: {mappings_created + skipped}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     # If mappings were created, offer to process them
     if mappings_created > 0:
-        print(f"\nNew mappings have been added to new_mappings.toml")
+        print("\nNew mappings have been added to new_mappings.toml")
         print("They need to be processed to take effect.")
         print()
 
         if prompt_yes_no("Would you like to run the mapping processor now?", default=True):
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print("Running Mapping Processor...")
-            print("="*70)
+            print("=" * 70)
 
             try:
                 # Use run_combined_processing() which offers interactive duplicate resolution
@@ -584,6 +585,7 @@ def run_mapping_wizard(
                 print(f"\nError running mapping processor: {e}")
                 if debug:
                     import traceback
+
                     traceback.print_exc()
         else:
             print("\nYou can process the mappings later by running:")
@@ -603,6 +605,6 @@ if __name__ == "__main__":
     ]
 
     print("INTERACTIVE MAPPING BUILDER TEST")
-    print("="*70)
+    print("=" * 70)
     created = run_mapping_wizard(sample_transactions, debug=True)
     print(f"\n\nTest complete. Created {created} mappings.")
