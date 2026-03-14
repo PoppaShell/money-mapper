@@ -22,20 +22,8 @@ from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Dict, List, Optional, Tuple, Set
 
-# Add the src directory to Python path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-try:
-    from config_manager import get_config_manager
-    from utils import prompt_yes_no
-except ImportError:
-    # If running from different directory, try relative import
-    try:
-        from .config_manager import get_config_manager
-        from .utils import prompt_yes_no
-    except ImportError:
-        print("Error: Could not import required modules. Please ensure config_manager.py and utils.py are in the same directory.")
-        sys.exit(1)
+from money_mapper.config_manager import get_config_manager
+from money_mapper.utils import prompt_yes_no
 
 
 # Complete PFC Taxonomy with descriptions - All 104 subcategories
