@@ -1,0 +1,54 @@
+[
+  {
+    "date": "2024-01-15",
+    "description": "STARBUCKS #1234",
+    "amount": -5.67,
+    "merchant": "Starbucks",
+    "category": "FOOD_AND_DRINK",
+    "confidence": 0.95,
+    "account_type": "checking",
+    "account_number_masked": "XXXX-XXXX-1234",
+    "merchant_name": "Starbucks",
+    "subcategory": "FOOD_AND_DRINK_COFFEE",
+    "categorization_method": "public_mapping"
+  },
+  {
+    "date": "2024-01-10",
+    "description": "AMAZON.COM AMZN.COM/BILL",
+    "amount": -45.99,
+    "merchant": "Amazon",
+    "category": "GENERAL_MERCHANDISE",
+    "confidence": 0.95,
+    "account_type": "checking",
+    "account_number_masked": "XXXX-XXXX-1234",
+    "merchant_name": "Amazon",
+    "subcategory": "GENERAL_MERCHANDISE_ONLINE_MARKETPLACES",
+    "categorization_method": "public_mapping"
+  },
+  {
+    "date": "2024-01-05",
+    "description": "WHOLE FOODS MKT #10234",
+    "amount": -87.43,
+    "merchant": "Whole Foods",
+    "category": "FOOD_AND_DRINK",
+    "confidence": 0.95,
+    "account_type": "checking",
+    "account_number_masked": "XXXX-XXXX-1234",
+    "merchant_name": "Whole Foods Market",
+    "subcategory": "FOOD_AND_DRINK_GROCERIES",
+    "categorization_method": "public_mapping"
+  },
+  {
+    "date": "2024-01-01",
+    "description": "PAYROLL DEPOSIT",
+    "amount": 2500.0,
+    "merchant": "Employer",
+    "category": "INCOME",
+    "confidence": 0.95,
+    "account_type": "checking",
+    "account_number_masked": "XXXX-XXXX-1234",
+    "merchant_name": "Payroll",
+    "subcategory": "INCOME_WAGES",
+    "categorization_method": "public_mapping"
+  }
+]

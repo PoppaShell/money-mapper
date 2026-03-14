@@ -238,7 +238,7 @@ def save_privacy_settings(
     try:
         import toml  # We need toml for writing (tomllib is read-only)
     except ImportError:
-        from utils import handle_toml_import_error
+        from money_mapper.utils import handle_toml_import_error
 
         handle_toml_import_error()
         return False
@@ -328,8 +328,8 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         print("-" * 60)
         print(f"Parsing statements from '{statements_dir}' directory...")
 
-        from statement_parser import process_pdf_statements
-        from utils import save_transactions_to_json
+        from money_mapper.statement_parser import process_pdf_statements
+        from money_mapper.utils import save_transactions_to_json
 
         transactions = process_pdf_statements(statements_dir, debug=False)
 
@@ -356,7 +356,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         print("-" * 60)
         print("Enriching transactions...")
 
-        from transaction_enricher import process_transaction_enrichment
+        from money_mapper.transaction_enricher import process_transaction_enrichment
 
         process_transaction_enrichment(parsed_file, enriched_file, debug=False)
 
@@ -368,7 +368,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         print("Categorization Analysis")
         print("-" * 60)
 
-        from transaction_enricher import analyze_categorization_accuracy
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
 
         # Load enriched transactions to calculate categorization rate
         with open(enriched_file) as f:

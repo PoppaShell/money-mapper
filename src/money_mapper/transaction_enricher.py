@@ -112,7 +112,7 @@ def process_transaction_enrichment(input_file: str, output_file: str, debug: boo
     for i, transaction in enumerate(transactions):
         # Show progress bar (suppressed in debug mode to avoid clutter)
         if not debug:
-            from utils import show_progress
+            from money_mapper.utils import show_progress
 
             show_progress(i + 1, len(transactions))
 
@@ -647,7 +647,7 @@ def analyze_categorization_accuracy(
         uncategorized_list = [t for t in transactions if t.get("category") == "UNCATEGORIZED"]
 
         if uncategorized_list:
-            from interactive_mapper import get_transaction_frequency, run_mapping_wizard
+            from money_mapper.interactive_mapper import get_transaction_frequency, run_mapping_wizard
 
             print("\n--- Top Uncategorized Transactions ---")
             print("Analyzing transaction frequency...")

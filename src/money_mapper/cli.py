@@ -248,7 +248,7 @@ def parse_statements_interactive():
         transactions = process_pdf_statements(directory, debug=False)
 
         if transactions:
-            from utils import save_transactions_to_json
+            from money_mapper.utils import save_transactions_to_json
 
             save_transactions_to_json(transactions, output_file)
             print(f"\nSuccessfully processed {len(transactions)} transactions")
@@ -448,7 +448,7 @@ def run_full_pipeline_interactive():
             print("No transactions found in PDF files")
             return
 
-        from utils import save_transactions_to_json
+        from money_mapper.utils import save_transactions_to_json
 
         save_transactions_to_json(transactions, parsed_file)
         print(f"Parsed {len(transactions)} transactions")
@@ -593,7 +593,7 @@ Examples:
 
     # Check for first-run and launch setup wizard if needed
     try:
-        from setup_wizard import check_first_run, run_setup_wizard
+        from money_mapper.setup_wizard import check_first_run, run_setup_wizard
 
         if check_first_run():
             print()
@@ -679,7 +679,7 @@ Examples:
         transactions = process_pdf_statements(directory, args.debug)
 
         if transactions:
-            from utils import save_transactions_to_json
+            from money_mapper.utils import save_transactions_to_json
 
             save_transactions_to_json(transactions, output_file)
             print(f"Successfully processed {len(transactions)} transactions")
@@ -747,7 +747,7 @@ Examples:
             print("No transactions found")
             sys.exit(1)
 
-        from utils import save_transactions_to_json
+        from money_mapper.utils import save_transactions_to_json
 
         save_transactions_to_json(transactions, parsed_file)
         print(f"Parsed {len(transactions)} transactions")
@@ -864,7 +864,7 @@ Examples:
 
     elif args.command == "check-deps":
         # Check dependencies
-        from utils import format_dependency_status
+        from money_mapper.utils import format_dependency_status
 
         print("\n" + "=" * 60)
         print("Dependency Status Check")
@@ -901,7 +901,7 @@ Examples:
 
     elif args.command == "setup":
         # Run setup wizard manually
-        from setup_wizard import run_setup_wizard
+        from money_mapper.setup_wizard import run_setup_wizard
 
         config_dir = args.config if args.config else "config"
         print("\nRunning setup wizard...")

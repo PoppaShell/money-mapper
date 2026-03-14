@@ -569,7 +569,7 @@ class MappingProcessor:
                                     wildcard_patterns[section_key].append((pattern, pattern_info))
 
         # Now check for patterns covered by wildcards in the same category
-        from transaction_enricher import wildcard_pattern_match
+        from money_mapper.transaction_enricher import wildcard_pattern_match
 
         for pattern, pattern_info in all_patterns.items():
             # Skip wildcards themselves
@@ -1744,7 +1744,7 @@ class MappingProcessor:
                 print(f"\nBoth map to merchant: {dup['existing_mapping'].get('name', 'Unknown')}")
                 print("\nRecommendation: Remove the exact pattern (it's redundant)")
 
-                from utils import prompt_with_validation
+                from money_mapper.utils import prompt_with_validation
 
                 choice = prompt_with_validation(
                     "Remove exact pattern?",
@@ -2135,7 +2135,7 @@ class MappingProcessor:
             print()
 
             # Ask user if they want to consolidate
-            from utils import prompt_with_validation
+            from money_mapper.utils import prompt_with_validation
 
             choice = prompt_with_validation(
                 "Action for this pattern?",

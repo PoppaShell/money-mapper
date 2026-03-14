@@ -349,7 +349,7 @@ def create_mapping_entry(
         try:
             import toml
         except ImportError:
-            from utils import handle_toml_import_error
+            from money_mapper.utils import handle_toml_import_error
 
             handle_toml_import_error()
             return False

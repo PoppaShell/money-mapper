@@ -786,7 +786,7 @@ def show_progress(current: int, total: int, bar_length: int = 50) -> None:
 
     percent = int((current / total) * 100)
     filled_length = int(bar_length * current / total)
-    bar = "█" * filled_length + "░" * (bar_length - filled_length)
+    bar = "=" * filled_length + "-" * (bar_length - filled_length)
     print(f"\r[{bar}] {percent}% ({current}/{total})", end="", flush=True)
 
 

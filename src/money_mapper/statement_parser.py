@@ -94,7 +94,7 @@ def process_pdf_statements(directory: str, debug: bool = False) -> list[dict]:
     for i, pdf_file in enumerate(pdf_files, 1):
         # Show progress bar (suppressed in debug mode to avoid clutter)
         if not debug:
-            from utils import show_progress
+            from money_mapper.utils import show_progress
 
             show_progress(i, len(pdf_files))
 
