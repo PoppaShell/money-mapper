@@ -75,7 +75,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=src/money_mapper --cov-report=term-miss --cov-report=html"
+addopts = "--cov=src/money_mapper --cov-report=term-missing --cov-report=html"
 
 [tool.coverage.run]
 source = ["src/money_mapper"]
