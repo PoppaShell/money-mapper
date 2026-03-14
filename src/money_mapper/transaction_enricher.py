@@ -192,7 +192,7 @@ def enrich_transaction(
         # The interactive mapper loads original descriptions from parsed_transactions.json
         enriched["description"] = sanitize_description(
             description,
-            sanitization_patterns=None,  # Legacy patterns not used here
+            sanitization_patterns=[],  # Legacy patterns not used here
             privacy_config=privacy_config,
         )
     except Exception as e:
@@ -738,7 +738,7 @@ def analyze_categorization_accuracy(
                             )
 
 
-def generate_enrichment_report(transactions: list[dict], output_file: str = None) -> str:
+def generate_enrichment_report(transactions: list[dict], output_file: str | None = None) -> str:
     """
     Generate a detailed enrichment report.
 
