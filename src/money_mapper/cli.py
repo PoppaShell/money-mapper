@@ -129,7 +129,7 @@ def validate_output_path(file_path: str, prompt_overwrite: bool = True) -> bool:
     return True
 
 
-def validate_config_paths(config_manager, command: str = None) -> bool:
+def validate_config_paths(config_manager, command: str | None = None) -> bool:
     """
     Validate that configured paths exist and are accessible.
 

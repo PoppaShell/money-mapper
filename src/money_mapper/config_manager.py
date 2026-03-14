@@ -13,7 +13,7 @@ import tomllib
 class ConfigManager:
     """Centralized configuration manager for Money Mapper."""
 
-    def __init__(self, config_dir: str = None):
+    def __init__(self, config_dir: str | None = None):
         """
         Initialize configuration manager.
 
@@ -254,7 +254,7 @@ class ConfigManager:
         """
         fuzzy_matching = self.settings.get("fuzzy_matching", {})
         key = f"{threshold_type}_threshold"
-        return fuzzy_matching.get(key, 0.7)
+        return float(fuzzy_matching.get(key, 0.7))
 
     def get_confidence_threshold(self, confidence_level: str) -> float:
         """
@@ -267,7 +267,7 @@ class ConfigManager:
             Threshold value
         """
         thresholds = self.settings.get("confidence_thresholds", {})
-        return thresholds.get(confidence_level, 0.5)
+        return float(thresholds.get(confidence_level, 0.5))
 
     def get_display_setting(self, setting_key: str) -> int:
         """
@@ -280,12 +280,12 @@ class ConfigManager:
             Setting value
         """
         display = self.settings.get("display", {})
-        return display.get(setting_key, 10)
+        return int(display.get(setting_key, 10))
 
     def is_auto_alphabetize_enabled(self) -> bool:
         """Check if auto-alphabetization is enabled."""
         processing = self.settings.get("processing", {})
-        return processing.get("auto_alphabetize", True)
+        return bool(processing.get("auto_alphabetize", True))
 
     def get_processing_setting(self, setting_key: str) -> bool:
         """
@@ -306,7 +306,7 @@ class ConfigManager:
             "validate_categories": True,
         }
 
-        return processing.get(setting_key, defaults.get(setting_key, False))
+        return bool(processing.get(setting_key, defaults.get(setting_key, False)))
 
     def check_first_run(self) -> bool:
         """
@@ -321,7 +321,7 @@ class ConfigManager:
 
         return not (private_settings_exists and private_mappings_exists)
 
-    def get_privacy_settings(self) -> dict:
+    def get_privacy_settings(self) -> dict[str, object]:
         """
         Get privacy settings from merged configuration.
 
@@ -335,7 +335,7 @@ class ConfigManager:
 _config_manager = None
 
 
-def get_config_manager(config_dir: str = None) -> ConfigManager:
+def get_config_manager(config_dir: str | None = None) -> ConfigManager:
     """
     Get global configuration manager instance.
 

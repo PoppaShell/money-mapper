@@ -192,7 +192,7 @@ def enrich_transaction(
         # The interactive mapper loads original descriptions from parsed_transactions.json
         enriched["description"] = sanitize_description(
             description,
-            sanitization_patterns=None,  # Legacy patterns not used here
+            sanitization_patterns=[],  # Legacy patterns not used here
             privacy_config=privacy_config,
         )
     except Exception as e:
@@ -590,7 +590,7 @@ def analyze_categorization_accuracy(
     print(f"  Low (<0.5): {low_confidence} ({(low_confidence / len(transactions)) * 100:.1f}%)")
 
     # Method distribution
-    methods = {}
+    methods: dict[str, int] = {}
     for transaction in transactions:
         method = transaction.get("categorization_method", "unknown")
         methods[method] = methods.get(method, 0) + 1
@@ -602,7 +602,7 @@ def analyze_categorization_accuracy(
 
     # Category distribution (only show if verbose or debug)
     if verbose or debug:
-        categories = {}
+        categories: dict[str, int] = {}
         for transaction in transactions:
             category = transaction.get("category", "UNCATEGORIZED")
             categories[category] = categories.get(category, 0) + 1
@@ -738,7 +738,7 @@ def analyze_categorization_accuracy(
                             )
 
 
-def generate_enrichment_report(transactions: list[dict], output_file: str = None) -> str:
+def generate_enrichment_report(transactions: list[dict], output_file: str | None = None) -> str:
     """
     Generate a detailed enrichment report.
 
@@ -763,13 +763,13 @@ def generate_enrichment_report(transactions: list[dict], output_file: str = None
     report_lines.append(f"Categorization Rate: {(categorized / len(transactions) * 100):.1f}%")
 
     # Average confidence by method
-    methods = {}
+    methods: dict[str, list[float]] = {}
     for transaction in transactions:
         method = transaction.get("categorization_method", "unknown")
         confidence = transaction.get("confidence", 0)
         if method not in methods:
             methods[method] = []
-        methods[method].append(confidence)
+        methods[method].append(float(confidence) if confidence else 0.0)
 
     report_lines.append("\nMethod Performance:")
     for method, confidences in methods.items():
@@ -777,8 +777,8 @@ def generate_enrichment_report(transactions: list[dict], output_file: str = None
         report_lines.append(f"  {method}: {len(confidences)} txns, avg confidence {avg_conf:.3f}")
 
     # Top categories
-    categories = {}
-    amounts = {}
+    categories: dict[str, int] = {}
+    amounts: dict[str, float] = {}
     for transaction in transactions:
         category = transaction.get("category", "UNCATEGORIZED")
         amount = abs(float(transaction.get("amount", 0)))
