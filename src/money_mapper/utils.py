@@ -126,8 +126,8 @@ def standardize_date(date_str: str, statement_period: dict | None = None) -> str
 
 def sanitize_description(
     description: str,
-    sanitization_patterns: list = None,
-    privacy_config: dict = None,
+    sanitization_patterns: list | None = None,
+    privacy_config: dict | None = None,
     fuzzy_threshold: float = 0.85,
 ) -> str:
     """
@@ -383,7 +383,7 @@ def load_transactions_from_json(input_file: str) -> list[dict]:
     """
     try:
         with open(input_file, encoding="utf-8") as f:
-            return json.load(f)
+            return list(json.load(f))
     except FileNotFoundError:
         print(f"Error: File '{input_file}' not found")
         return []
@@ -596,7 +596,7 @@ def get_processing_stats(transactions: list[dict]) -> dict:
 
     # Confidence distribution
     confidence_levels = {"high": 0, "medium": 0, "low": 0}
-    method_counts = {}
+    method_counts: dict[str, int] = {}
 
     for transaction in transactions:
         confidence = transaction.get("confidence", 0.0)
