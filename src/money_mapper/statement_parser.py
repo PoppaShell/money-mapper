@@ -237,7 +237,8 @@ def parse_statement_text(text: str, config: dict, debug: bool = False) -> list[d
             print("\nFirst transaction example:")
             first = transactions[0]
             print(f"  Date: {first.get('date')}")
-            print(f"  Description: {first.get('description')[:50]}...")
+            desc = first.get('description', '')
+            print(f"  Description: {desc[:50] if desc else 'N/A'}...")
             print(f"  Amount: ${first.get('amount')}")
 
     return transactions
@@ -630,7 +631,7 @@ def extract_section_transactions(
     return transactions
 
 
-def extract_statement_period(text: str, period_config: dict, debug: bool = False) -> dict | None:
+def extract_statement_period(text: str, period_config: dict, debug: bool = False) -> dict[str, object] | None:
     """Extract statement period dates."""
     patterns = period_config.get("patterns", [])
     period_config.get("month_names", {})

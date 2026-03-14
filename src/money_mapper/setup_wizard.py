@@ -396,7 +396,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         return stats
 
 
-def display_setup_complete(config_dir: str = "config", stats: dict = None):
+def display_setup_complete(config_dir: str = "config", stats: dict[str, object] | None = None):
     """
     Display setup complete message with optional processing statistics.
 
