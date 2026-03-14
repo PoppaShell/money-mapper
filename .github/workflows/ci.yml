@@ -48,7 +48,7 @@ jobs:
         run: pip-audit
 
       - name: Run tests with pytest
-        run: pytest tests/ --cov=src/money_mapper --cov-report=xml --cov-report=term-miss
+        run: pytest tests/ --cov=src/money_mapper --cov-report=xml --cov-report=term-missing
 
       - name: Check test coverage
         run: coverage report --fail-under=60
