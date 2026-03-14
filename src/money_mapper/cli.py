@@ -11,47 +11,15 @@ import os
 import sys
 from typing import Optional
 
-# Add the src directory to Python path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from money_mapper.statement_parser import process_pdf_statements
+from money_mapper.transaction_enricher import process_transaction_enrichment, analyze_categorization_accuracy
+from money_mapper.utils import load_transactions_from_json, ensure_directories_exist, validate_toml_files, prompt_yes_no
+from money_mapper.config_manager import get_config_manager
 
-from statement_parser import process_pdf_statements
-from transaction_enricher import process_transaction_enrichment, analyze_categorization_accuracy
-from utils import load_transactions_from_json, ensure_directories_exist, validate_toml_files, prompt_yes_no
-
-try:
-    from config_manager import get_config_manager
-except ImportError:
-    print("Error: Could not import config_manager. Please ensure config_manager.py is in the same directory.")
-    sys.exit(1)
-
-# Import MappingProcessor only when needed to avoid automatic execution
 def get_mapping_processor(config_dir: str = "config", debug_mode: bool = False):
-    """Import and return MappingProcessor class only when needed."""
-    import importlib.util
-    import sys
-    import os
-    
-    # Get the path to mapping_processor.py
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    mapping_processor_path = os.path.join(current_dir, 'mapping_processor.py')
-    
-    if not os.path.exists(mapping_processor_path):
-        print(f"Error: mapping_processor.py not found at {mapping_processor_path}")
-        sys.exit(1)
-    
-    try:
-        # Load the module dynamically
-        spec = importlib.util.spec_from_file_location("mapping_processor", mapping_processor_path)
-        mapping_processor_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mapping_processor_module)
-        
-        # Get the MappingProcessor class
-        MappingProcessor = mapping_processor_module.MappingProcessor
-        return MappingProcessor(config_dir=config_dir, debug_mode=debug_mode)
-        
-    except Exception as e:
-        print(f"Error loading MappingProcessor: {e}")
-        sys.exit(1)
+    """Import and return MappingProcessor class."""
+    from money_mapper.mapping_processor import MappingProcessor
+    return MappingProcessor(config_dir=config_dir, debug_mode=debug_mode)
 
 
 def print_banner():

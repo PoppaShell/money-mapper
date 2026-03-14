@@ -17,12 +17,9 @@ import csv
 from typing import Dict, List, Tuple, Optional
 from collections import Counter
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from config_manager import get_config_manager
-from utils import load_config, prompt_yes_no, prompt_with_validation
-from mapping_processor import MappingProcessor
+from money_mapper.config_manager import get_config_manager
+from money_mapper.utils import load_config, prompt_yes_no, prompt_with_validation
+from money_mapper.mapping_processor import MappingProcessor
 
 
 def get_transaction_frequency(transactions: List[Dict]) -> Dict[str, int]:

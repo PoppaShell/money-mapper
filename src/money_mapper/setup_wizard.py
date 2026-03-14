@@ -12,11 +12,8 @@ import shutil
 import tomllib
 import json
 
-# Add the src directory to Python path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from config_manager import get_config_manager
-from utils import prompt_yes_no, check_dependencies
+from money_mapper.config_manager import get_config_manager
+from money_mapper.utils import prompt_yes_no, check_dependencies
 
 
 def check_first_run() -> bool:
