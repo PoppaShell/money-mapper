@@ -13,9 +13,13 @@ src/__pycache__/
 # Financial statements (sensitive data)
 statements/
 
-# Claude Code directory & CLAUDE.md files
+# Claude Code and Droid development (local only, never commit)
 .claude/
 *CLAUDE.md
+.factory/
+.droid/
+AGENTS.md
+*.spec.md
 
 # Private configuration files (user-specific, not versioned)
 config/private_settings.toml
@@ -23,3 +27,18 @@ config/private_mappings.toml
 
 # Keep templates versioned
 !config/templates/
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+wheel/
+
+# Python and testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+__pycache__/
+*.pyc
