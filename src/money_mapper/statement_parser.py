@@ -348,8 +348,17 @@ def determine_transaction_year(month: int, statement_period: dict | None) -> int
         Year for the transaction
     """
     if not statement_period or "end_year" not in statement_period:
-        # Fallback to current year if no statement period
-        return datetime.now().year
+        # Smarter fallback: Use current year only if transaction month is current or past
+        # Otherwise assume it's from previous year (avoid dating old transactions to future)
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+        
+        # If transaction month is in the future (e.g., it's March but transaction is in December),
+        # likely from previous year
+        if month > current_month:
+            return current_year - 1
+        else:
+            return current_year
 
     end_year = statement_period["end_year"]
     end_month_str = statement_period.get("end_month", "")
@@ -634,14 +643,44 @@ def extract_section_transactions(
 def extract_statement_period(text: str, period_config: dict, debug: bool = False) -> dict[str, object] | None:
     """Extract statement period dates."""
     patterns = period_config.get("patterns", [])
-    period_config.get("month_names", {})
+    month_names = period_config.get("month_names", {})
 
     for pattern in patterns:
         try:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
                 groups = match.groups()
-                if len(groups) >= 6:  # Start month, day, year, end month, day, year
+                
+                # Handle 5-group pattern: Month1 Day1 - Month2 Day2, Year
+                # (credit card format: "December 27 - January 26, 2024")
+                if len(groups) == 5:
+                    start_month = groups[0]
+                    start_day = int(groups[1])
+                    end_month = groups[2]
+                    end_day = int(groups[3])
+                    end_year = int(groups[4])
+                    
+                    # Convert month names to numbers
+                    start_month_num = month_names.get(start_month.lower(), 0)
+                    end_month_num = month_names.get(end_month.lower(), 0)
+                    
+                    # If start month > end month, crossing year boundary (e.g., Dec to Jan)
+                    start_year = end_year - 1 if start_month_num > end_month_num else end_year
+                    
+                    if debug:
+                        print(f"    Statement period: {start_month} {start_day}, {start_year} to {end_month} {end_day}, {end_year}")
+                    
+                    return {
+                        "start_month": start_month,
+                        "start_day": start_day,
+                        "start_year": start_year,
+                        "end_month": end_month,
+                        "end_day": end_day,
+                        "end_year": end_year,
+                    }
+                
+                # Handle 6-group pattern: Month1 Day1 Year1 Month2 Day2 Year2
+                elif len(groups) >= 6:
                     return {
                         "start_month": groups[0],
                         "start_day": int(groups[1]),
@@ -650,7 +689,9 @@ def extract_statement_period(text: str, period_config: dict, debug: bool = False
                         "end_day": int(groups[4]),
                         "end_year": int(groups[5]),
                     }
-        except (re.error, ValueError, IndexError):
+        except (re.error, ValueError, IndexError) as e:
+            if debug:
+                print(f"    Pattern matching error: {e}")
             continue
 
     return None
