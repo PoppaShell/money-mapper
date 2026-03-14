@@ -15,11 +15,8 @@ from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Dict, List, Optional, Tuple
 
-# Add the src directory to Python path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from utils import load_config, load_transactions_from_json, save_transactions_to_json, sanitize_description, prompt_yes_no
-from config_manager import get_config_manager
+from money_mapper.utils import load_config, load_transactions_from_json, save_transactions_to_json, sanitize_description, prompt_yes_no
+from money_mapper.config_manager import get_config_manager
 
 
 def load_enrichment_config(config_dir: str = "config") -> Dict:

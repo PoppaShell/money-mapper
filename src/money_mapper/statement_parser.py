@@ -12,11 +12,8 @@ import sys
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
-# Add the src directory to Python path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from utils import extract_pdf_text, standardize_date, sanitize_description, load_config
-from config_manager import get_config_manager
+from money_mapper.utils import extract_pdf_text, standardize_date, sanitize_description, load_config
+from money_mapper.config_manager import get_config_manager
 
 
 def load_statement_patterns(config_dir: str = "config") -> Dict:
