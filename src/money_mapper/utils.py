@@ -15,15 +15,6 @@ from datetime import datetime
 
 from money_mapper.config_manager import get_config_manager
 
-try:
-    import pypdf
-except ImportError:
-    print("\nERROR: The 'pypdf' package is required to read PDF statements.")
-    print("Please install it with: pip install pypdf")
-    print("Or install all dependencies: pip install -r requirements.txt")
-    print()
-    exit(1)
-
 
 def load_config(config_file: str) -> dict:
     """
