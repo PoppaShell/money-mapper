@@ -832,7 +832,7 @@ def prompt_yes_no(message: str, default: bool = True) -> bool:
 
 
 def prompt_with_validation(
-    message: str, valid_options: list[str], default: str = None, case_sensitive: bool = False
+    message: str, valid_options: list[str], default: str | None = None, case_sensitive: bool = False
 ) -> str:
     """
     Prompt user with input validation and re-prompting.
