@@ -12,8 +12,6 @@ import os
 import re
 import tomllib
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
-import sys
 
 from money_mapper.config_manager import get_config_manager
 
@@ -27,18 +25,18 @@ except ImportError:
     exit(1)
 
 
-def load_config(config_file: str) -> Dict:
+def load_config(config_file: str) -> dict:
     """
     Load configuration from TOML file.
-    
+
     Args:
         config_file: Path to TOML configuration file
-        
+
     Returns:
         Dictionary containing configuration data
     """
     try:
-        with open(config_file, 'rb') as f:
+        with open(config_file, "rb") as f:
             return tomllib.load(f)
     except FileNotFoundError:
         print(f"Error: Configuration file '{config_file}' not found")
@@ -54,84 +52,88 @@ def load_config(config_file: str) -> Dict:
 def extract_pdf_text(pdf_path: str) -> str:
     """
     Extract text content from PDF file.
-    
+
     Args:
         pdf_path: Path to PDF file
-        
+
     Returns:
         Extracted text content
     """
     try:
-        with open(pdf_path, 'rb') as file:
+        with open(pdf_path, "rb") as file:
             pdf_reader = pypdf.PdfReader(file)
             text = ""
-            
+
             for page in pdf_reader.pages:
                 text += page.extract_text() + "\n"
-            
+
             return text.strip()
-    
+
     except Exception as e:
         print(f"Error extracting text from PDF '{pdf_path}': {e}")
         return ""
 
 
-def standardize_date(date_str: str, statement_period: Optional[Dict] = None) -> str:
+def standardize_date(date_str: str, statement_period: dict | None = None) -> str:
     """
     Standardize date format to YYYY-MM-DD.
-    
+
     Args:
         date_str: Date string in various formats
         statement_period: Statement period info for year inference
-        
+
     Returns:
         Standardized date string
     """
     # Remove extra whitespace
     date_str = date_str.strip()
-    
+
     # Handle MM/DD format (need to infer year)
-    if re.match(r'^\d{1,2}/\d{1,2}$', date_str):
-        month, day = date_str.split('/')
-        
+    if re.match(r"^\d{1,2}/\d{1,2}$", date_str):
+        month, day = date_str.split("/")
+
         # Try to infer year from statement period
-        if statement_period and 'end_year' in statement_period:
-            year = statement_period['end_year']
+        if statement_period and "end_year" in statement_period:
+            year = statement_period["end_year"]
         else:
             # Default to current year
             year = datetime.now().year
-        
+
         return f"{year}-{int(month):02d}-{int(day):02d}"
-    
+
     # Handle MM/DD/YY format
-    if re.match(r'^\d{1,2}/\d{1,2}/\d{2}$', date_str):
-        month, day, year = date_str.split('/')
+    if re.match(r"^\d{1,2}/\d{1,2}/\d{2}$", date_str):
+        month, day, year = date_str.split("/")
         year = int(year)
-        
+
         # Convert 2-digit year to 4-digit
         if year < 50:
             year += 2000
         else:
             year += 1900
-        
+
         return f"{year}-{int(month):02d}-{int(day):02d}"
-    
+
     # Handle MM/DD/YYYY format
-    if re.match(r'^\d{1,2}/\d{1,2}/\d{4}$', date_str):
-        month, day, year = date_str.split('/')
+    if re.match(r"^\d{1,2}/\d{1,2}/\d{4}$", date_str):
+        month, day, year = date_str.split("/")
         return f"{year}-{int(month):02d}-{int(day):02d}"
-    
+
     # Handle YYYY-MM-DD format (already standardized)
-    if re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
         return date_str
-    
+
     # If we can't parse it, return as-is
     print(f"Warning: Could not standardize date format: {date_str}")
     return date_str
 
 
-def sanitize_description(description: str, sanitization_patterns: List = None,
-                        privacy_config: Dict = None, fuzzy_threshold: float = 0.85) -> str:
+def sanitize_description(
+    description: str,
+    sanitization_patterns: list = None,
+    privacy_config: dict = None,
+    fuzzy_threshold: float = 0.85,
+) -> str:
     """
     Remove sensitive information from transaction descriptions using both
     pattern-based and fuzzy keyword-based redaction.
@@ -155,7 +157,6 @@ def sanitize_description(description: str, sanitization_patterns: List = None,
         >>> sanitize_description("ACME CORP INDN:JOHN SMITH 1234 5678", privacy_config=privacy)
         '[EMPLOYER] INDN:[NAME] [ACCT] [ACCT]'
     """
-    from difflib import SequenceMatcher
 
     sanitized = description
 
@@ -164,12 +165,12 @@ def sanitize_description(description: str, sanitization_patterns: List = None,
         for pattern_config in sanitization_patterns:
             # Handle both dictionary format and string format
             if isinstance(pattern_config, dict):
-                pattern = pattern_config.get('pattern', '')
-                replacement = pattern_config.get('replacement', '[REDACTED]')
+                pattern = pattern_config.get("pattern", "")
+                replacement = pattern_config.get("replacement", "[REDACTED]")
             elif isinstance(pattern_config, str):
                 # If it's just a string, use it as the pattern with default replacement
                 pattern = pattern_config
-                replacement = '[REDACTED]'
+                replacement = "[REDACTED]"
             else:
                 # Skip invalid pattern types
                 continue
@@ -181,21 +182,20 @@ def sanitize_description(description: str, sanitization_patterns: List = None,
                 continue
 
     # Step 2: Apply privacy configuration if provided
-    if privacy_config and privacy_config.get('enable_redaction', True):
-
+    if privacy_config and privacy_config.get("enable_redaction", True):
         # Get fuzzy threshold from config or use parameter default
-        threshold = privacy_config.get('fuzzy_redaction_threshold', fuzzy_threshold)
+        threshold = privacy_config.get("fuzzy_redaction_threshold", fuzzy_threshold)
 
         # Apply pattern-based redaction from privacy config
-        patterns_config = privacy_config.get('patterns', {})
+        patterns_config = privacy_config.get("patterns", {})
 
         # Process pattern categories in specific order to avoid conflicts
         # Order matters: specific patterns must be processed before more generic ones
         category_order = [
-            'pii_fields',           # Process PII fields first (INDN:, COID:)
-            'reference_numbers',    # Then reference/ID numbers
-            'account_numbers',      # Then account numbers
-            'contact_info',         # Finally contact info (phone, email)
+            "pii_fields",  # Process PII fields first (INDN:, COID:)
+            "reference_numbers",  # Then reference/ID numbers
+            "account_numbers",  # Then account numbers
+            "contact_info",  # Finally contact info (phone, email)
         ]
 
         # Process ordered categories first
@@ -211,8 +211,8 @@ def sanitize_description(description: str, sanitization_patterns: List = None,
                 if not isinstance(pattern_config, dict):
                     continue
 
-                pattern = pattern_config.get('pattern', '')
-                replacement = pattern_config.get('replacement', '[REDACTED]')
+                pattern = pattern_config.get("pattern", "")
+                replacement = pattern_config.get("replacement", "[REDACTED]")
 
                 try:
                     sanitized = re.sub(pattern, replacement, sanitized)
@@ -232,8 +232,8 @@ def sanitize_description(description: str, sanitization_patterns: List = None,
                 if not isinstance(pattern_config, dict):
                     continue
 
-                pattern = pattern_config.get('pattern', '')
-                replacement = pattern_config.get('replacement', '[REDACTED]')
+                pattern = pattern_config.get("pattern", "")
+                replacement = pattern_config.get("replacement", "[REDACTED]")
 
                 try:
                     sanitized = re.sub(pattern, replacement, sanitized)
@@ -242,36 +242,38 @@ def sanitize_description(description: str, sanitization_patterns: List = None,
                     continue
 
         # Apply fuzzy keyword-based redaction
-        keywords_config = privacy_config.get('keywords', {})
+        keywords_config = privacy_config.get("keywords", {})
 
         # Sort keywords by length (descending) to process longer phrases first
         # This prevents partial redaction when multiple keywords appear together
         # Example: "Alice Johnson" with keywords ["alice", "johnson"] - process "alice johnson" before "alice"
 
         # Process names (sorted by length, descending)
-        names_sorted = sorted(keywords_config.get('names', []), key=len, reverse=True)
+        names_sorted = sorted(keywords_config.get("names", []), key=len, reverse=True)
         for name in names_sorted:
-            sanitized = _fuzzy_redact_keyword(sanitized, name, '[NAME]', threshold)
+            sanitized = _fuzzy_redact_keyword(sanitized, name, "[NAME]", threshold)
 
         # Process employers (sorted by length, descending)
-        employers_sorted = sorted(keywords_config.get('employers', []), key=len, reverse=True)
+        employers_sorted = sorted(keywords_config.get("employers", []), key=len, reverse=True)
         for employer in employers_sorted:
-            sanitized = _fuzzy_redact_keyword(sanitized, employer, '[EMPLOYER]', threshold)
+            sanitized = _fuzzy_redact_keyword(sanitized, employer, "[EMPLOYER]", threshold)
 
         # Process locations (sorted by length, descending)
-        locations_sorted = sorted(keywords_config.get('locations', []), key=len, reverse=True)
+        locations_sorted = sorted(keywords_config.get("locations", []), key=len, reverse=True)
         for location in locations_sorted:
-            sanitized = _fuzzy_redact_keyword(sanitized, location, '[LOCATION]', threshold)
+            sanitized = _fuzzy_redact_keyword(sanitized, location, "[LOCATION]", threshold)
 
         # Process custom keywords (sorted by length, descending)
-        custom_sorted = sorted(keywords_config.get('custom', []), key=len, reverse=True)
+        custom_sorted = sorted(keywords_config.get("custom", []), key=len, reverse=True)
         for keyword in custom_sorted:
-            sanitized = _fuzzy_redact_keyword(sanitized, keyword, '[REDACTED]', threshold)
+            sanitized = _fuzzy_redact_keyword(sanitized, keyword, "[REDACTED]", threshold)
 
     return sanitized.strip()
 
 
-def _fuzzy_redact_keyword(text: str, keyword: str, replacement: str, threshold: float = 0.85) -> str:
+def _fuzzy_redact_keyword(
+    text: str, keyword: str, replacement: str, threshold: float = 0.85
+) -> str:
     """
     Redact keyword from text using fuzzy string matching.
 
@@ -316,8 +318,8 @@ def _fuzzy_redact_keyword(text: str, keyword: str, replacement: str, threshold: 
 
     for i in range(len(words) - keyword_word_count + 1):
         # Extract window of words matching keyword length
-        window_words = words[i:i + keyword_word_count]
-        window_text = ' '.join(window_words)
+        window_words = words[i : i + keyword_word_count]
+        window_text = " ".join(window_words)
         window_normalized = window_text.lower().strip()
 
         # Calculate fuzzy similarity
@@ -336,14 +338,14 @@ def _fuzzy_redact_keyword(text: str, keyword: str, replacement: str, threshold: 
                     replacements_made.append((i + j, i + j + 1, word))
 
     # Apply replacements from right to left to maintain indices
-    for start_idx, end_idx, original_phrase in reversed(replacements_made):
+    for start_idx, end_idx, _original_phrase in reversed(replacements_made):
         # Reconstruct text with replacement
-        before = ' '.join(words[:start_idx])
-        after = ' '.join(words[end_idx:])
+        before = " ".join(words[:start_idx])
+        after = " ".join(words[end_idx:])
 
         # Rebuild with proper spacing
         parts = [p for p in [before, replacement, after] if p]
-        redacted_text = ' '.join(parts)
+        redacted_text = " ".join(parts)
 
         # Update words list for next iteration
         words = redacted_text.split()
@@ -351,10 +353,10 @@ def _fuzzy_redact_keyword(text: str, keyword: str, replacement: str, threshold: 
     return redacted_text
 
 
-def save_transactions_to_json(transactions: List[Dict], output_file: str) -> None:
+def save_transactions_to_json(transactions: list[dict], output_file: str) -> None:
     """
     Save transactions to JSON file.
-    
+
     Args:
         transactions: List of transaction dictionaries
         output_file: Output file path
@@ -364,27 +366,27 @@ def save_transactions_to_json(transactions: List[Dict], output_file: str) -> Non
         output_dir = os.path.dirname(output_file)
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        
-        with open(output_file, 'w', encoding='utf-8') as f:
+
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(transactions, f, indent=2, ensure_ascii=False, default=str)
-            
+
     except Exception as e:
         print(f"Error saving transactions to '{output_file}': {e}")
         raise
 
 
-def load_transactions_from_json(input_file: str) -> List[Dict]:
+def load_transactions_from_json(input_file: str) -> list[dict]:
     """
     Load transactions from JSON file.
-    
+
     Args:
         input_file: Input file path
-        
+
     Returns:
         List of transaction dictionaries
     """
     try:
-        with open(input_file, 'r', encoding='utf-8') as f:
+        with open(input_file, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         print(f"Error: File '{input_file}' not found")
@@ -400,10 +402,10 @@ def load_transactions_from_json(input_file: str) -> List[Dict]:
 def validate_toml_files(verbose: bool = False) -> bool:
     """
     Validate all TOML configuration files using config manager.
-    
+
     Args:
         verbose: Print detailed validation info
-        
+
     Returns:
         True if all files are valid, False otherwise
     """
@@ -411,25 +413,25 @@ def validate_toml_files(verbose: bool = False) -> bool:
         # Get config manager and file list
         config_manager = get_config_manager()
         config_files = config_manager.get_all_config_files()
-        
+
         if verbose:
             print(f"Validating {len(config_files)} TOML configuration files...")
-        
+
         all_valid = True
-        
+
         for file_path in config_files:
             try:
                 if not os.path.exists(file_path):
                     if verbose:
                         print(f"  Warning: {file_path} does not exist (may be optional)")
                     continue
-                
-                with open(file_path, 'rb') as f:
+
+                with open(file_path, "rb") as f:
                     tomllib.load(f)
-                
+
                 if verbose:
                     print(f"  Valid: {file_path}")
-                    
+
             except tomllib.TOMLDecodeError as e:
                 if verbose:
                     print(f"  Invalid: {file_path}: {e}")
@@ -442,9 +444,9 @@ def validate_toml_files(verbose: bool = False) -> bool:
                 else:
                     print(f"Error reading {file_path}: {e}")
                 all_valid = False
-        
+
         return all_valid
-        
+
     except Exception as e:
         print(f"Error during TOML validation: {e}")
         return False
@@ -453,30 +455,30 @@ def validate_toml_files(verbose: bool = False) -> bool:
 def ensure_directories_exist() -> bool:
     """
     Ensure all required directories exist using config manager.
-    
+
     Returns:
         True if all directories exist or were created successfully
     """
     try:
         config_manager = get_config_manager()
-        
+
         # Get all required directories
         directories_to_check = [
-            config_manager.get_directory_path('statements'),
-            config_manager.get_directory_path('output'),
-            config_manager.get_directory_path('config')
+            config_manager.get_directory_path("statements"),
+            config_manager.get_directory_path("output"),
+            config_manager.get_directory_path("config"),
         ]
-        
+
         # Also check backup directory if configured
         try:
-            backup_dir = config_manager.get_mapping_processor_files()['backup_directory']
+            backup_dir = config_manager.get_mapping_processor_files()["backup_directory"]
             if backup_dir:
                 directories_to_check.append(backup_dir)
         except:
             pass  # Backup directory is optional
-        
+
         all_success = True
-        
+
         for directory in directories_to_check:
             if not os.path.exists(directory):
                 try:
@@ -488,9 +490,9 @@ def ensure_directories_exist() -> bool:
             elif not os.path.isdir(directory):
                 print(f"Error: {directory} exists but is not a directory")
                 all_success = False
-        
+
         return all_success
-        
+
     except Exception as e:
         print(f"Error ensuring directories exist: {e}")
         return False
@@ -499,38 +501,40 @@ def ensure_directories_exist() -> bool:
 def clean_merchant_name(description: str) -> str:
     """
     Extract clean merchant name from transaction description.
-    
+
     Args:
         description: Transaction description
-        
+
     Returns:
         Cleaned merchant name
     """
     # Remove common banking prefixes
-    cleaned = re.sub(r'^(CHECKCARD|DEBIT CARD|POS|ACH|DES:|REF #)', '', description, flags=re.IGNORECASE)
-    
+    cleaned = re.sub(
+        r"^(CHECKCARD|DEBIT CARD|POS|ACH|DES:|REF #)", "", description, flags=re.IGNORECASE
+    )
+
     # Remove card numbers and dates
-    cleaned = re.sub(r'\d{4}\s*\*+\d{4}|\d{2}/\d{2}', '', cleaned)
-    
+    cleaned = re.sub(r"\d{4}\s*\*+\d{4}|\d{2}/\d{2}", "", cleaned)
+
     # Remove extra whitespace and normalize
-    cleaned = ' '.join(cleaned.split()).strip()
-    
+    cleaned = " ".join(cleaned.split()).strip()
+
     # Take first meaningful part (usually merchant name)
     parts = cleaned.split()
     if parts:
         # Return first 3-4 words as merchant name
-        return ' '.join(parts[:4])
-    
+        return " ".join(parts[:4])
+
     return cleaned
 
 
-def format_amount(amount: Union[float, str]) -> str:
+def format_amount(amount: float | str) -> str:
     """
     Format monetary amount for display.
-    
+
     Args:
         amount: Amount to format
-        
+
     Returns:
         Formatted amount string
     """
@@ -547,205 +551,208 @@ def format_amount(amount: Union[float, str]) -> str:
 def calculate_confidence_score(method: str, similarity: float = 0.0) -> float:
     """
     Calculate confidence score based on categorization method.
-    
+
     Args:
         method: Categorization method used
         similarity: Similarity score for fuzzy matches
-        
+
     Returns:
         Confidence score between 0.0 and 1.0
     """
-    if method == 'private_mapping':
+    if method == "private_mapping":
         return 0.95  # Highest confidence for personal mappings
-    elif method == 'public_mapping':
+    elif method == "public_mapping":
         return 0.85  # High confidence for merchant mappings
-    elif method == 'fuzzy_match':
+    elif method == "fuzzy_match":
         return min(0.80, similarity)  # Based on similarity score
-    elif method == 'plaid_keyword':
+    elif method == "plaid_keyword":
         return 0.70  # Medium confidence for keyword matching
-    elif method == 'plaid_fallback':
+    elif method == "plaid_fallback":
         return 0.40  # Lower confidence for fallback categories
     else:
         return 0.20  # Low confidence for unknown methods
 
 
-def get_processing_stats(transactions: List[Dict]) -> Dict:
+def get_processing_stats(transactions: list[dict]) -> dict:
     """
     Calculate processing statistics for transactions.
-    
+
     Args:
         transactions: List of processed transactions
-        
+
     Returns:
         Dictionary containing statistics
     """
     if not transactions:
         return {
-            'total_transactions': 0,
-            'categorized': 0,
-            'uncategorized': 0,
-            'categorization_rate': 0.0,
-            'confidence_distribution': {},
-            'method_distribution': {}
+            "total_transactions": 0,
+            "categorized": 0,
+            "uncategorized": 0,
+            "categorization_rate": 0.0,
+            "confidence_distribution": {},
+            "method_distribution": {},
         }
-    
+
     total = len(transactions)
-    categorized = sum(1 for t in transactions if t.get('category') and t.get('category') != 'UNCATEGORIZED')
-    
+    categorized = sum(
+        1 for t in transactions if t.get("category") and t.get("category") != "UNCATEGORIZED"
+    )
+
     # Confidence distribution
-    confidence_levels = {'high': 0, 'medium': 0, 'low': 0}
+    confidence_levels = {"high": 0, "medium": 0, "low": 0}
     method_counts = {}
-    
+
     for transaction in transactions:
-        confidence = transaction.get('confidence', 0.0)
-        method = transaction.get('categorization_method', 'unknown')
-        
+        confidence = transaction.get("confidence", 0.0)
+        method = transaction.get("categorization_method", "unknown")
+
         # Count confidence levels
         if confidence >= 0.8:
-            confidence_levels['high'] += 1
+            confidence_levels["high"] += 1
         elif confidence >= 0.5:
-            confidence_levels['medium'] += 1
+            confidence_levels["medium"] += 1
         else:
-            confidence_levels['low'] += 1
-        
+            confidence_levels["low"] += 1
+
         # Count methods
         method_counts[method] = method_counts.get(method, 0) + 1
-    
+
     return {
-        'total_transactions': total,
-        'categorized': categorized,
-        'uncategorized': total - categorized,
-        'categorization_rate': (categorized / total) * 100 if total > 0 else 0.0,
-        'confidence_distribution': confidence_levels,
-        'method_distribution': method_counts
+        "total_transactions": total,
+        "categorized": categorized,
+        "uncategorized": total - categorized,
+        "categorization_rate": (categorized / total) * 100 if total > 0 else 0.0,
+        "confidence_distribution": confidence_levels,
+        "method_distribution": method_counts,
     }
 
 
 def normalize_text_for_matching(text: str) -> str:
     """
     Normalize text for consistent matching.
-    
+
     Args:
         text: Text to normalize
-        
+
     Returns:
         Normalized text
     """
     # Convert to lowercase
     text = text.lower()
-    
+
     # Remove extra whitespace
-    text = ' '.join(text.split())
-    
+    text = " ".join(text.split())
+
     # Remove common punctuation
-    text = re.sub(r'[^\w\s]', '', text)
-    
+    text = re.sub(r"[^\w\s]", "", text)
+
     # Remove common banking terms
-    banking_terms = ['checkcard', 'debit', 'card', 'pos', 'purchase', 'payment']
+    banking_terms = ["checkcard", "debit", "card", "pos", "purchase", "payment"]
     for term in banking_terms:
-        text = text.replace(term, '')
-    
+        text = text.replace(term, "")
+
     # Remove extra whitespace again
-    text = ' '.join(text.split())
-    
+    text = " ".join(text.split())
+
     return text.strip()
 
 
 def fuzzy_match_similarity(text1: str, text2: str) -> float:
     """
     Calculate fuzzy matching similarity between two strings.
-    
+
     Args:
         text1: First string
         text2: Second string
-        
+
     Returns:
         Similarity score between 0.0 and 1.0
     """
     from difflib import SequenceMatcher
-    
+
     # Normalize both strings
     norm1 = normalize_text_for_matching(text1)
     norm2 = normalize_text_for_matching(text2)
-    
+
     # Calculate similarity
     return SequenceMatcher(None, norm1, norm2).ratio()
 
 
-def validate_transaction_data(transaction: Dict) -> Tuple[bool, List[str]]:
+def validate_transaction_data(transaction: dict) -> tuple[bool, list[str]]:
     """
     Validate transaction data structure.
-    
+
     Args:
         transaction: Transaction dictionary
-        
+
     Returns:
         Tuple of (is_valid, error_messages)
     """
     errors = []
-    
+
     # Check required fields
-    required_fields = ['date', 'description', 'amount']
+    required_fields = ["date", "description", "amount"]
     for field in required_fields:
         if field not in transaction:
             errors.append(f"Missing required field: {field}")
         elif not transaction[field]:
             errors.append(f"Empty required field: {field}")
-    
+
     # Validate date format
-    if 'date' in transaction:
-        date_str = transaction['date']
-        if not re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
+    if "date" in transaction:
+        date_str = transaction["date"]
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
             errors.append(f"Invalid date format: {date_str} (expected YYYY-MM-DD)")
-    
+
     # Validate amount
-    if 'amount' in transaction:
+    if "amount" in transaction:
         try:
-            float(transaction['amount'])
+            float(transaction["amount"])
         except (ValueError, TypeError):
             errors.append(f"Invalid amount format: {transaction['amount']}")
-    
+
     return len(errors) == 0, errors
 
 
-def backup_file(file_path: str, backup_dir: str = "backups") -> Optional[str]:
+def backup_file(file_path: str, backup_dir: str = "backups") -> str | None:
     """
     Create a backup copy of a file with timestamp.
-    
+
     Args:
         file_path: Path to file to backup
         backup_dir: Directory to store backup
-        
+
     Returns:
         Path to backup file or None if failed
     """
     if not os.path.exists(file_path):
         return None
-    
+
     try:
         # Ensure backup directory exists
         if not os.path.exists(backup_dir):
             os.makedirs(backup_dir)
-        
+
         # Create backup filename with timestamp
         filename = os.path.basename(file_path)
         name, ext = os.path.splitext(filename)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_filename = f"{name}_{timestamp}{ext}"
         backup_path = os.path.join(backup_dir, backup_filename)
-        
+
         # Copy file
         import shutil
+
         shutil.copy2(file_path, backup_path)
-        
+
         return backup_path
-        
+
     except Exception as e:
         print(f"Error creating backup of {file_path}: {e}")
         return None
 
 
-def merge_transaction_data(base_transaction: Dict, update_data: Dict) -> Dict:
+def merge_transaction_data(base_transaction: dict, update_data: dict) -> dict:
     """
     Merge transaction data with updates.
 
@@ -760,7 +767,7 @@ def merge_transaction_data(base_transaction: Dict, update_data: Dict) -> Dict:
     merged.update(update_data)
 
     # Add processing timestamp
-    merged['last_updated'] = datetime.now().isoformat()
+    merged["last_updated"] = datetime.now().isoformat()
 
     return merged
 
@@ -779,8 +786,8 @@ def show_progress(current: int, total: int, bar_length: int = 50) -> None:
 
     percent = int((current / total) * 100)
     filled_length = int(bar_length * current / total)
-    bar = '█' * filled_length + '░' * (bar_length - filled_length)
-    print(f'\r[{bar}] {percent}% ({current}/{total})', end='', flush=True)
+    bar = "█" * filled_length + "░" * (bar_length - filled_length)
+    print(f"\r[{bar}] {percent}% ({current}/{total})", end="", flush=True)
 
 
 def prompt_yes_no(message: str, default: bool = True) -> bool:
@@ -813,17 +820,21 @@ def prompt_yes_no(message: str, default: bool = True) -> bool:
             return default
 
         # Explicit yes/no
-        if response in ['y', 'yes']:
+        if response in ["y", "yes"]:
             return True
-        elif response in ['n', 'no']:
+        elif response in ["n", "no"]:
             return False
         else:
             default_text = "yes" if default else "no"
-            print(f"Invalid input. Please enter 'y' for yes or 'n' for no (or press Enter for {default_text}).", flush=True)
+            print(
+                f"Invalid input. Please enter 'y' for yes or 'n' for no (or press Enter for {default_text}).",
+                flush=True,
+            )
 
 
-def prompt_with_validation(message: str, valid_options: List[str], default: str = None,
-                          case_sensitive: bool = False) -> str:
+def prompt_with_validation(
+    message: str, valid_options: list[str], default: str = None, case_sensitive: bool = False
+) -> str:
     """
     Prompt user with input validation and re-prompting.
 
@@ -845,7 +856,7 @@ def prompt_with_validation(message: str, valid_options: List[str], default: str 
     """
     # Build prompt suffix
     if default:
-        options_str = '/'.join(valid_options)
+        options_str = "/".join(valid_options)
         suffix = f" [{options_str}, Enter={default}]: "
     else:
         suffix = f" [{'/'.join(valid_options)}]: "
@@ -873,7 +884,7 @@ def prompt_with_validation(message: str, valid_options: List[str], default: str 
         print(f"Invalid input. Please enter one of: {', '.join(valid_options)}", flush=True)
 
 
-def check_dependencies(packages: Optional[List[str]] = None) -> Tuple[bool, List[str]]:
+def check_dependencies(packages: list[str] | None = None) -> tuple[bool, list[str]]:
     """
     Check if required dependencies are installed.
 
@@ -887,7 +898,7 @@ def check_dependencies(packages: Optional[List[str]] = None) -> Tuple[bool, List
     """
     # Default required packages
     if packages is None:
-        packages = ['toml', 'pandas', 'pypdf']
+        packages = ["toml", "pandas", "pypdf"]
 
     missing = []
 
@@ -900,14 +911,14 @@ def check_dependencies(packages: Optional[List[str]] = None) -> Tuple[bool, List
     return (len(missing) == 0, missing)
 
 
-def format_dependency_status() -> List[Tuple[str, Optional[str], bool]]:
+def format_dependency_status() -> list[tuple[str, str | None, bool]]:
     """
     Get detailed status of all required dependencies including version numbers.
 
     Returns:
         List of tuples: (package_name, version_or_none, is_installed)
     """
-    required_packages = ['toml', 'pandas', 'pypdf']
+    required_packages = ["toml", "pandas", "pypdf"]
     status = []
 
     for package in required_packages:
@@ -915,9 +926,9 @@ def format_dependency_status() -> List[Tuple[str, Optional[str], bool]]:
             module = __import__(package)
             # Try to get version
             version = None
-            if hasattr(module, '__version__'):
+            if hasattr(module, "__version__"):
                 version = module.__version__
-            elif hasattr(module, 'VERSION'):
+            elif hasattr(module, "VERSION"):
                 version = module.VERSION
             status.append((package, version, True))
         except ImportError:

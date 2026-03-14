@@ -6,14 +6,13 @@ This module provides an interactive setup wizard that runs on first use to help
 users configure their private settings and create initial configurations.
 """
 
+import json
 import os
-import sys
 import shutil
 import tomllib
-import json
 
 from money_mapper.config_manager import get_config_manager
-from money_mapper.utils import prompt_yes_no, check_dependencies
+from money_mapper.utils import check_dependencies, prompt_yes_no
 
 
 def check_first_run() -> bool:
@@ -187,8 +186,8 @@ def configure_privacy_settings(config_dir: str = "config") -> bool:
     redaction_enabled = prompt_yes_no("Enable redaction?", default=True)
 
     redaction_mode = input("Redaction mode (exact/fuzzy, default: fuzzy): ").strip().lower()
-    if redaction_mode not in ['exact', 'fuzzy']:
-        redaction_mode = 'fuzzy'
+    if redaction_mode not in ["exact", "fuzzy"]:
+        redaction_mode = "fuzzy"
 
     threshold_str = input("Fuzzy matching threshold (0.0-1.0, default: 0.85): ").strip()
     try:
@@ -200,19 +199,26 @@ def configure_privacy_settings(config_dir: str = "config") -> bool:
     # Save settings
     return save_privacy_settings(
         config_dir,
-        names=[n.strip() for n in names.split(',') if n.strip()],
-        employers=[e.strip() for e in employers.split(',') if e.strip()],
-        locations=[l.strip() for l in locations.split(',') if l.strip()],
-        custom=[c.strip() for c in custom.split(',') if c.strip()],
+        names=[n.strip() for n in names.split(",") if n.strip()],
+        employers=[e.strip() for e in employers.split(",") if e.strip()],
+        locations=[l.strip() for l in locations.split(",") if l.strip()],
+        custom=[c.strip() for c in custom.split(",") if c.strip()],
         enable_redaction=redaction_enabled,
         redaction_mode=redaction_mode,
-        fuzzy_threshold=threshold
+        fuzzy_threshold=threshold,
     )
 
 
-def save_privacy_settings(config_dir: str, names: list, employers: list,
-                          locations: list, custom: list, enable_redaction: bool,
-                          redaction_mode: str, fuzzy_threshold: float) -> bool:
+def save_privacy_settings(
+    config_dir: str,
+    names: list,
+    employers: list,
+    locations: list,
+    custom: list,
+    enable_redaction: bool,
+    redaction_mode: str,
+    fuzzy_threshold: float,
+) -> bool:
     """
     Save privacy settings to private_settings.toml.
 
@@ -233,6 +239,7 @@ def save_privacy_settings(config_dir: str, names: list, employers: list,
         import toml  # We need toml for writing (tomllib is read-only)
     except ImportError:
         from utils import handle_toml_import_error
+
         handle_toml_import_error()
         return False
 
@@ -240,31 +247,31 @@ def save_privacy_settings(config_dir: str, names: list, employers: list,
 
     try:
         # Load existing settings
-        with open(private_settings_file, 'rb') as f:
+        with open(private_settings_file, "rb") as f:
             settings = tomllib.load(f)
     except Exception as e:
         print(f"Warning: Could not load existing settings: {e}")
         settings = {}
 
     # Update privacy section
-    if 'privacy' not in settings:
-        settings['privacy'] = {}
+    if "privacy" not in settings:
+        settings["privacy"] = {}
 
-    settings['privacy']['enable_redaction'] = enable_redaction
-    settings['privacy']['redaction_mode'] = redaction_mode
-    settings['privacy']['fuzzy_redaction_threshold'] = fuzzy_threshold
+    settings["privacy"]["enable_redaction"] = enable_redaction
+    settings["privacy"]["redaction_mode"] = redaction_mode
+    settings["privacy"]["fuzzy_redaction_threshold"] = fuzzy_threshold
 
-    if 'keywords' not in settings['privacy']:
-        settings['privacy']['keywords'] = {}
+    if "keywords" not in settings["privacy"]:
+        settings["privacy"]["keywords"] = {}
 
-    settings['privacy']['keywords']['names'] = names
-    settings['privacy']['keywords']['employers'] = employers
-    settings['privacy']['keywords']['locations'] = locations
-    settings['privacy']['keywords']['custom'] = custom
+    settings["privacy"]["keywords"]["names"] = names
+    settings["privacy"]["keywords"]["employers"] = employers
+    settings["privacy"]["keywords"]["locations"] = locations
+    settings["privacy"]["keywords"]["custom"] = custom
 
     # Write back to file
     try:
-        with open(private_settings_file, 'w') as f:
+        with open(private_settings_file, "w") as f:
             toml.dump(settings, f)
         print(f"\n✓ Privacy settings saved to {private_settings_file}")
         return True
@@ -284,8 +291,8 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         Dictionary with processing statistics (num_transactions, categorization_rate)
     """
     config = get_config_manager(config_dir)
-    statements_dir = config.get_directory_path('statements')
-    stats = {'num_transactions': 0, 'categorization_rate': None}
+    statements_dir = config.get_directory_path("statements")
+    stats = {"num_transactions": 0, "categorization_rate": None}
 
     if not os.path.exists(statements_dir):
         print(f"No statements directory found at: {statements_dir}")
@@ -293,7 +300,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         return stats
 
     # Check for PDF files
-    pdf_files = [f for f in os.listdir(statements_dir) if f.lower().endswith('.pdf')]
+    pdf_files = [f for f in os.listdir(statements_dir) if f.lower().endswith(".pdf")]
 
     if not pdf_files:
         print(f"No PDF files found in: {statements_dir}")
@@ -311,8 +318,8 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         return stats
 
     # Get file paths from config manager
-    parsed_file = config.get_default_file_path('parsed_transactions')
-    enriched_file = config.get_default_file_path('enriched_transactions')
+    parsed_file = config.get_default_file_path("parsed_transactions")
+    enriched_file = config.get_default_file_path("enriched_transactions")
 
     try:
         # Step 1: Parse statements
@@ -336,9 +343,11 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         save_transactions_to_json(transactions, parsed_file)
 
         num_transactions = len(transactions)
-        stats['num_transactions'] = num_transactions
+        stats["num_transactions"] = num_transactions
 
-        print(f"✓ Successfully parsed {num_transactions} transaction(s) from {len(pdf_files)} file(s)")
+        print(
+            f"✓ Successfully parsed {num_transactions} transaction(s) from {len(pdf_files)} file(s)"
+        )
         print(f"  Output: {parsed_file}")
 
         # Step 2: Enrich transactions
@@ -348,6 +357,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         print("Enriching transactions...")
 
         from transaction_enricher import process_transaction_enrichment
+
         process_transaction_enrichment(parsed_file, enriched_file, debug=False)
 
         print(f"✓ Successfully enriched {num_transactions} transaction(s)")
@@ -361,12 +371,12 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         from transaction_enricher import analyze_categorization_accuracy
 
         # Load enriched transactions to calculate categorization rate
-        with open(enriched_file, 'r') as f:
+        with open(enriched_file) as f:
             enriched_transactions = json.load(f)
 
-        categorized = sum(1 for t in enriched_transactions if t.get('category') != 'UNCATEGORIZED')
+        categorized = sum(1 for t in enriched_transactions if t.get("category") != "UNCATEGORIZED")
         if num_transactions > 0:
-            stats['categorization_rate'] = (categorized / num_transactions) * 100
+            stats["categorization_rate"] = (categorized / num_transactions) * 100
 
         # Run analysis (this includes Interactive Mapping Builder integration)
         analyze_categorization_accuracy(enriched_file, verbose=False, debug=False)
@@ -406,9 +416,9 @@ def display_setup_complete(config_dir: str = "config", stats: dict = None):
     print("  ✓ Configuration files created")
     print("  ✓ Privacy settings configured")
 
-    if stats and stats.get('num_transactions', 0) > 0:
+    if stats and stats.get("num_transactions", 0) > 0:
         print(f"  ✓ Statements parsed: {stats['num_transactions']} transaction(s)")
-        if stats.get('categorization_rate') is not None:
+        if stats.get("categorization_rate") is not None:
             print(f"  ✓ Categorization rate: {stats['categorization_rate']:.1f}%")
 
     print()
@@ -421,7 +431,7 @@ def display_setup_complete(config_dir: str = "config", stats: dict = None):
 
     # Show next steps
     print("Next steps:")
-    if not stats or stats.get('num_transactions', 0) == 0:
+    if not stats or stats.get("num_transactions", 0) == 0:
         print("  1. Add PDF statements to 'statements/' directory")
         print("  2. Run: python src/cli.py")
         print("  3. Choose option 3 for complete processing pipeline")
