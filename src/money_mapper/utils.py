@@ -15,6 +15,11 @@ from datetime import datetime
 
 from money_mapper.config_manager import get_config_manager
 
+try:
+    import pypdf
+except ImportError:
+    pypdf = None  # type: ignore
+
 
 def load_config(config_file: str) -> dict:
     """
