@@ -9,16 +9,25 @@ and enriching transactions with categories and merchant names.
 import argparse
 import os
 import sys
-from typing import Optional
 
-from money_mapper.statement_parser import process_pdf_statements
-from money_mapper.transaction_enricher import process_transaction_enrichment, analyze_categorization_accuracy
-from money_mapper.utils import load_transactions_from_json, ensure_directories_exist, validate_toml_files, prompt_yes_no
 from money_mapper.config_manager import get_config_manager
+from money_mapper.statement_parser import process_pdf_statements
+from money_mapper.transaction_enricher import (
+    analyze_categorization_accuracy,
+    process_transaction_enrichment,
+)
+from money_mapper.utils import (
+    ensure_directories_exist,
+    load_transactions_from_json,
+    prompt_yes_no,
+    validate_toml_files,
+)
+
 
 def get_mapping_processor(config_dir: str = "config", debug_mode: bool = False):
     """Import and return MappingProcessor class."""
     from money_mapper.mapping_processor import MappingProcessor
+
     return MappingProcessor(config_dir=config_dir, debug_mode=debug_mode)
 
 
@@ -33,29 +42,31 @@ def print_banner():
 def validate_directory(directory: str) -> bool:
     """
     Validate that directory exists and contains PDF files.
-    
+
     Args:
         directory: Directory path to validate
-        
+
     Returns:
         True if valid, False otherwise
     """
     if not os.path.exists(directory):
         print(f"Error: Directory '{directory}' does not exist")
-        print("Please check your config/public_settings.toml [directories] section or create the directory")
+        print(
+            "Please check your config/public_settings.toml [directories] section or create the directory"
+        )
         return False
-    
+
     if not os.path.isdir(directory):
         print(f"Error: '{directory}' is not a directory")
         return False
-    
+
     # Check for PDF files
-    pdf_files = [f for f in os.listdir(directory) if f.lower().endswith('.pdf')]
+    pdf_files = [f for f in os.listdir(directory) if f.lower().endswith(".pdf")]
     if not pdf_files:
         print(f"Warning: No PDF files found in '{directory}'")
         print("Please add PDF files to process or check your directory configuration")
         return False
-    
+
     print(f"Found {len(pdf_files)} PDF files in '{directory}'")
     return True
 
@@ -63,10 +74,10 @@ def validate_directory(directory: str) -> bool:
 def validate_json_file(file_path: str) -> bool:
     """
     Validate that JSON file exists and contains transactions.
-    
+
     Args:
         file_path: Path to JSON file
-        
+
     Returns:
         True if valid, False otherwise
     """
@@ -74,13 +85,13 @@ def validate_json_file(file_path: str) -> bool:
         print(f"Error: File '{file_path}' does not exist")
         print("Please run the parse command first or check your file path configuration")
         return False
-    
+
     try:
         transactions = load_transactions_from_json(file_path)
         if not transactions:
             print(f"Warning: No transactions found in '{file_path}'")
             return False
-        
+
         print(f"Found {len(transactions)} transactions in '{file_path}'")
         return True
     except Exception as e:
@@ -91,11 +102,11 @@ def validate_json_file(file_path: str) -> bool:
 def validate_output_path(file_path: str, prompt_overwrite: bool = True) -> bool:
     """
     Validate output file path and handle overwrite confirmation.
-    
+
     Args:
         file_path: Path to output file
         prompt_overwrite: Whether to prompt for overwrite confirmation
-        
+
     Returns:
         True if path is valid and ready to use, False otherwise
     """
@@ -108,58 +119,58 @@ def validate_output_path(file_path: str, prompt_overwrite: bool = True) -> bool:
         except Exception as e:
             print(f"Error: Cannot create output directory '{output_dir}': {e}")
             return False
-    
+
     # Check if file exists and prompt for overwrite
     if os.path.exists(file_path) and prompt_overwrite:
         if not confirm_action(f"File '{file_path}' already exists. Overwrite?"):
             print("Operation cancelled")
             return False
-    
+
     return True
 
 
 def validate_config_paths(config_manager, command: str = None) -> bool:
     """
     Validate that configured paths exist and are accessible.
-    
+
     Args:
         config_manager: ConfigManager instance
         command: Specific command being run (for targeted validation)
-        
+
     Returns:
         True if all required paths are valid, False otherwise
     """
     validation_errors = []
-    
+
     # Check directories based on command
-    if command in ['parse', 'pipeline', None]:
-        statements_dir = config_manager.get_directory_path('statements')
+    if command in ["parse", "pipeline", None]:
+        statements_dir = config_manager.get_directory_path("statements")
         if not os.path.exists(statements_dir):
             validation_errors.append(f"Statements directory not found: {statements_dir}")
-    
-    if command in ['enrich', 'analyze', 'pipeline', None]:
-        output_dir = config_manager.get_directory_path('output')
+
+    if command in ["enrich", "analyze", "pipeline", None]:
+        output_dir = config_manager.get_directory_path("output")
         if not os.path.exists(output_dir):
             try:
                 os.makedirs(output_dir)
                 print(f"Created output directory: {output_dir}")
             except Exception as e:
                 validation_errors.append(f"Cannot create output directory: {output_dir} ({e})")
-    
+
     # Check config directory
-    config_dir = config_manager.get_directory_path('config')
+    config_dir = config_manager.get_directory_path("config")
     if not os.path.exists(config_dir):
         validation_errors.append(f"Config directory not found: {config_dir}")
-    
+
     # Check required config files exist
-    required_files = ['statement_patterns', 'plaid_categories']
+    required_files = ["statement_patterns", "plaid_categories"]
     for file_key in required_files:
         file_path = config_manager.get_file_path(file_key)
         if not os.path.exists(file_path):
             validation_errors.append(f"Required config file missing: {file_path}")
-    
+
     # Check optional config files and warn if missing
-    optional_files = ['private_mappings', 'public_mappings']
+    optional_files = ["private_mappings", "public_mappings"]
     for file_key in optional_files:
         try:
             file_path = config_manager.get_file_path(file_key)
@@ -167,16 +178,16 @@ def validate_config_paths(config_manager, command: str = None) -> bool:
                 print(f"Info: Optional file missing: {file_path}")
         except:
             pass  # File key might not be configured
-    
+
     if validation_errors:
         print("Configuration validation failed:")
         for error in validation_errors:
             print(f"  - {error}")
-        print(f"\nPlease check your config files (public_settings.toml, private_settings.toml)")
-        print(f"or create the missing directories/files.")
+        print("\nPlease check your config files (public_settings.toml, private_settings.toml)")
+        print("or create the missing directories/files.")
         print(f"Current config directory: {config_dir}")
         return False
-    
+
     return True
 
 
@@ -197,36 +208,36 @@ def confirm_action(message: str, default: bool = True) -> bool:
 def parse_statements_interactive():
     """Interactive mode for parsing PDF statements."""
     print("\n--- PDF Statement Parsing ---")
-    
+
     # Get defaults from config manager
     config = get_config_manager()
-    
-    # Show current configuration
-    default_dir = config.get_directory_path('statements')
-    default_output = config.get_default_file_path('parsed_transactions')
 
-    print(f"Current configuration:")
+    # Show current configuration
+    default_dir = config.get_directory_path("statements")
+    default_output = config.get_default_file_path("parsed_transactions")
+
+    print("Current configuration:")
     print(f"  Input directory: {default_dir}")
     print(f"  Output file: {default_output}", flush=True)
 
     # Allow user to override defaults
-    directory = input(f"\nEnter directory containing PDF files (Enter for default): ").strip()
+    directory = input("\nEnter directory containing PDF files (Enter for default): ").strip()
     if not directory:
         directory = default_dir
-    
-    output_file = input(f"Enter output file name (Enter for default): ").strip()
+
+    output_file = input("Enter output file name (Enter for default): ").strip()
     if not output_file:
         output_file = default_output
-    
+
     # Show what will be used
-    print(f"\nUsing configuration:")
+    print("\nUsing configuration:")
     print(f"  Input directory: {directory}")
     print(f"  Output file: {output_file}")
-    
+
     # Validate paths
     if not validate_directory(directory):
         return
-    
+
     if not validate_output_path(output_file):
         return
 
@@ -235,57 +246,58 @@ def parse_statements_interactive():
     # Process statements (debug mode disabled in interactive mode - use CLI flags for debug)
     try:
         transactions = process_pdf_statements(directory, debug=False)
-        
+
         if transactions:
             from utils import save_transactions_to_json
+
             save_transactions_to_json(transactions, output_file)
             print(f"\nSuccessfully processed {len(transactions)} transactions")
             print(f"Results saved to '{output_file}'")
-            
+
             # Ask if user wants to proceed to enrichment
             if confirm_action("\nWould you like to enrich these transactions with categories?"):
                 enrich_transactions_interactive(output_file)
         else:
             print("\nNo transactions found")
-            
+
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")
     except Exception as e:
         print(f"\nError processing statements: {e}")
 
 
-def enrich_transactions_interactive(input_file: Optional[str] = None):
+def enrich_transactions_interactive(input_file: str | None = None):
     """Interactive mode for enriching transactions."""
     print("\n--- Transaction Enrichment ---")
-    
+
     # Get defaults from config manager
     config = get_config_manager()
-    
+
     # Show current configuration and allow overrides
     if not input_file:
-        default_input = config.get_default_file_path('parsed_transactions')
+        default_input = config.get_default_file_path("parsed_transactions")
         print(f"Current input file: {default_input}", flush=True)
 
-        input_file = input(f"Enter input file name (Enter for default): ").strip()
+        input_file = input("Enter input file name (Enter for default): ").strip()
         if not input_file:
             input_file = default_input
 
-    default_output = config.get_default_file_path('enriched_transactions')
+    default_output = config.get_default_file_path("enriched_transactions")
     print(f"Current output file: {default_output}", flush=True)
 
-    output_file = input(f"Enter output file name (Enter for default): ").strip()
+    output_file = input("Enter output file name (Enter for default): ").strip()
     if not output_file:
         output_file = default_output
-    
+
     # Show what will be used
-    print(f"\nUsing configuration:")
+    print("\nUsing configuration:")
     print(f"  Input file: {input_file}")
     print(f"  Output file: {output_file}")
-    
+
     # Validate paths
     if not validate_json_file(input_file):
         return
-    
+
     if not validate_output_path(output_file):
         return
 
@@ -295,18 +307,18 @@ def enrich_transactions_interactive(input_file: Optional[str] = None):
     try:
         process_transaction_enrichment(input_file, output_file, debug=False)
         print(f"\nEnrichment complete! Results saved to '{output_file}'")
-        
+
         # Ask if user wants to analyze results
         if confirm_action("\nWould you like to analyze categorization accuracy?"):
             analyze_interactive(output_file)
-            
+
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")
     except Exception as e:
         print(f"\nError enriching transactions: {e}")
 
 
-def analyze_interactive(file_path: Optional[str] = None, allow_mapping: bool = True):
+def analyze_interactive(file_path: str | None = None, allow_mapping: bool = True):
     """Interactive mode for analyzing categorization accuracy with verbose details.
 
     Args:
@@ -320,7 +332,7 @@ def analyze_interactive(file_path: Optional[str] = None, allow_mapping: bool = T
 
     # Get file path
     if not file_path:
-        default_file = config.get_default_file_path('enriched_transactions')
+        default_file = config.get_default_file_path("enriched_transactions")
         file_path = input(f"Enter enriched transactions file [{default_file}]: ").strip()
         if not file_path:
             file_path = default_file
@@ -331,8 +343,10 @@ def analyze_interactive(file_path: Optional[str] = None, allow_mapping: bool = T
 
     # Run analysis with verbose output
     # skip_interactive is the inverse of allow_mapping
-    print(f"\nAnalyzing categorization accuracy...")
-    analyze_categorization_accuracy(file_path, verbose=True, debug=False, skip_interactive=not allow_mapping)
+    print("\nAnalyzing categorization accuracy...")
+    analyze_categorization_accuracy(
+        file_path, verbose=True, debug=False, skip_interactive=not allow_mapping
+    )
 
 
 def manage_mappings_interactive():
@@ -370,9 +384,9 @@ def manage_mappings_interactive():
         success = processor.run_combined_processing()
 
         if success:
-            print(f"\nMapping management complete!")
+            print("\nMapping management complete!")
         else:
-            print(f"\nMapping management completed with warnings")
+            print("\nMapping management completed with warnings")
 
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")
@@ -380,50 +394,51 @@ def manage_mappings_interactive():
         print(f"\nError managing mappings: {e}")
         if debug_mode:
             import traceback
+
             traceback.print_exc()
 
 
 def run_full_pipeline_interactive():
     """Interactive mode for complete pipeline."""
     print("\n--- Complete Pipeline: Parse & Enrich ---")
-    
+
     # Get config manager
     config = get_config_manager()
-    
+
     # Show current configuration
-    default_dir = config.get_directory_path('statements')
-    parsed_file = config.get_default_file_path('parsed_transactions')
-    enriched_file = config.get_default_file_path('enriched_transactions')
-    
-    print(f"Current configuration:")
+    default_dir = config.get_directory_path("statements")
+    parsed_file = config.get_default_file_path("parsed_transactions")
+    enriched_file = config.get_default_file_path("enriched_transactions")
+
+    print("Current configuration:")
     print(f"  Input directory: {default_dir}")
     print(f"  Parsed output: {parsed_file}")
     print(f"  Enriched output: {enriched_file}", flush=True)
 
     # Allow user to override input directory
-    directory = input(f"\nEnter directory containing PDF files (Enter for default): ").strip()
+    directory = input("\nEnter directory containing PDF files (Enter for default): ").strip()
     if not directory:
         directory = default_dir
-    
+
     # Validate directory
     if not validate_directory(directory):
         return
-    
+
     # Validate output paths
     if not validate_output_path(parsed_file):
         return
-    
+
     if not validate_output_path(enriched_file):
         return
-    
-    print(f"\nPipeline will create:")
+
+    print("\nPipeline will create:")
     print(f"  1. {parsed_file} (raw transactions)")
     print(f"  2. {enriched_file} (enriched transactions)")
-    
+
     if not confirm_action("\nProceed with full pipeline?"):
         print("Operation cancelled")
         return
-    
+
     try:
         # Step 1: Parse statements (debug mode disabled in interactive mode - use CLI flags for debug)
         print(f"\nStep 1: Processing PDF files in '{directory}'...")
@@ -434,33 +449,42 @@ def run_full_pipeline_interactive():
             return
 
         from utils import save_transactions_to_json
+
         save_transactions_to_json(transactions, parsed_file)
         print(f"Parsed {len(transactions)} transactions")
 
         # Step 2: Enrich transactions
-        print(f"\nStep 2: Enriching transactions...")
+        print("\nStep 2: Enriching transactions...")
         process_transaction_enrichment(parsed_file, enriched_file, debug=False)
-        print(f"Enrichment complete!")
+        print("Enrichment complete!")
 
         print(f"\nPipeline complete! Results saved to '{enriched_file}'")
 
         # Offer detailed analysis first (optional)
         if confirm_action("\nWould you like to run detailed analysis?"):
             # Run analysis with verbose output and interactive mapping prompts
-            analyze_categorization_accuracy(enriched_file, verbose=True, debug=False, skip_interactive=False)
+            analyze_categorization_accuracy(
+                enriched_file, verbose=True, debug=False, skip_interactive=False
+            )
         else:
             # User skipped analysis, but still offer mapping opportunity
             # Load transactions to check if there are uncategorized ones
             transactions = load_transactions_from_json(enriched_file)
             if transactions:
-                uncategorized_count = sum(1 for t in transactions if t.get('category') == 'UNCATEGORIZED')
+                uncategorized_count = sum(
+                    1 for t in transactions if t.get("category") == "UNCATEGORIZED"
+                )
 
                 if uncategorized_count > 0:
                     print(f"\nFound {uncategorized_count} uncategorized transaction(s)")
-                    if confirm_action("Would you like to create mappings for uncategorized transactions?"):
+                    if confirm_action(
+                        "Would you like to create mappings for uncategorized transactions?"
+                    ):
                         # Run analysis with interactive mapping (skip verbose details since they declined analysis)
-                        analyze_categorization_accuracy(enriched_file, verbose=False, debug=False, skip_interactive=False)
-        
+                        analyze_categorization_accuracy(
+                            enriched_file, verbose=False, debug=False, skip_interactive=False
+                        )
+
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")
     except Exception as e:
@@ -486,69 +510,81 @@ Examples:
   %(prog)s add-mappings              # Manage transaction mappings
   %(prog)s add-mappings --config config --debug  # Debug mapping management
   %(prog)s check-deps                # Check required dependencies
-        """
+        """,
     )
-    
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
-    
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
     # Parse command
-    parse_parser = subparsers.add_parser('parse', help='Parse PDF statements')
-    parse_parser.add_argument('--dir', 
-                             help='Directory containing PDF files (default: from config)')
-    parse_parser.add_argument('--output',
-                             help='Output JSON file (default: from config)')
-    parse_parser.add_argument('--debug', action='store_true',
-                             help='Enable debug output')
-    
+    parse_parser = subparsers.add_parser("parse", help="Parse PDF statements")
+    parse_parser.add_argument("--dir", help="Directory containing PDF files (default: from config)")
+    parse_parser.add_argument("--output", help="Output JSON file (default: from config)")
+    parse_parser.add_argument("--debug", action="store_true", help="Enable debug output")
+
     # Enrich command
-    enrich_parser = subparsers.add_parser('enrich', help='Enrich transactions with categories')
-    enrich_parser.add_argument('--input',
-                              help='Input JSON file (default: from config)')
-    enrich_parser.add_argument('--output',
-                              help='Output JSON file (default: from config)')
-    enrich_parser.add_argument('--debug', action='store_true',
-                              help='Enable debug output for detailed processing information')
-    
+    enrich_parser = subparsers.add_parser("enrich", help="Enrich transactions with categories")
+    enrich_parser.add_argument("--input", help="Input JSON file (default: from config)")
+    enrich_parser.add_argument("--output", help="Output JSON file (default: from config)")
+    enrich_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug output for detailed processing information",
+    )
+
     # Pipeline command
-    pipeline_parser = subparsers.add_parser('pipeline', help='Run complete parse + enrich pipeline')
-    pipeline_parser.add_argument('--dir',
-                                help='Directory containing PDF files (default: from config)')
-    pipeline_parser.add_argument('--debug', action='store_true',
-                                help='Enable debug output')
-    
+    pipeline_parser = subparsers.add_parser("pipeline", help="Run complete parse + enrich pipeline")
+    pipeline_parser.add_argument(
+        "--dir", help="Directory containing PDF files (default: from config)"
+    )
+    pipeline_parser.add_argument("--debug", action="store_true", help="Enable debug output")
+
     # Validate command
-    validate_parser = subparsers.add_parser('validate', help='Validate TOML configuration files')
-    
+    subparsers.add_parser("validate", help="Validate TOML configuration files")
+
     # Analyze command
-    analyze_parser = subparsers.add_parser('analyze', help='Analyze categorization accuracy')
-    analyze_parser.add_argument('--file',
-                               help='Enriched transactions file (default: from config)')
-    analyze_parser.add_argument('--verbose', action='store_true',
-                               help='Enable verbose analysis with detailed examples and patterns')
-    analyze_parser.add_argument('--debug', action='store_true',
-                               help='Enable debug analysis with full diagnostic information')
-    
+    analyze_parser = subparsers.add_parser("analyze", help="Analyze categorization accuracy")
+    analyze_parser.add_argument("--file", help="Enriched transactions file (default: from config)")
+    analyze_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose analysis with detailed examples and patterns",
+    )
+    analyze_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug analysis with full diagnostic information",
+    )
+
     # Check mappings command
-    check_mappings_parser = subparsers.add_parser('check-mappings', help='Validate existing transaction mappings')
-    check_mappings_parser.add_argument('--config',
-                                     help='Configuration directory (default: from config)')
-    check_mappings_parser.add_argument('--debug', action='store_true',
-                                     help='Enable debug output for detailed processing information')
-    
+    check_mappings_parser = subparsers.add_parser(
+        "check-mappings", help="Validate existing transaction mappings"
+    )
+    check_mappings_parser.add_argument(
+        "--config", help="Configuration directory (default: from config)"
+    )
+    check_mappings_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug output for detailed processing information",
+    )
+
     # Add mappings command
-    add_mappings_parser = subparsers.add_parser('add-mappings', help='Manage transaction mappings')
-    add_mappings_parser.add_argument('--config',
-                                   help='Configuration directory (default: from config)')
-    add_mappings_parser.add_argument('--debug', action='store_true',
-                                   help='Enable debug output for detailed processing information')
+    add_mappings_parser = subparsers.add_parser("add-mappings", help="Manage transaction mappings")
+    add_mappings_parser.add_argument(
+        "--config", help="Configuration directory (default: from config)"
+    )
+    add_mappings_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug output for detailed processing information",
+    )
 
     # Setup command
-    setup_parser = subparsers.add_parser('setup', help='Run first-time setup wizard')
-    setup_parser.add_argument('--config',
-                             help='Configuration directory (default: config)')
+    setup_parser = subparsers.add_parser("setup", help="Run first-time setup wizard")
+    setup_parser.add_argument("--config", help="Configuration directory (default: config)")
 
     # Check dependencies command
-    check_deps_parser = subparsers.add_parser('check-deps', help='Check required dependencies')
+    subparsers.add_parser("check-deps", help="Check required dependencies")
 
     args = parser.parse_args()
 
@@ -584,16 +620,18 @@ Examples:
         except Exception as e:
             print(f"Error initializing configuration: {e}")
             sys.exit(1)
-        
+
         # Validate configuration for specific commands (but not for validate command)
-        if args.command != 'validate':
+        if args.command != "validate":
             try:
                 if not ensure_directories_exist():
                     print("Setup incomplete. Exiting.")
                     sys.exit(1)
-                    
+
                 if not validate_toml_files(verbose=False):
-                    print("Configuration validation failed. Please fix TOML files before proceeding.")
+                    print(
+                        "Configuration validation failed. Please fix TOML files before proceeding."
+                    )
                     print("\nTo check mapping files specifically, try:")
                     print("  python cli.py check-mappings")
                     sys.exit(1)
@@ -614,117 +652,125 @@ Examples:
             print(f"Warning: Configuration issues detected: {e}")
             print("Some features may not work correctly.")
             config = None
-    
-    if args.command == 'parse':
+
+    if args.command == "parse":
         # Use config defaults with flag overrides
-        directory = args.dir if args.dir else config.get_directory_path('statements')
-        output_file = args.output if args.output else config.get_default_file_path('parsed_transactions')
-        
-        print(f"Parse Configuration:")
+        directory = args.dir if args.dir else config.get_directory_path("statements")
+        output_file = (
+            args.output if args.output else config.get_default_file_path("parsed_transactions")
+        )
+
+        print("Parse Configuration:")
         print(f"  Input directory: {directory}")
         print(f"  Output file: {output_file}")
         if args.dir:
-            print(f"  (Directory overridden by --dir flag)")
+            print("  (Directory overridden by --dir flag)")
         if args.output:
-            print(f"  (Output overridden by --output flag)")
-        
+            print("  (Output overridden by --output flag)")
+
         # Validate paths
         if not validate_directory(directory):
             sys.exit(1)
-        
+
         if not validate_output_path(output_file, prompt_overwrite=False):
             sys.exit(1)
-        
+
         print(f"\nProcessing PDF files in '{directory}'...")
         transactions = process_pdf_statements(directory, args.debug)
-        
+
         if transactions:
             from utils import save_transactions_to_json
+
             save_transactions_to_json(transactions, output_file)
             print(f"Successfully processed {len(transactions)} transactions")
             print(f"Results saved to '{output_file}'")
         else:
             print("No transactions found")
             sys.exit(1)
-    
-    elif args.command == 'enrich':
+
+    elif args.command == "enrich":
         # Use config defaults with flag overrides
-        input_file = args.input if args.input else config.get_default_file_path('parsed_transactions')
-        output_file = args.output if args.output else config.get_default_file_path('enriched_transactions')
-        
-        print(f"Enrich Configuration:")
+        input_file = (
+            args.input if args.input else config.get_default_file_path("parsed_transactions")
+        )
+        output_file = (
+            args.output if args.output else config.get_default_file_path("enriched_transactions")
+        )
+
+        print("Enrich Configuration:")
         print(f"  Input file: {input_file}")
         print(f"  Output file: {output_file}")
         if args.input:
-            print(f"  (Input overridden by --input flag)")
+            print("  (Input overridden by --input flag)")
         if args.output:
-            print(f"  (Output overridden by --output flag)")
-        
+            print("  (Output overridden by --output flag)")
+
         # Validate paths
         if not validate_json_file(input_file):
             sys.exit(1)
-        
+
         if not validate_output_path(output_file, prompt_overwrite=False):
             sys.exit(1)
-        
+
         print(f"\nEnriching transactions from '{input_file}'...")
         process_transaction_enrichment(input_file, output_file, args.debug)
         print(f"Results saved to '{output_file}'")
-    
-    elif args.command == 'pipeline':
+
+    elif args.command == "pipeline":
         # Use config defaults with flag overrides
-        directory = args.dir if args.dir else config.get_directory_path('statements')
-        parsed_file = config.get_default_file_path('parsed_transactions')
-        enriched_file = config.get_default_file_path('enriched_transactions')
-        
-        print(f"Pipeline Configuration:")
+        directory = args.dir if args.dir else config.get_directory_path("statements")
+        parsed_file = config.get_default_file_path("parsed_transactions")
+        enriched_file = config.get_default_file_path("enriched_transactions")
+
+        print("Pipeline Configuration:")
         print(f"  Input directory: {directory}")
         print(f"  Parsed output: {parsed_file}")
         print(f"  Enriched output: {enriched_file}")
         if args.dir:
-            print(f"  (Directory overridden by --dir flag)")
-        
+            print("  (Directory overridden by --dir flag)")
+
         # Validate paths
         if not validate_directory(directory):
             sys.exit(1)
-        
+
         if not validate_output_path(parsed_file, prompt_overwrite=False):
             sys.exit(1)
-        
+
         if not validate_output_path(enriched_file, prompt_overwrite=False):
             sys.exit(1)
-        
+
         print(f"\nRunning complete pipeline on '{directory}'...")
-        
+
         # Parse
         transactions = process_pdf_statements(directory, args.debug)
         if not transactions:
             print("No transactions found")
             sys.exit(1)
-        
+
         from utils import save_transactions_to_json
+
         save_transactions_to_json(transactions, parsed_file)
         print(f"Parsed {len(transactions)} transactions")
-        
+
         # Enrich
         process_transaction_enrichment(parsed_file, enriched_file, args.debug)
         print(f"Pipeline complete! Results in '{enriched_file}'")
-        
+
         # Basic analysis
         analyze_categorization_accuracy(enriched_file, verbose=False, debug=False)
-    
-    elif args.command == 'validate':
+
+    elif args.command == "validate":
         # Special handling for validate command - don't pre-validate
         try:
             if not ensure_directories_exist():
                 print("Directory setup incomplete.")
         except Exception:
             pass  # Continue with validation anyway
-        
+
         # Validate TOML files with detailed output
         if validate_toml_files(verbose=True):
             print("All TOML configuration files are valid.")
-            
+
             # Also validate configured paths
             try:
                 config = get_config_manager()
@@ -739,59 +785,62 @@ Examples:
             print("\nTo check mapping files specifically, try:")
             print("  python cli.py check-mappings")
             sys.exit(1)
-    
-    elif args.command == 'analyze':
+
+    elif args.command == "analyze":
         # Use config defaults with flag overrides
-        file_path = args.file if args.file else config.get_default_file_path('enriched_transactions')
-        
-        print(f"Analyze Configuration:")
+        file_path = (
+            args.file if args.file else config.get_default_file_path("enriched_transactions")
+        )
+
+        print("Analyze Configuration:")
         print(f"  Input file: {file_path}")
         if args.file:
-            print(f"  (File overridden by --file flag)")
-        
+            print("  (File overridden by --file flag)")
+
         # Validate file
         if not validate_json_file(file_path):
             sys.exit(1)
-        
-        print(f"\nAnalyzing categorization accuracy...")
+
+        print("\nAnalyzing categorization accuracy...")
         analyze_categorization_accuracy(file_path, args.verbose, args.debug)
-    
-    elif args.command == 'check-mappings':
+
+    elif args.command == "check-mappings":
         # Use config defaults with flag overrides
         config_dir = args.config if args.config else config.config_dir
-        
-        print(f"Check-mappings Configuration:")
+
+        print("Check-mappings Configuration:")
         print(f"  Config directory: {config_dir}")
         if args.config:
-            print(f"  (Directory overridden by --config flag)")
-        
+            print("  (Directory overridden by --config flag)")
+
         print(f"\nValidating existing mappings in '{config_dir}'...")
-        
+
         try:
             processor = get_mapping_processor(config_dir=config_dir, debug_mode=args.debug)
             success = processor.run_check_only()
-            
+
             if success:
-                print(f"Mapping validation complete!")
+                print("Mapping validation complete!")
             else:
-                print(f"Mapping validation failed")
+                print("Mapping validation failed")
                 sys.exit(1)
-                
+
         except Exception as e:
             print(f"Error validating mappings: {e}")
             if args.debug:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)
-    
-    elif args.command == 'add-mappings':
+
+    elif args.command == "add-mappings":
         # Use config defaults with flag overrides
         config_dir = args.config if args.config else config.config_dir
 
-        print(f"Add-mappings Configuration:")
+        print("Add-mappings Configuration:")
         print(f"  Config directory: {config_dir}")
         if args.config:
-            print(f"  (Directory overridden by --config flag)")
+            print("  (Directory overridden by --config flag)")
 
         print(f"\nAnalyzing mappings in '{config_dir}'...")
 
@@ -800,19 +849,20 @@ Examples:
             success = processor.run_full_processing()
 
             if success:
-                print(f"Mapping analysis complete!")
+                print("Mapping analysis complete!")
             else:
-                print(f"Mapping analysis failed")
+                print("Mapping analysis failed")
                 sys.exit(1)
 
         except Exception as e:
             print(f"Error analyzing mappings: {e}")
             if args.debug:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)
 
-    elif args.command == 'check-deps':
+    elif args.command == "check-deps":
         # Check dependencies
         from utils import format_dependency_status
 
@@ -849,12 +899,12 @@ Examples:
             print()
             sys.exit(1)
 
-    elif args.command == 'setup':
+    elif args.command == "setup":
         # Run setup wizard manually
         from setup_wizard import run_setup_wizard
 
         config_dir = args.config if args.config else "config"
-        print(f"\nRunning setup wizard...")
+        print("\nRunning setup wizard...")
         print(f"  Config directory: {config_dir}")
         print()
 
@@ -878,29 +928,29 @@ Examples:
 
         while True:
             choice = input("\nEnter your choice (1-7): ").strip()
-            
-            if choice == '1':
+
+            if choice == "1":
                 parse_statements_interactive()
                 break
-            elif choice == '2':
+            elif choice == "2":
                 enrich_transactions_interactive()
                 break
-            elif choice == '3':
+            elif choice == "3":
                 run_full_pipeline_interactive()
                 break
-            elif choice == '4':
+            elif choice == "4":
                 analyze_interactive()
                 break
-            elif choice == '5':
+            elif choice == "5":
                 if validate_toml_files(verbose=True):
                     print("\n✓ All configuration files are valid.")
                 else:
                     print("\n✗ Configuration errors found. Please fix them.")
                 break
-            elif choice == '6':
+            elif choice == "6":
                 manage_mappings_interactive()
                 break
-            elif choice == '7':
+            elif choice == "7":
                 print("\nGoodbye!")
                 break
             else:
