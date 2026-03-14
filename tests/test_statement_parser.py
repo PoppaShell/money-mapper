@@ -250,3 +250,137 @@ class TestSortTransactionsByDate:
         sorted_trans = sort_transactions_by_date(transactions)
         
         assert len(sorted_trans) == len(transactions)
+
+
+class TestExtractStatementPeriod:
+    """Test statement period extraction - fixes issue #32."""
+
+    @pytest.fixture
+    def period_config(self):
+        """Period configuration with month names."""
+        return {
+            "month_names": {
+                "january": 1,
+                "february": 2,
+                "march": 3,
+                "april": 4,
+                "may": 5,
+                "june": 6,
+                "july": 7,
+                "august": 8,
+                "september": 9,
+                "october": 10,
+                "november": 11,
+                "december": 12,
+            },
+            "patterns": [
+                r'''for\s+([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})\s+to\s+([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})''',
+                r'''([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})\s+to\s+([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})''',
+                r'''(\d{1,2})/(\d{1,2})/(\d{2,4})\s+to\s+(\d{1,2})/(\d{1,2})/(\d{2,4})''',
+                r'''([A-Za-z]+)\s+(\d{1,2})\s*-\s*([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})''',
+            ],
+        }
+
+    def test_credit_card_dash_separator_format(self, period_config):
+        """Test extracting period from credit card format with dash separator (issue #32)."""
+        text = "Statement Period: December 27 - January 26, 2024"
+        period = extract_statement_period(text, period_config)
+        
+        assert period is not None
+        assert period["start_month"] == "December"
+        assert period["start_day"] == 27
+        assert period["start_year"] == 2023  # Previous year (Dec < Jan)
+        assert period["end_month"] == "January"
+        assert period["end_day"] == 26
+        assert period["end_year"] == 2024
+
+    def test_credit_card_year_boundary_detection(self, period_config):
+        """Test year boundary detection (Dec to Jan crossing)."""
+        text = "Period: December 1 - January 31, 2024"
+        period = extract_statement_period(text, period_config)
+        
+        # When start_month (12) > end_month (1), start year is previous year
+        assert period["start_year"] == 2023
+        assert period["end_year"] == 2024
+
+    def test_credit_card_no_year_boundary(self, period_config):
+        """Test when no year boundary is crossed."""
+        text = "Period: January 1 - February 28, 2024"
+        period = extract_statement_period(text, period_config)
+        
+        # When start_month (1) < end_month (2), both in same year
+        assert period["start_year"] == 2024
+        assert period["end_year"] == 2024
+
+    def test_traditional_to_separator_format(self, period_config):
+        """Test traditional format with 'to' separator still works."""
+        text = "Statement for January 1, 2024 to February 28, 2024"
+        period = extract_statement_period(text, period_config)
+        
+        assert period is not None
+        assert period["start_year"] == 2024
+        assert period["end_year"] == 2024
+
+    def test_statement_period_without_commas(self, period_config):
+        """Test credit card format without commas."""
+        text = "December 27 - January 26 2024"
+        period = extract_statement_period(text, period_config)
+        
+        assert period is not None
+        assert period["end_year"] == 2024
+
+
+class TestDetermineTransactionYear:
+    """Test transaction year determination - issue #32 fallback logic."""
+
+    def test_year_determination_with_statement_period(self):
+        """Test year determination using statement period."""
+        period = {
+            "start_month": "December",
+            "start_year": 2023,
+            "end_month": "January",
+            "end_year": 2024,
+        }
+        
+        # December transaction should be 2023
+        assert determine_transaction_year(12, period) == 2023
+        
+        # January transaction should be 2024
+        assert determine_transaction_year(1, period) == 2024
+
+    def test_year_determination_no_period_current_month(self):
+        """Test fallback logic with current month."""
+        # If current month is 3 (March), transaction in March should be current year
+        # We'll test with None statement_period and a month that's likely current or past
+        from datetime import datetime
+        current_month = datetime.now().month
+        
+        year = determine_transaction_year(current_month, None)
+        assert year == datetime.now().year
+
+    def test_year_determination_no_period_future_month(self):
+        """Test fallback logic with future month (should be previous year)."""
+        # If current month is early in year, future months should be previous year
+        from datetime import datetime
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+        
+        # Pick a month definitely in the future from now
+        future_month = (current_month % 12) + 2  # Skip ahead 2 months
+        
+        year = determine_transaction_year(future_month, None)
+        # Future months without period should be previous year
+        assert year == current_year - 1
+
+    def test_year_determination_crossing_boundary(self):
+        """Test year determination crossing boundary correctly."""
+        period = {
+            "end_month": "January",  # 1
+            "end_year": 2024,
+        }
+        
+        # Month 12 (Dec) > end_month 1 (Jan) = previous year
+        assert determine_transaction_year(12, period) == 2023
+        
+        # Month 1 (Jan) = end_month 1 (Jan) = same year
+        assert determine_transaction_year(1, period) == 2024
