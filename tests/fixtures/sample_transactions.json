@@ -1,0 +1,42 @@
+[
+  {
+    "date": "2024-01-15",
+    "description": "STARBUCKS #1234",
+    "amount": -5.67,
+    "merchant": "Starbucks",
+    "category": null,
+    "confidence": null,
+    "account_type": "checking",
+    "account_number_masked": "XXXX-XXXX-1234"
+  },
+  {
+    "date": "2024-01-10",
+    "description": "AMAZON.COM AMZN.COM/BILL",
+    "amount": -45.99,
+    "merchant": "Amazon",
+    "category": null,
+    "confidence": null,
+    "account_type": "checking",
+    "account_number_masked": "XXXX-XXXX-1234"
+  },
+  {
+    "date": "2024-01-05",
+    "description": "WHOLE FOODS MKT #10234",
+    "amount": -87.43,
+    "merchant": "Whole Foods",
+    "category": null,
+    "confidence": null,
+    "account_type": "checking",
+    "account_number_masked": "XXXX-XXXX-1234"
+  },
+  {
+    "date": "2024-01-01",
+    "description": "PAYROLL DEPOSIT",
+    "amount": 2500.00,
+    "merchant": "Employer",
+    "category": null,
+    "confidence": null,
+    "account_type": "checking",
+    "account_number_masked": "XXXX-XXXX-1234"
+  }
+]
