@@ -8,6 +8,7 @@ and settings used throughout the Money Mapper application.
 
 import os
 import tomllib
+from typing import Any
 
 
 class ConfigManager:
@@ -321,14 +322,14 @@ class ConfigManager:
 
         return not (private_settings_exists and private_mappings_exists)
 
-    def get_privacy_settings(self) -> dict[str, object]:
+    def get_privacy_settings(self) -> dict[str, Any]:
         """
         Get privacy settings from merged configuration.
 
         Returns:
             Privacy settings dictionary
         """
-        return self.settings.get("privacy", {})
+        return self.settings.get("privacy", {})  # type: ignore[no-any-return]
 
 
 # Global instance for easy access

@@ -18,6 +18,7 @@ import shutil
 import tomllib
 from datetime import datetime
 from difflib import SequenceMatcher
+from typing import Any
 
 from money_mapper.config_manager import get_config_manager
 from money_mapper.utils import prompt_yes_no
@@ -473,8 +474,10 @@ class MappingProcessor:
         public_data = self._load_toml_file(self.public_mappings)
 
         # Create pattern-to-location mapping
-        all_patterns = {}
-        wildcard_patterns = {}  # Separate tracking for wildcards
+        all_patterns: dict[str, dict[str, Any]] = {}
+        wildcard_patterns: dict[
+            str, list[tuple[str, dict[str, Any]]]
+        ] = {}  # Separate tracking for wildcards
 
         # Index private mappings (handle nested structure: PRIMARY -> SUBCATEGORY -> patterns)
         for primary_key, primary_section in private_data.items():
@@ -854,7 +857,7 @@ class MappingProcessor:
 
         # Build a flat index of all existing patterns for fast lookup
         # Format: { pattern: [(file, section, mapping), ...] }
-        existing_patterns: dict[str, list[str]] = {}
+        existing_patterns: dict[str, list[dict[str, Any]]] = {}
 
         # Index private mappings
         for primary_key, primary_section in existing_private.items():
@@ -2024,7 +2027,7 @@ class MappingProcessor:
         category: str,
         subcategory: str,
         merchant_name: str,
-        source_file: str = None,
+        source_file: str | None = None,
     ) -> bool:
         """
         Add a wildcard pattern to new_mappings.toml for later processing.
@@ -2260,7 +2263,7 @@ class MappingProcessor:
         if consolidated_count > 0:
             print(f"\n✓ Added {consolidated_count} wildcard pattern(s) to new_mappings.toml")
 
-        return consolidated_count  # Return count instead of True
+        return consolidated_count > 0  # Return True if any patterns were added
 
 
 def main():

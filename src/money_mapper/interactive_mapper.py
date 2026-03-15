@@ -13,6 +13,7 @@ categories and 104 DETAILED subcategories.
 import os
 import re
 from collections import Counter
+from typing import Any
 
 from money_mapper.config_manager import get_config_manager
 from money_mapper.mapping_processor import MappingProcessor
@@ -136,9 +137,9 @@ def load_category_taxonomy() -> tuple[dict[str, list[str]], dict[str, str], dict
             ...
         }
     """
-    taxonomy = {}
-    detailed_descriptions = {}
-    primary_descriptions = {}
+    taxonomy: dict[str, Any] = {}
+    detailed_descriptions: dict[str, str] = {}
+    primary_descriptions: dict[str, str] = {}
 
     # Manual PRIMARY category descriptions
     primary_desc_map = {
@@ -347,7 +348,7 @@ def create_mapping_entry(
 
         # Write back to file, preserving the header
         try:
-            import toml
+            import toml  # type: ignore[import-untyped]
         except ImportError:
             from utils import handle_toml_import_error
 

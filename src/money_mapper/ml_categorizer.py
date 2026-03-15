@@ -23,7 +23,7 @@ def extract_features(transaction: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Dictionary of extracted features suitable for ML model
     """
-    features = {}
+    features: dict[str, int | float] = {}
 
     merchant_name = transaction.get("merchant_name", "").lower()
     amount = float(transaction.get("amount", 0.0))
@@ -124,7 +124,7 @@ def predict_category(model: Any, transaction: dict[str, Any]) -> tuple[str, str]
     prediction = model.predict([features])
 
     if prediction and len(prediction) > 0:
-        return prediction[0]
+        return prediction[0]  # type: ignore[no-any-return]
 
     return ("UNKNOWN", "UNKNOWN")
 
