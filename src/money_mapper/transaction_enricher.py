@@ -28,16 +28,23 @@ from money_mapper.utils import (
 def _enrich_transaction_worker(args: tuple) -> dict:
     """
     Worker function for multiprocessing enrichment.
-    
+
     Must be at module level for pickling by multiprocessing.Pool.
-    
+
     Args:
         args: Tuple of (transaction, private_mappings, public_mappings, plaid_categories, fuzzy_threshold, config_dir)
-    
+
     Returns:
         Enriched transaction dictionary
     """
-    transaction, private_mappings, public_mappings, plaid_categories, fuzzy_threshold, config_dir = args
+    (
+        transaction,
+        private_mappings,
+        public_mappings,
+        plaid_categories,
+        fuzzy_threshold,
+        config_dir,
+    ) = args
     return enrich_transaction(
         transaction,
         private_mappings,
@@ -103,7 +110,9 @@ def load_enrichment_config(config_dir: str = "config") -> dict:
         sys.exit(1)
 
 
-def process_transaction_enrichment(input_file: str, output_file: str, debug: bool = False, use_multiprocessing: bool = True) -> None:
+def process_transaction_enrichment(
+    input_file: str, output_file: str, debug: bool = False, use_multiprocessing: bool = True
+) -> None:
     """
     Process transaction enrichment using centralized configuration.
 
@@ -137,19 +146,19 @@ def process_transaction_enrichment(input_file: str, output_file: str, debug: boo
 
     # Attempt multiprocessing (with fallback to sequential)
     enriched_transactions = []
-    
+
     if use_multiprocessing and len(transactions) > 1:
         try:
             # Get number of CPU cores
             num_cores = multiprocessing.cpu_count()
-            
+
             # For small datasets, sequential is faster
             if len(transactions) < 10:
                 use_multiprocessing = False
             else:
                 if debug:
                     print(f"  Using multiprocessing ({num_cores} cores)")
-                
+
                 # Prepare arguments for each transaction
                 worker_args = [
                     (
@@ -162,7 +171,7 @@ def process_transaction_enrichment(input_file: str, output_file: str, debug: boo
                     )
                     for transaction in transactions
                 ]
-                
+
                 # Create pool and process transactions
                 with multiprocessing.Pool(processes=num_cores) as pool:
                     # Use imap_unordered for load-balanced distribution
@@ -171,29 +180,30 @@ def process_transaction_enrichment(input_file: str, output_file: str, debug: boo
                     for enriched in pool.imap_unordered(_enrich_transaction_worker, worker_args):
                         enriched_transactions.append(enriched)
                         processed += 1
-                        
+
                         if not debug and (processed % 50 == 0 or processed == len(transactions)):
                             from utils import show_progress
+
                             show_progress(processed, len(transactions))
-                
+
                 # Print newline after progress bar
                 if not debug:
                     print()
-                
+
                 if debug:
-                    print(f"  Completed multiprocessing enrichment")
-                
+                    print("  Completed multiprocessing enrichment")
+
         except Exception as e:
             if debug:
                 print(f"  Multiprocessing failed: {e}. Falling back to sequential...")
             enriched_transactions = []
             use_multiprocessing = False
-    
+
     # Fallback to sequential processing
     if not use_multiprocessing or len(transactions) <= 1:
         if debug and len(transactions) > 1:
             print("  Using sequential processing")
-        
+
         for i, transaction in enumerate(transactions):
             # Show progress bar (suppressed in debug mode to avoid clutter)
             if not debug:
