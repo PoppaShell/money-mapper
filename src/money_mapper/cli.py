@@ -11,7 +11,7 @@ import os
 import sys
 
 from money_mapper.config_manager import get_config_manager
-from money_mapper.statement_parser import process_pdf_statements
+from money_mapper.csv_importer import CSVImporter
 from money_mapper.transaction_enricher import (
     analyze_categorization_accuracy,
     process_transaction_enrichment,
@@ -206,24 +206,23 @@ def confirm_action(message: str, default: bool = True) -> bool:
 
 
 def parse_statements_interactive():
-    """Interactive mode for parsing PDF statements."""
-    print("\n--- PDF Statement Parsing ---")
+    """Interactive mode for importing CSV transactions."""
+    print("\n--- CSV Transaction Import ---")
 
     # Get defaults from config manager
     config = get_config_manager()
 
     # Show current configuration
-    default_dir = config.get_directory_path("statements")
     default_output = config.get_default_file_path("parsed_transactions")
 
     print("Current configuration:")
-    print(f"  Input directory: {default_dir}")
     print(f"  Output file: {default_output}", flush=True)
 
     # Allow user to override defaults
-    directory = input("\nEnter directory containing PDF files (Enter for default): ").strip()
-    if not directory:
-        directory = default_dir
+    csv_file = input("\nEnter CSV file path (e.g., transactions.csv): ").strip()
+    if not csv_file:
+        print("CSV file path is required")
+        return
 
     output_file = input("Enter output file name (Enter for default): ").strip()
     if not output_file:
@@ -231,39 +230,41 @@ def parse_statements_interactive():
 
     # Show what will be used
     print("\nUsing configuration:")
-    print(f"  Input directory: {directory}")
+    print(f"  Input CSV: {csv_file}")
     print(f"  Output file: {output_file}")
 
     # Validate paths
-    if not validate_directory(directory):
+    if not os.path.exists(csv_file):
+        print(f"Error: CSV file not found: {csv_file}")
         return
 
     if not validate_output_path(output_file):
         return
 
-    print(f"\nProcessing PDF files in '{directory}'...")
+    print(f"\nImporting transactions from '{csv_file}'...")
 
     # Process statements (debug mode disabled in interactive mode - use CLI flags for debug)
     try:
-        transactions = process_pdf_statements(directory, debug=False)
+        importer = CSVImporter()
+        transactions = importer.import_csv(csv_file)
 
         if transactions:
-            from utils import save_transactions_to_json
+            from money_mapper.utils import save_transactions_to_json
 
             save_transactions_to_json(transactions, output_file)
-            print(f"\nSuccessfully processed {len(transactions)} transactions")
+            print(f"\nSuccessfully imported {len(transactions)} transactions")
             print(f"Results saved to '{output_file}'")
 
             # Ask if user wants to proceed to enrichment
             if confirm_action("\nWould you like to enrich these transactions with categories?"):
                 enrich_transactions_interactive(output_file)
         else:
-            print("\nNo transactions found")
+            print("\nNo transactions found in CSV file")
 
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")
     except Exception as e:
-        print(f"\nError processing statements: {e}")
+        print(f"\nError importing transactions: {e}")
 
 
 def enrich_transactions_interactive(input_file: str | None = None):
