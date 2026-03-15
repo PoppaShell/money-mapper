@@ -6,6 +6,17 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Cancel in-progress runs when a new run is triggered (best practice)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Explicit permissions: principle of least privilege (GitHub Actions best practice)
+permissions:
+  contents: read  # Read-only access to repo contents
+  checks: write  # Allow workflow to create status checks
+  pull-requests: write  # Allow codecov to comment on PRs
+
 jobs:
   # Lint with ruff (~30 seconds)
   lint:
