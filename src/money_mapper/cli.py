@@ -517,7 +517,7 @@ Examples:
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Parse command
-    parse_parser = subparsers.add_parser("parse", help="Parse PDF statements")
+    parse_parser = subparsers.add_parser("parse", help="Import transactions from CSV files")
     parse_parser.add_argument("--dir", help="Directory containing PDF files (default: from config)")
     parse_parser.add_argument("--output", help="Output JSON file (default: from config)")
     parse_parser.add_argument("--debug", action="store_true", help="Enable debug output")
@@ -676,14 +676,15 @@ Examples:
         if not validate_output_path(output_file, prompt_overwrite=False):
             sys.exit(1)
 
-        print(f"\nProcessing PDF files in '{directory}'...")
-        transactions = process_pdf_statements(directory, args.debug)
+        print(f"\nImporting CSV transactions from '{directory}'...")
+        importer = CSVImporter(debug=args.debug)
+        transactions = importer.import_directory(directory)
 
         if transactions:
             from utils import save_transactions_to_json
 
             save_transactions_to_json(transactions, output_file)
-            print(f"Successfully processed {len(transactions)} transactions")
+            print(f"Successfully imported {len(transactions)} transactions")
             print(f"Results saved to '{output_file}'")
         else:
             print("No transactions found")
@@ -743,7 +744,8 @@ Examples:
         print(f"\nRunning complete pipeline on '{directory}'...")
 
         # Parse
-        transactions = process_pdf_statements(directory, args.debug)
+        importer = CSVImporter(debug=args.debug)
+        transactions = importer.import_directory(directory)
         if not transactions:
             print("No transactions found")
             sys.exit(1)
@@ -751,7 +753,7 @@ Examples:
         from utils import save_transactions_to_json
 
         save_transactions_to_json(transactions, parsed_file)
-        print(f"Parsed {len(transactions)} transactions")
+        print(f"Imported {len(transactions)} transactions")
 
         # Enrich
         process_transaction_enrichment(parsed_file, enriched_file, args.debug)
