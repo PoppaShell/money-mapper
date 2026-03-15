@@ -2217,7 +2217,9 @@ class MappingProcessor:
             source_file = group["file"]
             source_scope = "private" if "private" in source_file else "public"
             other_scope = "public" if source_scope == "private" else "private"
-            other_file = "private_mappings.toml" if other_scope == "private" else "public_mappings.toml"
+            other_file = (
+                "private_mappings.toml" if other_scope == "private" else "public_mappings.toml"
+            )
 
             print(f"  Default: {source_file} (source file, scope: {source_scope})")
             print(f"  Other: {other_file} (scope: {other_scope})")
