@@ -33,10 +33,22 @@ def extract_features(transaction: dict[str, Any]) -> dict[str, Any]:
     features["merchant_word_count"] = len(merchant_name.split())
 
     # Extract merchant type indicators (simple heuristic)
-    features["is_coffee"] = 1.0 if any(word in merchant_name for word in ["coffee", "starbucks", "cafe"]) else 0.0
-    features["is_gas"] = 1.0 if any(word in merchant_name for word in ["gas", "shell", "chevron", "exxon"]) else 0.0
-    features["is_retail"] = 1.0 if any(word in merchant_name for word in ["amazon", "walmart", "target", "store"]) else 0.0
-    features["is_restaurant"] = 1.0 if any(word in merchant_name for word in ["restaurant", "pizza", "burger", "diner"]) else 0.0
+    features["is_coffee"] = (
+        1.0 if any(word in merchant_name for word in ["coffee", "starbucks", "cafe"]) else 0.0
+    )
+    features["is_gas"] = (
+        1.0 if any(word in merchant_name for word in ["gas", "shell", "chevron", "exxon"]) else 0.0
+    )
+    features["is_retail"] = (
+        1.0
+        if any(word in merchant_name for word in ["amazon", "walmart", "target", "store"])
+        else 0.0
+    )
+    features["is_restaurant"] = (
+        1.0
+        if any(word in merchant_name for word in ["restaurant", "pizza", "burger", "diner"])
+        else 0.0
+    )
 
     # Amount features
     features["amount"] = amount
@@ -50,7 +62,9 @@ def extract_features(transaction: dict[str, Any]) -> dict[str, Any]:
     return features
 
 
-def prepare_training_data(transactions: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[tuple[str, str]]]:
+def prepare_training_data(
+    transactions: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[tuple[str, str]]]:
     """
     Prepare training data from transactions with categories.
 
@@ -130,7 +144,9 @@ def calculate_confidence(probability: float) -> float:
     return confidence
 
 
-def fallback_to_mapping(merchant: str, mappings: dict[str, dict[str, str]]) -> dict[str, str] | None:
+def fallback_to_mapping(
+    merchant: str, mappings: dict[str, dict[str, str]]
+) -> dict[str, str] | None:
     """
     Fallback to mapping rules if ML confidence is too low.
 
@@ -249,7 +265,7 @@ class MLCategorizer:
         self,
         transaction: dict[str, Any],
         mappings: dict[str, dict[str, str]] | None = None,
-        confidence_threshold: float = 0.5
+        confidence_threshold: float = 0.5,
     ) -> dict[str, Any]:
         """
         Predict category for a transaction.
@@ -263,12 +279,7 @@ class MLCategorizer:
             Dictionary with category, subcategory, confidence, and method
         """
         if self.model is None:
-            return {
-                "category": None,
-                "subcategory": None,
-                "confidence": 0.0,
-                "method": "none"
-            }
+            return {"category": None, "subcategory": None, "confidence": 0.0, "method": "none"}
 
         # Get ML prediction
         category, subcategory = predict_category(self.model, transaction)
@@ -296,14 +307,14 @@ class MLCategorizer:
             "category": category,
             "subcategory": subcategory,
             "confidence": confidence,
-            "method": method
+            "method": method,
         }
 
     def predict_batch(
         self,
         transactions: list[dict[str, Any]],
         mappings: dict[str, dict[str, str]] | None = None,
-        confidence_threshold: float = 0.5
+        confidence_threshold: float = 0.5,
     ) -> list[dict[str, Any]]:
         """
         Predict categories for multiple transactions.

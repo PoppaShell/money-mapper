@@ -37,7 +37,14 @@ def _enrich_transaction_worker(args: tuple) -> dict:
     Returns:
         Enriched transaction dictionary
     """
-    transaction, private_mappings, public_mappings, plaid_categories, fuzzy_threshold, config_dir = args
+    (
+        transaction,
+        private_mappings,
+        public_mappings,
+        plaid_categories,
+        fuzzy_threshold,
+        config_dir,
+    ) = args
     return enrich_transaction(
         transaction,
         private_mappings,
@@ -103,7 +110,9 @@ def load_enrichment_config(config_dir: str = "config") -> dict:
         sys.exit(1)
 
 
-def process_transaction_enrichment(input_file: str, output_file: str, debug: bool = False, use_multiprocessing: bool = True) -> None:
+def process_transaction_enrichment(
+    input_file: str, output_file: str, debug: bool = False, use_multiprocessing: bool = True
+) -> None:
     """
     Process transaction enrichment using centralized configuration.
 
@@ -174,6 +183,7 @@ def process_transaction_enrichment(input_file: str, output_file: str, debug: boo
 
                         if not debug and (processed % 50 == 0 or processed == len(transactions)):
                             from utils import show_progress
+
                             show_progress(processed, len(transactions))
 
                 # Print newline after progress bar

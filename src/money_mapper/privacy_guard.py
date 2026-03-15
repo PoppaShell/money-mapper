@@ -117,11 +117,7 @@ def decrypt_amount(encrypted: str) -> float | None:
 
 
 def create_audit_log(
-    transaction_id: str,
-    field: str,
-    original_value: Any,
-    redacted_value: Any,
-    redaction_type: str
+    transaction_id: str, field: str, original_value: Any, redacted_value: Any, redaction_type: str
 ) -> dict[str, Any]:
     """
     Create audit log entry for redaction operation.
@@ -146,10 +142,7 @@ def create_audit_log(
     }
 
 
-def apply_privacy_settings(
-    transaction: dict[str, Any],
-    settings: dict[str, Any]
-) -> dict[str, Any]:
+def apply_privacy_settings(transaction: dict[str, Any], settings: dict[str, Any]) -> dict[str, Any]:
     """
     Apply privacy settings to a transaction.
 
@@ -167,8 +160,7 @@ def apply_privacy_settings(
     if settings.get("mask_account", False) and "account" in protected:
         visible_digits = settings.get("mask_account_digits", 4)
         protected["account"] = mask_account_number(
-            str(protected["account"]),
-            visible_digits=visible_digits
+            str(protected["account"]), visible_digits=visible_digits
         )
 
     # Apply merchant redaction
@@ -241,9 +233,7 @@ class PrivacyGuard:
 
         return protected
 
-    def _track_changes(
-        self, original: dict[str, Any], protected: dict[str, Any]
-    ) -> None:
+    def _track_changes(self, original: dict[str, Any], protected: dict[str, Any]) -> None:
         """
         Track changes for audit log.
 
@@ -260,7 +250,7 @@ class PrivacyGuard:
                     field=field,
                     original_value=original[field],
                     redacted_value=protected.get(field),
-                    redaction_type=self._get_redaction_type(field)
+                    redaction_type=self._get_redaction_type(field),
                 )
                 self.audit_log.append(entry)
 
