@@ -1618,48 +1618,94 @@ class MappingProcessor:
             else:
                 print("Please enter 1, 2, or 3")
 
+    def _prompt_for_category_selection(self) -> tuple[str, str] | None:
+        """
+        Interactive numbered menu for category and subcategory selection.
+        
+        Returns:
+            Tuple of (category, subcategory) or None if skipped
+        """
+        # Step 1: Show primary categories
+        categories = sorted(COMPLETE_PFC_TAXONOMY.keys())
+        
+        print("\nSelect primary category:")
+        for i, cat in enumerate(categories, 1):
+            print(f"  {i}. {cat}")
+        print("  [s] Skip")
+        
+        while True:
+            choice = input("\nEnter choice [1-16, s]: ").strip().lower()
+            
+            if choice == 's':
+                return None
+            
+            try:
+                cat_idx = int(choice) - 1
+                if 0 <= cat_idx < len(categories):
+                    selected_category = categories[cat_idx]
+                    break
+                else:
+                    print("Invalid choice. Please enter a number or [s] to skip.")
+            except ValueError:
+                print("Invalid input. Please enter a number or [s] to skip.")
+        
+        # Step 2: Show subcategories for selected category
+        subcategories = sorted(COMPLETE_PFC_TAXONOMY[selected_category].keys())
+        
+        print(f"\nSelect subcategory for {selected_category}:")
+        for i, subcat in enumerate(subcategories, 1):
+            # Show just the descriptive part (after the category prefix)
+            subcat_display = subcat.split(selected_category + "_")[-1] if "_" in subcat else subcat
+            print(f"  {i}. {subcat_display}")
+        print("  [b] Back to categories")
+        print("  [s] Skip")
+        
+        while True:
+            choice = input(f"\nEnter choice [1-{len(subcategories)}, b, s]: ").strip().lower()
+            
+            if choice == 'b':
+                # Recursively go back to category selection
+                return self._prompt_for_category_selection()
+            
+            if choice == 's':
+                return None
+            
+            try:
+                subcat_idx = int(choice) - 1
+                if 0 <= subcat_idx < len(subcategories):
+                    selected_subcategory = subcategories[subcat_idx]
+                    return (selected_category, selected_subcategory)
+                else:
+                    print(f"Invalid choice. Please enter a number between 1 and {len(subcategories)}, or [b]/[s].")
+            except ValueError:
+                print(f"Invalid input. Please enter a number between 1 and {len(subcategories)}, [b], or [s].")
+
     def _fix_invalid_category_interactive(self, issue: dict) -> bool:
-        """Interactively fix invalid category issues."""
+        """Interactively fix invalid category issues using numbered menu."""
         mapping = issue["mapping"]
         current_category = mapping.get("category", "")
         current_subcategory = mapping.get("subcategory", "")
 
         print(f"\nInvalid category: {current_category}.{current_subcategory}")
-        print("Available primary categories:")
-
-        # Show available categories
-        for i, primary in enumerate(sorted(COMPLETE_PFC_TAXONOMY.keys())[:10], 1):
-            print(f"  {i}. {primary}")
-        if len(COMPLETE_PFC_TAXONOMY) > 10:
-            print(f"  ... and {len(COMPLETE_PFC_TAXONOMY) - 10} more")
-
-        print("\nOptions:")
-        print("1. Enter new category and subcategory")
-        print("2. Skip this issue", flush=True)
-
-        while True:
-            choice = input("Enter choice (1/2): ").strip()
-            if choice == "1":
-                new_category = input("Enter primary category: ").strip()
-                if new_category in COMPLETE_PFC_TAXONOMY:
-                    print(f"Available subcategories for {new_category}:")
-                    for subcategory in sorted(COMPLETE_PFC_TAXONOMY[new_category].keys())[:5]:
-                        print(f"  - {subcategory}")
-                    if len(COMPLETE_PFC_TAXONOMY[new_category]) > 5:
-                        print(f"  ... and {len(COMPLETE_PFC_TAXONOMY[new_category]) - 5} more")
-
-                    new_subcategory = input("Enter subcategory: ").strip()
-                    if new_subcategory in COMPLETE_PFC_TAXONOMY[new_category]:
-                        print(f"Would update to {new_category}.{new_subcategory}")
-                        return True
-                    else:
-                        print("Invalid subcategory. Available options shown above.")
-                else:
-                    print("Invalid primary category. Please check available categories.")
-            elif choice == "2":
-                return False
-            else:
-                print("Please enter 1 or 2")
+        
+        # Use numbered menu for selection
+        result = self._prompt_for_category_selection()
+        
+        if result is None:
+            return False
+        
+        new_category, new_subcategory = result
+        
+        # Show confirmation
+        print(f"\n✓ Would update to {new_category}.{new_subcategory}")
+        
+        if prompt_yes_no("Apply this change?", default=True):
+            # Update the mapping in the issue
+            issue["mapping"]["category"] = new_category
+            issue["mapping"]["subcategory"] = new_subcategory
+            return True
+        
+        return False
 
     def _remove_pattern_from_file(
         self, file_path: str, pattern: str, primary_key: str, subcategory_key: str
@@ -2171,6 +2217,23 @@ class MappingProcessor:
                 else:
                     print(f'Using suggested pattern: "{final_wildcard}"')
 
+            # Issue #18: Prompt for file selection
+            print("\n→ Destination file for consolidated pattern:")
+            source_file = group["file"]
+            source_scope = "private" if "private" in source_file else "public"
+            other_scope = "public" if source_scope == "private" else "private"
+            other_file = "private_mappings.toml" if other_scope == "private" else "public_mappings.toml"
+            
+            print(f"  Default: {source_file} (source file, scope: {source_scope})")
+            print(f"  Other: {other_file} (scope: {other_scope})")
+            
+            destination_file = source_file
+            if prompt_yes_no("Swap to other mapping file?", default=False):
+                destination_file = other_file
+                print(f"  ✓ Will save to {other_file}")
+            else:
+                print(f"  ✓ Will save to {source_file}")
+
             # Add wildcard to new_mappings.toml
             print("\n→ Adding wildcard to new_mappings.toml...")
 
@@ -2179,7 +2242,7 @@ class MappingProcessor:
                 category=group["category"],
                 subcategory=group["subcategory"],
                 merchant_name=group["mapping"].get("name", "Unknown"),
-                source_file=group["file"],
+                source_file=destination_file,
             )
 
             if success:
