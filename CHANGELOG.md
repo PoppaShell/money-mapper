@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-15
+
 ### Added
+- CSV import pipeline replacing PDF statement parsing (Phase 3, PR #79)
+  - csv_importer.py: Handles checking, savings, credit card CSV formats
+  - Auto-detection of CSV type from column headers
+  - 41 tests, 86% coverage
+- Privacy guard module — centralized PII detection and redaction (Phase 4, PR #80)
+  - privacy_guard.py with configurable redaction policies
+  - 42 tests, 92% coverage
+- ML categorization module using scikit-learn (Phase 5, PR #81)
+  - ml_categorizer.py with feature extraction and confidence scoring
+  - 44 tests, 95% coverage
+- Mapping processor refactoring into 3 focused modules (Phase 6, PR #82)
+  - mapping_validator.py: Validates against Plaid PFC taxonomy
+  - mapping_conflict_resolver.py: Detects and resolves duplicate patterns
+  - mapping_consolidator.py: Similarity-based consolidation
+- PatternMatcher class with pre-compiled regex patterns (Issue #29, PR #88)
+  - Module-level caching and lazy initialization
+  - Priority-based matching: Exact → Word → Wildcard → Fuzzy
+  - 2–3x speedup on pattern matching
+- UX improvements for interactive workflows (Issues #18 & #19, PR #87)
+  - Numbered category selection menus in interactive mapper
+  - File selection prompt for wildcard consolidation
+- Comprehensive test suite: 622 tests, 36% coverage (Phase 1 + 7/7b)
+- Modern packaging with pyproject.toml and pre-commit hooks (Phase 1)
+- CI/CD parallel jobs architecture — 6 independent jobs, ~50–67% faster (PR #89)
+- GHA best practices: actionlint job, pip-audit pre-commit hook (PR #90)
+- Dev tool upgrades: ruff 0.15.6, mypy 1.19.1, bandit 1.9.4, pip-audit 2.10.0 (PR #90)
 - Dependency validation to setup wizard and improved error messages ([#22](https://github.com/PoppaShell/money-mapper/issues/22))
   - Setup wizard now checks dependencies BEFORE other setup steps
   - Clear error messages when dependencies are missing (toml, pandas, pypdf)
@@ -35,6 +63,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Wildcard patterns for better matching flexibility
 
 ### Fixed
+- CLI `parse` and `pipeline` commands broken after statement_parser.py removal
+  - Updated to use CSVImporter
+- Credit card date parsing with dash separator (Issue #32)
+  - Added regex for `MM/DD/YYYY-MM/DD/YYYY` format
+  - Year boundary detection for cross-year statements
+- 45 mypy type errors across 8 modules (PR #90)
 - Interactive prompts now display output correctly before requesting input ([#21](https://github.com/PoppaShell/money-mapper/issues/21))
   - Added flush=True to all print() statements before input() calls across 5 files
   - Fixes output buffering issues on Windows and other environments
@@ -48,6 +82,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Verified with comprehensive test suite (3/3 tests passed)
 
 ### Changed
+- **Breaking:** Removed `statement_parser.py` — PDF parsing replaced by `csv_importer.py`
+- Performance: Transaction enrichment 3–8x speedup via multiprocessing.Pool (Issue #27)
+- Performance: Mapping consolidation 2–3x speedup via similarity caching (Issue #31)
+- `sentence-transformers` moved to optional `[ml]` extra dependency
+- mypy now fully enforced in CI (removed `|| true`)
+- CI action versions: `actions/setup-python@v5`, `codecov/codecov-action@v4`
 - Updated development workflow to be issue-driven with comprehensive CLAUDE.md documentation
 - Enforced testing-first workflow in DEVELOPMENT.md and CLAUDE.md
   - Clear numbered steps: Code → Test → Document → Commit
@@ -201,7 +241,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enriched transactions
   - Analysis results
 
-[Unreleased]: https://github.com/PoppaShell/money-mapper/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/PoppaShell/money-mapper/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/PoppaShell/money-mapper/compare/v0.5.0...v0.7.0
 [0.5.0]: https://github.com/PoppaShell/money-mapper/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/PoppaShell/money-mapper/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/PoppaShell/money-mapper/compare/v0.2.0...v0.3.0
