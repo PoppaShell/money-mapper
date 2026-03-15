@@ -37,9 +37,9 @@ jobs:
 
       - name: Type check with mypy
         run: mypy src/ || true
-        # Phase 0: 42 type errors documented in MYPY_TYPE_ERRORS_DETAILED.md
-        # Phase 1: Fix all errors and make this check fail-safe (remove || true)
-        # See LOCAL_VALIDATION_RESULTS.md for complete analysis
+        # 21 type errors remain (complex architectural issues)
+        # Configuration: see pyproject.toml [tool.mypy]
+        # To enforce: remove || true when error count < 5
 
       - name: Security check with bandit
         run: bandit -r src/ -ll
@@ -51,9 +51,10 @@ jobs:
         run: pytest tests/ --cov=src/money_mapper --cov-report=xml --cov-report=term-missing
 
       - name: Check test coverage
-        run: coverage report --fail-under=60 || true
-        # Phase 0: Non-blocking (test infrastructure only, 7% coverage)
-        # Phase 1: Change to "run: coverage report --fail-under=60" (enforce 60%)
+        run: coverage report --fail-under=35
+        # Current: 30% coverage
+        # Target: 35% baseline (enforce immediately), 60% long-term
+        # Coverage strategy: see .factory/coverage-strategy.md
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
