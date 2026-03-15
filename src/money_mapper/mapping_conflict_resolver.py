@@ -21,7 +21,7 @@ def detect_duplicate_patterns(mappings: dict[str, Any]) -> list[dict[str, Any]]:
         List of detected duplicates with details
     """
     duplicates = []
-    seen_patterns = {}  # normalized pattern -> (section, pattern, mapping)
+    seen_patterns: dict[str, tuple[str, str, Any]] = {}  # normalized pattern -> (section, pattern, mapping)
 
     for section, section_mappings in mappings.items():
         if not isinstance(section_mappings, dict):
@@ -182,7 +182,7 @@ def detect_conflicting_categories(mappings: dict[str, Any]) -> list[dict[str, An
         List of category conflicts
     """
     conflicts = []
-    merchant_categories = {}  # merchant -> set of categories
+    merchant_categories: dict[str, set[Any]] = {}  # merchant -> set of categories
 
     for section, section_mappings in mappings.items():
         if not isinstance(section_mappings, dict):

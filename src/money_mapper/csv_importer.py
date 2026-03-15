@@ -13,7 +13,7 @@ from typing import Any
 from money_mapper.utils import standardize_date
 
 # CSV format schemas
-CSV_SCHEMAS = {
+CSV_SCHEMAS: dict[str, dict[str, Any]] = {
     "checking": {
         "required_headers": ["Date", "Description", "Debit", "Credit"],
         "optional_headers": ["Balance", "Check Number", "Reference"],
@@ -225,6 +225,7 @@ def parse_csv_transactions(csv_file_path: str) -> list[dict[str, Any]]:
     try:
         with open(csv_file_path, encoding="utf-8", errors="replace") as f:
             # Try to detect CSV dialect
+            dialect: Any
             try:
                 sample = f.read(8192)
                 f.seek(0)
@@ -239,7 +240,8 @@ def parse_csv_transactions(csv_file_path: str) -> list[dict[str, Any]]:
                 return transactions
 
             # Detect CSV type from headers
-            csv_type = detect_csv_type(reader.fieldnames)
+            fieldnames = list(reader.fieldnames)
+            csv_type = detect_csv_type(fieldnames)
 
             # If type detection failed, try to infer from content
             if csv_type is None:
@@ -247,7 +249,7 @@ def parse_csv_transactions(csv_file_path: str) -> list[dict[str, Any]]:
                 csv_type = "checking"
 
             # Validate headers
-            is_valid = validate_csv_headers(reader.fieldnames, csv_type)
+            is_valid = validate_csv_headers(fieldnames, csv_type)
             if not is_valid if isinstance(is_valid, bool) else not is_valid[0]:
                 # If validation fails, still try to parse
                 pass
@@ -305,13 +307,14 @@ class CSVValidator:
                     return False, "CSV file has no headers"
 
                 # Auto-detect type if not specified
-                csv_type = self.csv_type or detect_csv_type(reader.fieldnames)
+                fieldnames = list(reader.fieldnames) if reader.fieldnames else []
+                csv_type = self.csv_type or detect_csv_type(fieldnames)
 
                 if csv_type is None:
                     return False, "Could not determine CSV type from headers"
 
                 # Validate headers
-                is_valid = validate_csv_headers(reader.fieldnames, csv_type)
+                is_valid = validate_csv_headers(fieldnames, csv_type)
                 if not is_valid if isinstance(is_valid, bool) else not is_valid[0]:
                     error_msg = is_valid[1] if isinstance(is_valid, tuple) else "Invalid headers"
                     return False, error_msg
@@ -368,7 +371,7 @@ class CSVImporter:
                 with open(csv_file_path, encoding="utf-8", errors="replace") as f:
                     reader = csv.DictReader(f)
                     if reader.fieldnames:
-                        detected_type = detect_csv_type(reader.fieldnames)
+                        detected_type = detect_csv_type(list(reader.fieldnames))
                         csv_type = detected_type or "checking"
             except Exception as e:
                 print(f"Warning: Could not auto-detect CSV type, defaulting to checking: {e}")

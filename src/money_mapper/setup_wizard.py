@@ -292,7 +292,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
     """
     config = get_config_manager(config_dir)
     statements_dir = config.get_directory_path("statements")
-    stats = {"num_transactions": 0, "categorization_rate": None}
+    stats: dict[str, int | float | None] = {"num_transactions": 0, "categorization_rate": None}
 
     if not os.path.exists(statements_dir):
         print(f"No statements directory found at: {statements_dir}")
@@ -396,7 +396,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         return stats
 
 
-def display_setup_complete(config_dir: str = "config", stats: dict[str, object] | None = None):
+def display_setup_complete(config_dir: str = "config", stats: dict[str, int | float | None] | None = None):
     """
     Display setup complete message with optional processing statistics.
 
@@ -416,7 +416,7 @@ def display_setup_complete(config_dir: str = "config", stats: dict[str, object] 
     print("  ✓ Configuration files created")
     print("  ✓ Privacy settings configured")
 
-    if stats and stats.get("num_transactions", 0) > 0:
+    if stats and (stats.get("num_transactions") or 0) > 0:
         print(f"  ✓ Statements parsed: {stats['num_transactions']} transaction(s)")
         if stats.get("categorization_rate") is not None:
             print(f"  ✓ Categorization rate: {stats['categorization_rate']:.1f}%")

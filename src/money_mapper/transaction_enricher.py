@@ -14,6 +14,7 @@ import re
 import sys
 from datetime import datetime
 from difflib import SequenceMatcher
+from typing import Any
 
 from money_mapper.config_manager import get_config_manager
 from money_mapper.utils import (
@@ -40,9 +41,9 @@ class PatternMatcher:
             matcher_name: Name for this matcher (e.g., 'private', 'public')
         """
         self.name = matcher_name
-        self.exact_patterns = {}  # pattern_lower -> mapping_data
-        self.wildcard_patterns = []  # [(compiled_regex, pattern_lower, mapping_data)]
-        self.pattern_words = {}  # frozenset(words) -> [(pattern_lower, mapping_data)]
+        self.exact_patterns: dict[str, Any] = {}  # pattern_lower -> mapping_data
+        self.wildcard_patterns: list[tuple[Any, str, Any]] = []  # [(compiled_regex, pattern_lower, mapping_data)]
+        self.pattern_words: dict[frozenset[str], list[tuple[str, Any]]] = {}  # frozenset(words) -> [(pattern_lower, mapping_data)]
         self._build_index(mappings)
 
     def _build_index(self, mappings: dict) -> None:
@@ -686,7 +687,7 @@ def apply_plaid_keyword_matching(
     search_text = f"{cleaned_desc} {cleaned_merchant}".strip()
 
     best_match = None
-    best_score = 0
+    best_score = 0.0
 
     # Check each Plaid category
     for category_key, category_data in plaid_categories.items():
