@@ -469,6 +469,77 @@ Before committing code, verify:
 
 ---
 
+## GitHub Actions Workflow Guidelines
+
+### Overview
+
+All GitHub Actions workflows are subject to automated validation via `actionlint`. Workflows must follow best practices for security, maintainability, and efficiency.
+
+### Required Best Practices
+
+#### 1. Permissions Block (Security)
+
+Every workflow **must** include an explicit `permissions:` block with minimum required scopes:
+
+```yaml
+permissions:
+  contents: read           # Read-only access to repo contents
+  checks: write            # Create/update status checks
+  pull-requests: write     # Comment on PRs (e.g., codecov)
+```
+
+**Why?** Explicit permissions follow the principle of least privilege. If your workflow doesn't need a permission, don't grant it.
+
+#### 2. Concurrency Control (Performance)
+
+Every workflow **must** include a `concurrency:` block:
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+**Why?** This prevents duplicate runs and cancels older runs when a new push arrives, saving CI minutes.
+
+#### 3. Action Version Pinning (Security)
+
+All actions **must** be pinned to semver tags, not `@main` or commit SHAs:
+
+```yaml
+# CORRECT
+- uses: actions/checkout@v4
+- uses: actions/setup-python@v4
+
+# WRONG - Never use
+- uses: actions/checkout@main
+- uses: actions/checkout@abc123def456
+```
+
+**Why?** Unpinned actions can introduce breaking changes without warning.
+
+#### 4. Workflow Validation Locally
+
+Before pushing, validate your workflow:
+
+```bash
+pre-commit run actionlint --all-files
+```
+
+This checks your `.github/workflows/*.yml` files against the actionlint rules and will catch most common mistakes before CI runs.
+
+### Common actionlint Errors and Fixes
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Permissions is not set` | Missing `permissions:` block | Add explicit `permissions:` (see above) |
+| `Concurrency not set` | Missing `concurrency:` block | Add `concurrency:` (see above) |
+| `Action not pinned` | Using `@main` or commit SHA | Pin to semver tag like `@v4` |
+| `Undefined variable` | Typo in `${{ ... }}` reference | Check variable name and syntax |
+| `Invalid shell` | Shell syntax error in `run:` | Use `bash`, `sh`, `pwsh`, `python` |
+
+---
+
 ## Release Process
 
 ### Preparation
