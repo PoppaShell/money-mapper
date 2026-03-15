@@ -4,17 +4,18 @@ A Python tool for extracting and categorizing financial transactions from bank s
 
 ## Features
 
-- **Multi-format Support**: Handles checking, savings, and credit card statements
-- **Automatic Detection**: Intelligently identifies statement types
-- **Transaction Extraction**: Parses transaction data with proper date handling
-- **Merchant Recognition**: Extracts clean merchant names from descriptions
-- **Smart Categorization**: Uses Plaid PFC taxonomy + custom mappings
+- **CSV Import**: Supports checking, savings, and credit card CSV formats with auto-detection
+- **ML Categorization**: Machine learning-based transaction categorization using scikit-learn
+- **Smart Categorization**: Uses Plaid PFC taxonomy + custom mappings + ML models
 - **Interactive Mapping Builder**: Guided workflow to categorize uncategorized transactions with smart suggestions
+- **Performance**: 3–8x speedup with multiprocessing, 2–3x with intelligent caching
+- **Privacy Guard**: Centralized PII detection and redaction with configurable policies
+- **Pattern Matching**: Pre-compiled regex patterns with module-level caching for 2–3x speedup
 - **Configurable**: Dual TOML configuration (`public_settings.toml` and `private_settings.toml`)
-- **Privacy-Aware**: Sanitizes account numbers and sensitive data automatically
-- **Progress Tracking**: Visual progress bars for long-running operations
 - **Mapping Management**: Interactive tools for managing merchant categorizations
 - **CLI Interface**: Simple command-line and interactive menu modes
+- **Progress Tracking**: Visual progress bars for long-running operations
+- **Type Safe**: Full mypy enforcement with 45+ type annotations
 
 ## Installation
 
@@ -28,8 +29,10 @@ A Python tool for extracting and categorizing financial transactions from bank s
 git clone https://github.com/PoppaShell/money-mapper.git
 cd money-mapper
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies (choose one)
+pip install -e .              # Standard install
+pip install -e .[dev]         # Development install (tests, linting, type checking)
+pip install -e .[ml]          # Optional: ML categorization features
 
 # Verify installation
 python src/cli.py --help
@@ -64,13 +67,13 @@ Choose an option and follow the prompts - no need to remember commands!
 
 ### Command Line Usage
 ```bash
-# Parse PDF statements
+# Import CSV transactions
 python src/cli.py parse --dir statements
 
 # Enrich with categories
 python src/cli.py enrich --input output/financial_transactions.json
 
-# Complete pipeline
+# Complete pipeline (import + enrich)
 python src/cli.py pipeline --dir statements
 
 # Analyze accuracy
@@ -433,30 +436,39 @@ This validates:
 
 ```
 money-mapper/
-├── src/
-│   ├── cli.py                      # Command-line interface
-│   ├── statement_parser.py         # PDF parsing logic
-│   ├── transaction_enricher.py     # Categorization logic
-│   ├── interactive_mapper.py       # Interactive mapping builder
-│   ├── utils.py                    # Shared utilities
-│   ├── config_manager.py           # Configuration management
-│   ├── setup_wizard.py             # First-run setup wizard
-│   └── mapping_processor.py        # Mapping validation & management
+├── src/money_mapper/
+│   ├── cli.py                           # Command-line interface
+│   ├── csv_importer.py                  # CSV import (checking/savings/credit)
+│   ├── config_manager.py                # Configuration management
+│   ├── interactive_mapper.py            # Interactive mapping builder
+│   ├── mapping_conflict_resolver.py     # Conflict detection & resolution
+│   ├── mapping_consolidator.py          # Similarity-based consolidation
+│   ├── mapping_processor.py             # Mapping validation & management
+│   ├── mapping_validator.py             # PFC taxonomy validation
+│   ├── ml_categorizer.py                # ML-based categorization
+│   ├── privacy_guard.py                 # PII detection & redaction
+│   ├── setup_wizard.py                  # First-run setup wizard
+│   ├── transaction_enricher.py          # Categorization logic
+│   └── utils.py                         # Shared utilities
 ├── config/
-│   ├── templates/                  # Configuration templates (versioned)
-│   │   ├── private_settings.toml   # Template for privacy settings
-│   │   └── private_mappings.toml   # Template for personal mappings
-│   ├── public_settings.toml        # Public settings (versioned)
-│   ├── private_settings.toml       # Private settings (gitignored)
-│   ├── public_mappings.toml        # National chain mappings (versioned, 580+)
-│   ├── private_mappings.toml       # Personal/local mappings (gitignored)
-│   ├── plaid_categories.toml       # Official Plaid PFC taxonomy (versioned)
-│   ├── statement_patterns.toml     # PDF parsing patterns (versioned)
-│   └── new_mappings.toml           # Template for adding new mappings (versioned)
-├── statements/                     # Place PDF statements here (gitignored)
-├── output/                         # Generated JSON files (gitignored)
-├── backups/                        # Automatic mapping backups (gitignored)
-├── requirements.txt
+│   ├── templates/                       # Configuration templates (versioned)
+│   │   ├── private_settings.toml        # Template for privacy settings
+│   │   └── private_mappings.toml        # Template for personal mappings
+│   ├── public_settings.toml             # Public settings (versioned)
+│   ├── private_settings.toml            # Private settings (gitignored)
+│   ├── public_mappings.toml             # National chain mappings (versioned, 580+)
+│   ├── private_mappings.toml            # Personal/local mappings (gitignored)
+│   ├── plaid_categories.toml            # Official Plaid PFC taxonomy (versioned)
+│   └── new_mappings.toml                # Template for adding new mappings (versioned)
+├── statements/                          # Place CSV files here (gitignored)
+├── output/                              # Generated JSON files (gitignored)
+├── backups/                             # Automatic mapping backups (gitignored)
+├── docs/
+│   ├── DEVELOPMENT.md                   # Development workflow and guidelines
+│   └── RELEASE_NOTES_TEMPLATE.md        # Template for GitHub releases
+├── pyproject.toml                       # Modern Python packaging
+├── .pre-commit-config.yaml              # Pre-commit hooks (ruff, mypy, bandit, pip-audit)
+├── .github/workflows/ci.yml             # GitHub Actions CI/CD pipeline
 └── README.md
 ```
 
@@ -530,15 +542,21 @@ money-mapper/
 - `confidence`: Match confidence score (0.0-1.0)
 - `categorization_method`: How category was determined (public_mapping, private_mapping, fuzzy_match, plaid_taxonomy)
 
-## Supported Statement Types
+## Supported CSV Formats
 
-### Currently Supported Banks
-- **Bank of America**
+### CSV Types
+- **Checking Accounts**: CSV with Date, Description, Debit, Credit, Balance, Check Number, Reference
+- **Savings Accounts**: CSV with Date, Transaction, Withdrawal, Deposit, Balance, Interest
+- **Credit Cards**: CSV with Transaction Date, Description, Amount, Post Date, Reference Number, Balance
 
-### Bank Statement Formats
-- **Checking Accounts**: Enhanced parsing for multi-line descriptions
-- **Savings Accounts**: Interest and transfer tracking
-- **Credit Cards**: Dual-date support (posting + transaction dates)
+### Format Detection
+Money Mapper automatically detects the CSV type based on column headers. No configuration needed — place your CSV files in the statements/ directory and let the importer handle the rest.
+
+### Date Handling
+- **Transaction Dates**: Automatically extracted from CSV columns
+- **Year Detection**: Correctly determines year for MM/DD dates using CSV processing order
+- **Cross-Year Support**: Handles statements spanning year boundaries
+- **Format Preservation**: Normalizes dates to consistent format (YYYY-MM-DD)
 
 ### Date Handling
 - **Transaction Dates**: Captures both transaction date and posting date from credit card statements
@@ -660,11 +678,32 @@ fuzzy_redaction_threshold = 0.85     # Similarity threshold (0.0-1.0)
 
 ## Development
 
+### Setup
+```bash
+# Install development dependencies
+pip install -e .[dev]
+
+# Install and activate pre-commit hooks
+pre-commit install
+
+# Run full test suite (622 tests)
+pytest tests/
+
+# Run individual checks
+python -m ruff check src/
+python -m mypy src/
+python -m bandit -r src/ -ll
+python -m pip-audit
+```
+
 ### Code Standards
-- **PEP 8 Compliant**: Follows Python style guidelines
+- **PEP 8 Compliant**: Enforced by ruff via pre-commit hooks
+- **Type Safe**: All code fully type-annotated, enforced by mypy
 - **Well Documented**: Comprehensive docstrings and comments
 - **Modular Design**: Clear separation of concerns
 - **Error Handling**: Graceful failure with helpful messages
+- **Test Coverage**: 622 tests, 36% code coverage
+- **Security**: Checked by bandit and pip-audit
 - **Progress Feedback**: Visual progress bars for long operations
 
 ### Extending the Parser
@@ -779,10 +818,17 @@ python src/cli.py analyze --help
 
 ## Performance
 
-- **Parsing**: ~1-2 seconds per PDF statement
-- **Enrichment**: ~50-100 transactions per second
+- **CSV Import**: Handles hundreds of transactions per second
+- **Transaction Enrichment**: 3–8x speedup via multiprocessing.Pool
+- **Pattern Matching**: 2–3x speedup via pre-compiled regex and module-level caching
+- **Combined Improvement**: ~8–10x over original baseline
 - **Progress Bars**: Visual feedback for operations taking >2 seconds
 - **Automatic Backups**: Negligible overhead (~10ms per backup)
+
+### Performance Optimizations
+- **Multiprocessing** (Issue #27): Transaction enrichment uses parallel processing pool
+- **Pattern Pre-compilation** (Issue #29): PatternMatcher class caches compiled regex patterns
+- **Similarity Caching** (Issue #31): Mapping consolidation caches similarity scores
 
 ## Contributing
 
