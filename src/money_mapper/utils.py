@@ -15,11 +15,6 @@ from datetime import datetime
 
 from money_mapper.config_manager import get_config_manager
 
-try:
-    import pypdf
-except ImportError:
-    pypdf = None  # type: ignore
-
 
 def load_config(config_file: str) -> dict:
     """
@@ -43,31 +38,6 @@ def load_config(config_file: str) -> dict:
     except Exception as e:
         print(f"Error loading configuration from '{config_file}': {e}")
         exit(1)
-
-
-def extract_pdf_text(pdf_path: str) -> str:
-    """
-    Extract text content from PDF file.
-
-    Args:
-        pdf_path: Path to PDF file
-
-    Returns:
-        Extracted text content
-    """
-    try:
-        with open(pdf_path, "rb") as file:
-            pdf_reader = pypdf.PdfReader(file)
-            text = ""
-
-            for page in pdf_reader.pages:
-                text += page.extract_text() + "\n"
-
-            return text.strip()
-
-    except Exception as e:
-        print(f"Error extracting text from PDF '{pdf_path}': {e}")
-        return ""
 
 
 def standardize_date(date_str: str, statement_period: dict | None = None) -> str:
@@ -897,7 +867,7 @@ def check_dependencies(packages: list[str] | None = None) -> tuple[bool, list[st
     """
     # Default required packages
     if packages is None:
-        packages = ["toml", "pandas", "pypdf"]
+        packages = ["toml", "pandas"]
 
     missing = []
 
@@ -917,7 +887,7 @@ def format_dependency_status() -> list[tuple[str, str | None, bool]]:
     Returns:
         List of tuples: (package_name, version_or_none, is_installed)
     """
-    required_packages = ["toml", "pandas", "pypdf"]
+    required_packages = ["toml", "pandas"]
     status = []
 
     for package in required_packages:
@@ -942,15 +912,5 @@ def handle_toml_import_error() -> None:
     """
     print("\nERROR: The 'toml' package is required to save mappings.")
     print("Please install it with: pip install toml")
-    print("Or install all dependencies: pip install -r requirements.txt")
-    print()
-
-
-def handle_pypdf_import_error() -> None:
-    """
-    Display helpful error message when pypdf package is missing.
-    """
-    print("\nERROR: The 'pypdf' package is required to read PDF statements.")
-    print("Please install it with: pip install pypdf")
     print("Or install all dependencies: pip install -r requirements.txt")
     print()
