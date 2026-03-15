@@ -82,10 +82,9 @@ jobs:
           pip install -e .[dev]
 
       - name: Type check with mypy
-        run: mypy src/ || true
-        # 21 type errors remain (complex architectural issues)
+        run: mypy src/
+        # All type errors fixed as of GHA best practices upgrade
         # Configuration: see pyproject.toml [tool.mypy]
-        # To enforce: remove || true when error count < 5
 
   # Security checks (~30 seconds)
   security:
@@ -172,9 +171,26 @@ jobs:
           file: ./coverage.xml
           fail_ci_if_error: false
 
+  # Validate GitHub Actions workflows (~30 seconds)
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download actionlint
+        id: get_actionlint
+        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+        shell: bash
+
+      - name: Check workflow files
+        run: ${{ steps.get_actionlint.outputs.executable }} -color
+        shell: bash
+
   # Final gate: All checks passed
   all-checks:
-    needs: [lint, format, type-check, security, test, coverage]
+    needs: [lint, format, type-check, security, test, coverage, actionlint]
     runs-on: ubuntu-latest
     timeout-minutes: 5
 

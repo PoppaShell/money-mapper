@@ -70,6 +70,16 @@ Fixes #
 - [ ] I have tested privacy redaction with example data (not real personal data)
 - [ ] N/A - This PR does not involve data handling
 
+## GitHub Actions Changes (if workflow files modified)
+
+<!-- If you modified `.github/workflows/*.yml` files, verify the following -->
+
+- [ ] `permissions:` block included with minimum required scopes
+- [ ] `concurrency:` block included to prevent duplicate runs
+- [ ] All action versions pinned to semver tags (not `@main` or commit SHAs)
+- [ ] actionlint CI job passes (or ran `pre-commit run actionlint --all-files` locally)
+- [ ] No new warnings or errors introduced in workflows
+
 ## Additional Notes
 
 <!-- Any additional information that reviewers should know -->
