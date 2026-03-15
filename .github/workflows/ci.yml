@@ -6,10 +6,116 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Cancel in-progress runs when a new run is triggered (best practice)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Explicit permissions: principle of least privilege (GitHub Actions best practice)
+permissions:
+  contents: read  # Read-only access to repo contents
+  checks: write  # Allow workflow to create status checks
+  pull-requests: write  # Allow codecov to comment on PRs
+
 jobs:
-  lint-and-test:
+  # Lint with ruff (~30 seconds)
+  lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Lint with ruff
+        run: ruff check src/
+
+  # Check formatting with ruff (~30 seconds)
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Check formatting with ruff
+        run: ruff format src/ --check
+
+  # Type check with mypy (~60 seconds)
+  type-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Type check with mypy
+        run: mypy src/ || true
+        # 21 type errors remain (complex architectural issues)
+        # Configuration: see pyproject.toml [tool.mypy]
+        # To enforce: remove || true when error count < 5
+
+  # Security checks (~30 seconds)
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Security check with bandit
+        run: bandit -r src/ -ll
+
+      - name: Audit dependencies with pip-audit
+        run: pip-audit
+
+  # Run tests with pytest (Python 3.11 & 3.12, ~120 seconds each)
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     strategy:
       matrix:
@@ -29,30 +135,34 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[dev]
 
-      - name: Lint with ruff
-        run: ruff check src/
-
-      - name: Check formatting with ruff
-        run: ruff format src/ --check
-
-      - name: Type check with mypy
-        run: mypy src/ || true
-        # 21 type errors remain (complex architectural issues)
-        # Configuration: see pyproject.toml [tool.mypy]
-        # To enforce: remove || true when error count < 5
-
-      - name: Security check with bandit
-        run: bandit -r src/ -ll
-
-      - name: Audit dependencies with pip-audit
-        run: pip-audit
-
       - name: Run tests with pytest
+        run: pytest tests/ -v --tb=short
+
+  # Coverage check (~60 seconds)
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Run tests with coverage
         run: pytest tests/ --cov=src/money_mapper --cov-report=xml --cov-report=term-missing
 
       - name: Check test coverage
         run: coverage report --fail-under=35
-        # Current: 30% coverage
+        # Current: 36% coverage
         # Target: 35% baseline (enforce immediately), 60% long-term
         # Coverage strategy: see .factory/coverage-strategy.md
 
@@ -61,3 +171,13 @@ jobs:
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
+
+  # Final gate: All checks passed
+  all-checks:
+    needs: [lint, format, type-check, security, test, coverage]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify all CI checks passed
+        run: echo "All CI checks passed successfully!"
