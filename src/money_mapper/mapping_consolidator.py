@@ -11,9 +11,7 @@ from typing import Any
 
 
 def detect_similar_patterns(
-    patterns: list[str],
-    threshold: float = 0.6,
-    cache: dict | None = None
+    patterns: list[str], threshold: float = 0.6, cache: dict | None = None
 ) -> list[list[str]]:
     """
     Detect groups of similar patterns that could be consolidated.
@@ -45,7 +43,7 @@ def detect_similar_patterns(
         group = [pattern1]
         used.add(i)
 
-        for j, pattern2 in enumerate(patterns[i+1:], i+1):
+        for j, pattern2 in enumerate(patterns[i + 1 :], i + 1):
             if j in used:
                 continue
 
@@ -168,9 +166,7 @@ def consolidate_with_wildcards(mappings: dict[str, Any]) -> dict[str, Any]:
 
 
 def find_consolidation_opportunities(
-    mappings: dict[str, Any],
-    threshold: float = 0.6,
-    cache: dict | None = None
+    mappings: dict[str, Any], threshold: float = 0.6, cache: dict | None = None
 ) -> list[dict[str, Any]]:
     """
     Find opportunities to consolidate mappings with wildcards.
@@ -219,20 +215,21 @@ def find_consolidation_opportunities(
         if len(categories) == 1 and len(subcategories) == 1:
             wildcard = suggest_wildcard_pattern(group)
 
-            opportunities.append({
-                "patterns": group,
-                "suggested_wildcard": wildcard,
-                "category": list(categories)[0] if categories else None,
-                "subcategory": list(subcategories)[0] if subcategories else None,
-                "reduction_percent": (1 - len(wildcard) / sum(len(p) for p in group)) * 100
-            })
+            opportunities.append(
+                {
+                    "patterns": group,
+                    "suggested_wildcard": wildcard,
+                    "category": list(categories)[0] if categories else None,
+                    "subcategory": list(subcategories)[0] if subcategories else None,
+                    "reduction_percent": (1 - len(wildcard) / sum(len(p) for p in group)) * 100,
+                }
+            )
 
     return opportunities
 
 
 def evaluate_wildcard_effectiveness(
-    original_patterns: list[str],
-    wildcard_pattern: str
+    original_patterns: list[str], wildcard_pattern: str
 ) -> dict[str, Any]:
     """
     Evaluate how effective a wildcard pattern is.
@@ -254,13 +251,18 @@ def evaluate_wildcard_effectiveness(
 
     # Calculate metrics
     coverage = matched / len(original_patterns) if original_patterns else 0
-    size_reduction = (sum(len(p) for p in original_patterns) - len(wildcard_pattern)) / sum(len(p) for p in original_patterns) if original_patterns else 0
+    size_reduction = (
+        (sum(len(p) for p in original_patterns) - len(wildcard_pattern))
+        / sum(len(p) for p in original_patterns)
+        if original_patterns
+        else 0
+    )
 
     return {
         "coverage": coverage,
         "matched_count": matched,
         "size_reduction": size_reduction,
-        "is_effective": coverage > 0.8 and size_reduction > 0.2
+        "is_effective": coverage > 0.8 and size_reduction > 0.2,
     }
 
 
@@ -271,7 +273,7 @@ def _find_common_prefix(strings: list[str]) -> str:
 
     prefix = ""
     for i, char in enumerate(strings[0]):
-        if all(s[i:i+1] == char for s in strings):
+        if all(s[i : i + 1] == char for s in strings):
             prefix += char
         else:
             break

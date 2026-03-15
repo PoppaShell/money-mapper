@@ -35,19 +35,17 @@ def detect_duplicate_patterns(mappings: dict[str, Any]) -> list[dict[str, Any]]:
                 # Found a duplicate
                 prev_section, prev_pattern, prev_mapping = seen_patterns[normalized]
 
-                duplicates.append({
-                    "pattern": normalized,
-                    "first": {
-                        "section": prev_section,
-                        "pattern": prev_pattern,
-                        "mapping": prev_mapping
-                    },
-                    "duplicate": {
-                        "section": section,
-                        "pattern": pattern,
-                        "mapping": mapping
+                duplicates.append(
+                    {
+                        "pattern": normalized,
+                        "first": {
+                            "section": prev_section,
+                            "pattern": prev_pattern,
+                            "mapping": prev_mapping,
+                        },
+                        "duplicate": {"section": section, "pattern": pattern, "mapping": mapping},
                     }
-                })
+                )
             else:
                 seen_patterns[normalized] = (section, pattern, mapping)
 
@@ -55,8 +53,7 @@ def detect_duplicate_patterns(mappings: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def check_mapping_conflicts(
-    existing_mappings: dict[str, Any],
-    new_mappings: dict[str, Any]
+    existing_mappings: dict[str, Any], new_mappings: dict[str, Any]
 ) -> list[dict[str, Any]]:
     """
     Check for conflicts between existing and new mappings.
@@ -76,19 +73,16 @@ def check_mapping_conflicts(
             if existing_pattern.lower() == pattern.lower():
                 # Check if the mappings are different
                 if existing_mapping != new_mapping:
-                    conflicts.append({
-                        "pattern": pattern,
-                        "existing": existing_mapping,
-                        "new": new_mapping
-                    })
+                    conflicts.append(
+                        {"pattern": pattern, "existing": existing_mapping, "new": new_mapping}
+                    )
                 break
 
     return conflicts
 
 
 def resolve_conflicts(
-    conflicts: list[dict[str, Any]],
-    action: str = "keep_existing"
+    conflicts: list[dict[str, Any]], action: str = "keep_existing"
 ) -> dict[str, Any]:
     """
     Resolve conflicts by choosing which mapping to keep.
@@ -114,8 +108,7 @@ def resolve_conflicts(
 
 
 def find_duplicates_across_files(
-    private_mappings: dict[str, Any],
-    public_mappings: dict[str, Any]
+    private_mappings: dict[str, Any], public_mappings: dict[str, Any]
 ) -> list[dict[str, Any]]:
     """
     Find duplicate patterns that exist in both private and public mappings.
@@ -133,19 +126,14 @@ def find_duplicates_across_files(
 
     for public_pattern in public_mappings.keys():
         if public_pattern.lower() in private_patterns:
-            duplicates.append({
-                "pattern": public_pattern.lower(),
-                "in_private": True,
-                "in_public": True
-            })
+            duplicates.append(
+                {"pattern": public_pattern.lower(), "in_private": True, "in_public": True}
+            )
 
     return duplicates
 
 
-def find_similar_patterns(
-    patterns: list[str],
-    threshold: float = 0.6
-) -> list[list[str]]:
+def find_similar_patterns(patterns: list[str], threshold: float = 0.6) -> list[list[str]]:
     """
     Find groups of similar patterns.
 
@@ -166,7 +154,7 @@ def find_similar_patterns(
         group = [pattern1]
         used.add(i)
 
-        for j, pattern2 in enumerate(patterns[i+1:], i+1):
+        for j, pattern2 in enumerate(patterns[i + 1 :], i + 1):
             if j in used:
                 continue
 
@@ -183,9 +171,7 @@ def find_similar_patterns(
     return groups
 
 
-def detect_conflicting_categories(
-    mappings: dict[str, Any]
-) -> list[dict[str, Any]]:
+def detect_conflicting_categories(mappings: dict[str, Any]) -> list[dict[str, Any]]:
     """
     Detect when the same merchant has multiple different categories assigned.
 
@@ -218,17 +204,12 @@ def detect_conflicting_categories(
     # Find merchants with multiple categories
     for merchant, categories in merchant_categories.items():
         if len(categories) > 1:
-            conflicts.append({
-                "merchant": merchant,
-                "categories": list(categories)
-            })
+            conflicts.append({"merchant": merchant, "categories": list(categories)})
 
     return conflicts
 
 
-def find_pattern_wildcards_overlap(
-    patterns: list[str]
-) -> list[dict[str, Any]]:
+def find_pattern_wildcards_overlap(patterns: list[str]) -> list[dict[str, Any]]:
     """
     Find patterns where a wildcard might be overmatching.
 
@@ -249,11 +230,9 @@ def find_pattern_wildcards_overlap(
 
             # Simple pattern matching
             if _matches_pattern(exact, wildcard):
-                issues.append({
-                    "wildcard": wildcard,
-                    "pattern": exact,
-                    "type": "exact_matches_wildcard"
-                })
+                issues.append(
+                    {"wildcard": wildcard, "pattern": exact, "type": "exact_matches_wildcard"}
+                )
 
     return issues
 
@@ -270,4 +249,5 @@ def _matches_pattern(text: str, pattern: str) -> bool:
         True if text matches pattern
     """
     import fnmatch
+
     return fnmatch.fnmatch(text.lower(), pattern.lower())

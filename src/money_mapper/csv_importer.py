@@ -347,9 +347,7 @@ class CSVImporter:
         validator = CSVValidator()
         return validator.validate(csv_file_path)
 
-    def import_csv(
-        self, csv_file_path: str, csv_type: str | None = None
-    ) -> list[dict[str, Any]]:
+    def import_csv(self, csv_file_path: str, csv_type: str | None = None) -> list[dict[str, Any]]:
         """
         Import transactions from CSV file.
 
