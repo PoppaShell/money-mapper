@@ -8,6 +8,7 @@ using configurable mappings and the Plaid Personal Finance Category taxonomy.
 
 import fnmatch
 import json
+import multiprocessing
 import os
 import re
 import sys
@@ -22,6 +23,29 @@ from money_mapper.utils import (
     sanitize_description,
     save_transactions_to_json,
 )
+
+
+def _enrich_transaction_worker(args: tuple) -> dict:
+    """
+    Worker function for multiprocessing enrichment.
+    
+    Must be at module level for pickling by multiprocessing.Pool.
+    
+    Args:
+        args: Tuple of (transaction, private_mappings, public_mappings, plaid_categories, fuzzy_threshold, config_dir)
+    
+    Returns:
+        Enriched transaction dictionary
+    """
+    transaction, private_mappings, public_mappings, plaid_categories, fuzzy_threshold, config_dir = args
+    return enrich_transaction(
+        transaction,
+        private_mappings,
+        public_mappings,
+        plaid_categories,
+        fuzzy_threshold,
+        debug=False,
+    )
 
 
 def load_enrichment_config(config_dir: str = "config") -> dict:
@@ -79,14 +103,18 @@ def load_enrichment_config(config_dir: str = "config") -> dict:
         sys.exit(1)
 
 
-def process_transaction_enrichment(input_file: str, output_file: str, debug: bool = False) -> None:
+def process_transaction_enrichment(input_file: str, output_file: str, debug: bool = False, use_multiprocessing: bool = True) -> None:
     """
     Process transaction enrichment using centralized configuration.
+
+    Uses multiprocessing for parallel enrichment on multi-core systems.
+    Falls back to sequential processing if multiprocessing is not available.
 
     Args:
         input_file: Path to input JSON file with parsed transactions
         output_file: Path to output JSON file for enriched transactions
         debug: Enable debug output
+        use_multiprocessing: Enable multiprocessing (default: True)
     """
     if debug:
         print("Loading enrichment configuration...")
@@ -107,31 +135,88 @@ def process_transaction_enrichment(input_file: str, output_file: str, debug: boo
     config_manager = get_config_manager()
     fuzzy_threshold = config_manager.get_fuzzy_threshold("enrichment")
 
-    # Enrich each transaction
+    # Attempt multiprocessing (with fallback to sequential)
     enriched_transactions = []
-    for i, transaction in enumerate(transactions):
-        # Show progress bar (suppressed in debug mode to avoid clutter)
+    
+    if use_multiprocessing and len(transactions) > 1:
+        try:
+            # Get number of CPU cores
+            num_cores = multiprocessing.cpu_count()
+            
+            # For small datasets, sequential is faster
+            if len(transactions) < 10:
+                use_multiprocessing = False
+            else:
+                if debug:
+                    print(f"  Using multiprocessing ({num_cores} cores)")
+                
+                # Prepare arguments for each transaction
+                worker_args = [
+                    (
+                        transaction,
+                        config["private_mappings"],
+                        config["public_mappings"],
+                        config["plaid_categories"],
+                        fuzzy_threshold,
+                        "config",
+                    )
+                    for transaction in transactions
+                ]
+                
+                # Create pool and process transactions
+                with multiprocessing.Pool(processes=num_cores) as pool:
+                    # Use imap_unordered for load-balanced distribution
+                    # Progress tracking with counter
+                    processed = 0
+                    for enriched in pool.imap_unordered(_enrich_transaction_worker, worker_args):
+                        enriched_transactions.append(enriched)
+                        processed += 1
+                        
+                        if not debug and (processed % 50 == 0 or processed == len(transactions)):
+                            from utils import show_progress
+                            show_progress(processed, len(transactions))
+                
+                # Print newline after progress bar
+                if not debug:
+                    print()
+                
+                if debug:
+                    print(f"  Completed multiprocessing enrichment")
+                
+        except Exception as e:
+            if debug:
+                print(f"  Multiprocessing failed: {e}. Falling back to sequential...")
+            enriched_transactions = []
+            use_multiprocessing = False
+    
+    # Fallback to sequential processing
+    if not use_multiprocessing or len(transactions) <= 1:
+        if debug and len(transactions) > 1:
+            print("  Using sequential processing")
+        
+        for i, transaction in enumerate(transactions):
+            # Show progress bar (suppressed in debug mode to avoid clutter)
+            if not debug:
+                from utils import show_progress
+
+                show_progress(i + 1, len(transactions))
+
+            if debug and (i + 1) % 50 == 0:
+                print(f"  Processed {i + 1}/{len(transactions)} transactions")
+
+            enriched = enrich_transaction(
+                transaction,
+                config["private_mappings"],
+                config["public_mappings"],
+                config["plaid_categories"],
+                fuzzy_threshold,
+                debug,
+            )
+            enriched_transactions.append(enriched)
+
+        # Print newline after progress bar
         if not debug:
-            from utils import show_progress
-
-            show_progress(i + 1, len(transactions))
-
-        if debug and (i + 1) % 50 == 0:
-            print(f"  Processed {i + 1}/{len(transactions)} transactions")
-
-        enriched = enrich_transaction(
-            transaction,
-            config["private_mappings"],
-            config["public_mappings"],
-            config["plaid_categories"],
-            fuzzy_threshold,
-            debug,
-        )
-        enriched_transactions.append(enriched)
-
-    # Print newline after progress bar
-    if not debug:
-        print()
+            print()
 
     # Save enriched transactions
     save_transactions_to_json(enriched_transactions, output_file)
