@@ -37,25 +37,10 @@ def extract_features(transaction: dict[str, Any]) -> dict[str, Any]:
     features["merchant_word_count"] = len(merchant_name.split())
     
     # Extract merchant type indicators (simple heuristic)
-    if any(word in merchant_name for word in ["coffee", "starbucks", "cafe"]):
-        features["is_coffee"] = 1.0
-    else:
-        features["is_coffee"] = 0.0
-    
-    if any(word in merchant_name for word in ["gas", "shell", "chevron", "exxon"]):
-        features["is_gas"] = 1.0
-    else:
-        features["is_gas"] = 0.0
-    
-    if any(word in merchant_name for word in ["amazon", "walmart", "target", "store"]):
-        features["is_retail"] = 1.0
-    else:
-        features["is_retail"] = 0.0
-    
-    if any(word in merchant_name for word in ["restaurant", "pizza", "burger", "diner"]):
-        features["is_restaurant"] = 1.0
-    else:
-        features["is_restaurant"] = 0.0
+    features["is_coffee"] = 1.0 if any(word in merchant_name for word in ["coffee", "starbucks", "cafe"]) else 0.0
+    features["is_gas"] = 1.0 if any(word in merchant_name for word in ["gas", "shell", "chevron", "exxon"]) else 0.0
+    features["is_retail"] = 1.0 if any(word in merchant_name for word in ["amazon", "walmart", "target", "store"]) else 0.0
+    features["is_restaurant"] = 1.0 if any(word in merchant_name for word in ["restaurant", "pizza", "burger", "diner"]) else 0.0
     
     # Amount features
     features["amount"] = amount
