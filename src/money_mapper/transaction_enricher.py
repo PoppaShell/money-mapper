@@ -42,8 +42,12 @@ class PatternMatcher:
         """
         self.name = matcher_name
         self.exact_patterns: dict[str, Any] = {}  # pattern_lower -> mapping_data
-        self.wildcard_patterns: list[tuple[Any, str, Any]] = []  # [(compiled_regex, pattern_lower, mapping_data)]
-        self.pattern_words: dict[frozenset[str], list[tuple[str, Any]]] = {}  # frozenset(words) -> [(pattern_lower, mapping_data)]
+        self.wildcard_patterns: list[
+            tuple[Any, str, Any]
+        ] = []  # [(compiled_regex, pattern_lower, mapping_data)]
+        self.pattern_words: dict[
+            frozenset[str], list[tuple[str, Any]]
+        ] = {}  # frozenset(words) -> [(pattern_lower, mapping_data)]
         self._build_index(mappings)
 
     def _build_index(self, mappings: dict) -> None:

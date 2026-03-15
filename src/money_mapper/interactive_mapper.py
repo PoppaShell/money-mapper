@@ -348,7 +348,7 @@ def create_mapping_entry(
 
         # Write back to file, preserving the header
         try:
-            import toml
+            import toml  # type: ignore[import-untyped]
         except ImportError:
             from utils import handle_toml_import_error
 

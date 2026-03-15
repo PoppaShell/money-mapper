@@ -21,7 +21,9 @@ def detect_duplicate_patterns(mappings: dict[str, Any]) -> list[dict[str, Any]]:
         List of detected duplicates with details
     """
     duplicates = []
-    seen_patterns: dict[str, tuple[str, str, Any]] = {}  # normalized pattern -> (section, pattern, mapping)
+    seen_patterns: dict[
+        str, tuple[str, str, Any]
+    ] = {}  # normalized pattern -> (section, pattern, mapping)
 
     for section, section_mappings in mappings.items():
         if not isinstance(section_mappings, dict):

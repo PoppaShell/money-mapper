@@ -236,7 +236,7 @@ def save_privacy_settings(
         True if successful, False otherwise
     """
     try:
-        import toml  # We need toml for writing (tomllib is read-only)
+        import toml  # type: ignore[import-untyped]  # We need toml for writing (tomllib is read-only)
     except ImportError:
         from utils import handle_toml_import_error
 
@@ -396,7 +396,9 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         return stats
 
 
-def display_setup_complete(config_dir: str = "config", stats: dict[str, int | float | None] | None = None):
+def display_setup_complete(
+    config_dir: str = "config", stats: dict[str, int | float | None] | None = None
+):
     """
     Display setup complete message with optional processing statistics.
 

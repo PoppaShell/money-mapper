@@ -475,7 +475,9 @@ class MappingProcessor:
 
         # Create pattern-to-location mapping
         all_patterns: dict[str, dict[str, Any]] = {}
-        wildcard_patterns: dict[str, list[tuple[str, dict[str, Any]]]] = {}  # Separate tracking for wildcards
+        wildcard_patterns: dict[
+            str, list[tuple[str, dict[str, Any]]]
+        ] = {}  # Separate tracking for wildcards
 
         # Index private mappings (handle nested structure: PRIMARY -> SUBCATEGORY -> patterns)
         for primary_key, primary_section in private_data.items():
