@@ -25,17 +25,17 @@ def mask_account_number(account: str, visible_digits: int = 4) -> str:
     """
     if not account:
         return ""
-    
+
     # Remove spaces and non-digits
     digits_only = "".join(c for c in account if c.isdigit())
-    
+
     if len(digits_only) <= visible_digits:
         return "*" * len(digits_only)
-    
+
     # Show only last N digits, mask the rest
     masked_part = "*" * (len(digits_only) - visible_digits)
     visible_part = digits_only[-visible_digits:]
-    
+
     return f"{masked_part}{visible_part}"
 
 
@@ -52,25 +52,25 @@ def redact_merchant_name(merchant: str, mode: str = "partial") -> str:
     """
     if not merchant:
         return ""
-    
+
     if mode == "none":
         return merchant
-    
+
     if mode == "full":
         # Complete redaction
         return "[REDACTED]"
-    
+
     elif mode == "partial":
         # Keep first word, redact rest
         words = merchant.split()
         if len(words) > 1:
             return f"{words[0]} [...]"
         return merchant
-    
+
     elif mode == "category":
         # Return generic category placeholder
         return "[MERCHANT]"
-    
+
     return merchant
 
 
@@ -86,13 +86,13 @@ def encrypt_amount(amount: float) -> str:
     """
     # Convert to string with 2 decimal places
     amount_str = f"{amount:.2f}"
-    
+
     # Encode to bytes
     encoded = amount_str.encode("utf-8")
-    
+
     # Base64 encode for reversibility
     encrypted = base64.b64encode(encoded).decode("utf-8")
-    
+
     return encrypted
 
 
@@ -109,7 +109,7 @@ def decrypt_amount(encrypted: str) -> float | None:
     try:
         # Base64 decode
         decoded = base64.b64decode(encrypted.encode("utf-8")).decode("utf-8")
-        
+
         # Convert back to float
         return float(decoded)
     except (ValueError, TypeError, Exception):
@@ -162,7 +162,7 @@ def apply_privacy_settings(
     """
     # Create a copy to avoid modifying original
     protected = transaction.copy()
-    
+
     # Apply account masking
     if settings.get("mask_account", False) and "account" in protected:
         visible_digits = settings.get("mask_account_digits", 4)
@@ -170,17 +170,17 @@ def apply_privacy_settings(
             str(protected["account"]),
             visible_digits=visible_digits
         )
-    
+
     # Apply merchant redaction
     if settings.get("redact_merchant", False) and "merchant" in protected:
         mode = settings.get("redact_merchant_mode", "partial")
         protected["merchant"] = redact_merchant_name(str(protected["merchant"]), mode=mode)
-    
+
     # Apply amount encryption
     if settings.get("encrypt_amounts", False) and "amount" in protected:
         if isinstance(protected["amount"], (int, float)):
             protected["amount"] = encrypt_amount(float(protected["amount"]))
-    
+
     return protected
 
 
@@ -232,13 +232,13 @@ class PrivacyGuard:
             "redact_merchant_mode": self.redact_merchant_mode,
             "encrypt_amounts": self.encrypt_amounts,
         }
-        
+
         protected = apply_privacy_settings(transaction, settings)
-        
+
         # Track audit log if enabled
         if self.track_audit and transaction.get("id"):
             self._track_changes(transaction, protected)
-        
+
         return protected
 
     def _track_changes(
@@ -252,7 +252,7 @@ class PrivacyGuard:
             protected: Protected transaction
         """
         transaction_id = original.get("id", "unknown")
-        
+
         for field in ["account", "merchant", "amount"]:
             if field in original and original[field] != protected.get(field):
                 entry = create_audit_log(
