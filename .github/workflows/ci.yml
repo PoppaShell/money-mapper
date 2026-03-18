@@ -160,10 +160,11 @@ jobs:
         run: pytest tests/ --cov=src/money_mapper --cov-report=xml --cov-report=term-missing
 
       - name: Check test coverage
-        run: coverage report --fail-under=35
-        # Current: 36% coverage
-        # Target: 35% baseline (enforce immediately), 60% long-term
-        # Coverage strategy: see .factory/coverage-strategy.md
+        run: coverage report --fail-under=36
+        # Current: 36% coverage (baseline, enforced immediately)
+        # Increment plan: 36% → 40% (after Category A bug fixes + tests) → 55% (after Phase 5 ML) → 60% (long-term)
+        # Rationale: Prevents regression, forces new features to include tests
+        # Each phase must include tests to raise the threshold without breaking CI
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
