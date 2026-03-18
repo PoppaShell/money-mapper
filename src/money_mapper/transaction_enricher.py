@@ -401,6 +401,8 @@ def enrich_transaction(
     fuzzy_threshold: float = 0.7,
     debug: bool = False,
     ml_model: Any = None,
+    similarity_model: Any = None,
+    vectors_file: str | None = None,
 ) -> dict:
     """
     Enrich a single transaction with category and merchant information.
@@ -413,6 +415,8 @@ def enrich_transaction(
         fuzzy_threshold: Threshold for fuzzy matching
         debug: Enable debug output
         ml_model: Pre-trained ML model for Stage 3a (optional)
+        similarity_model: SentenceTransformer model for Stage 3b (optional)
+        vectors_file: Path to pre-computed embeddings for Stage 3b (optional)
 
     Returns:
         Enriched transaction dictionary
@@ -438,6 +442,23 @@ def enrich_transaction(
         ml_result = try_ml_prediction(enriched, plaid_categories, ml_model, debug)
         if ml_result:
             category_result = ml_result
+
+    # Try similarity matching if still uncategorized (Stage 3b)
+    if (
+        category_result.get("category") == "UNCATEGORIZED"
+        and similarity_model is not None
+        and vectors_file is not None
+    ):
+        similarity_result = try_similarity_prediction(
+            merchant_name,
+            plaid_categories,
+            similarity_model,
+            vectors_file,
+            threshold=0.85,
+            debug=debug,
+        )
+        if similarity_result:
+            category_result = similarity_result
 
     # Add categorization results
     enriched.update(category_result)
@@ -816,6 +837,59 @@ def try_ml_prediction(
         method="ml_prediction",
         confidence=confidence,
     )
+
+
+def try_similarity_prediction(
+    merchant_name: str,
+    plaid_categories: dict,
+    similarity_model: Any = None,
+    vectors_file: str | None = None,
+    threshold: float = 0.85,
+    debug: bool = False,
+) -> dict | None:
+    """
+    Try similarity-based category prediction (Stage 3b).
+
+    Uses pre-computed merchant embeddings for high-accuracy matching.
+
+    Args:
+        merchant_name: Merchant name to match
+        plaid_categories: Plaid categories for validation
+        similarity_model: SentenceTransformer model (None skips similarity)
+        vectors_file: Path to pre-computed embeddings
+        threshold: Similarity threshold (default 0.85)
+        debug: Enable debug output
+
+    Returns:
+        Categorization result dict with confidence, or None if no match
+    """
+    if similarity_model is None or vectors_file is None:
+        return None
+
+    try:
+        from money_mapper.similarity_matcher import (
+            find_similar_merchant,
+            load_merchant_embeddings,
+        )
+    except ImportError:
+        return None
+
+    known_merchants, embeddings = load_merchant_embeddings(vectors_file)
+    if len(embeddings) == 0:
+        return None
+
+    match = find_similar_merchant(
+        merchant_name, known_merchants, embeddings, threshold, similarity_model, debug
+    )
+
+    if match:
+        return create_mapping_result(
+            mapping_data=match,
+            method="similarity_matching",
+            confidence=0.85,
+        )
+
+    return None
 
 
 def fuzzy_match_similarity(text1: str, text2: str) -> float:
