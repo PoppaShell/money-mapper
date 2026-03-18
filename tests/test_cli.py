@@ -36,26 +36,26 @@ class TestValidateDirectory:
         result = validate_directory(str(test_file))
         assert result is False
 
-    def test_validate_directory_requires_pdf_files(self, temp_output_dir):
-        """Test that validation requires PDF files to exist."""
+    def test_validate_directory_requires_csv_files(self, temp_output_dir):
+        """Test that validation requires CSV files to exist."""
         empty_dir = temp_output_dir / "empty"
         empty_dir.mkdir(exist_ok=True)
         
-        # Directory exists but has no PDFs - should return False
+        # Directory exists but has no CSVs - should return False
         result = validate_directory(str(empty_dir))
         assert result is False
 
-    def test_validate_directory_with_pdf_files(self, temp_output_dir):
-        """Test validation with PDF files present."""
-        pdf_dir = temp_output_dir / "pdfs"
-        pdf_dir.mkdir(exist_ok=True)
+    def test_validate_directory_with_csv_files(self, temp_output_dir):
+        """Test validation with CSV files present."""
+        csv_dir = temp_output_dir / "csvs"
+        csv_dir.mkdir(exist_ok=True)
         
-        # Create a test PDF file
-        pdf_file = pdf_dir / "test.pdf"
-        pdf_file.write_text("fake pdf content")
+        # Create a test CSV file
+        csv_file = csv_dir / "test.csv"
+        csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
         
-        # Should return True when PDF exists
-        result = validate_directory(str(pdf_dir))
+        # Should return True when CSV exists
+        result = validate_directory(str(csv_dir))
         assert result is True
 
     @pytest.mark.parametrize("invalid_path", [
@@ -255,21 +255,21 @@ class TestCLIIntegration:
 
     def test_directory_validation_workflow(self, temp_output_dir):
         """Test directory validation workflow."""
-        # Create test directory structure with PDF files
+        # Create test directory structure with CSV files
         statements_dir = temp_output_dir / "statements"
         statements_dir.mkdir(exist_ok=True)
         
-        # Add a PDF file to statements directory
-        pdf_file = statements_dir / "statement.pdf"
-        pdf_file.write_text("fake pdf")
+        # Add a CSV file to statements directory
+        csv_file = statements_dir / "statement.csv"
+        csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
         
         output_dir = temp_output_dir / "output"
         output_dir.mkdir(exist_ok=True)
         
-        # Validate statements directory (has PDF)
+        # Validate statements directory (has CSV)
         assert validate_directory(str(statements_dir)) is True
         
-        # Output dir doesn't need PDFs for validation (different validation rules)
+        # Output dir doesn't need CSVs for validation (different validation rules)
         # Just verify path is valid
         assert os.path.isdir(str(output_dir)) is True
 
@@ -279,9 +279,9 @@ class TestValidateDirectoryExtended:
 
     def test_validate_relative_path(self, temp_output_dir):
         """Test validation with relative path."""
-        # Create PDF in temp directory
-        pdf_file = temp_output_dir / "test.pdf"
-        pdf_file.write_text("test")
+        # Create CSV in temp directory
+        csv_file = temp_output_dir / "test.csv"
+        csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
         
         # Get relative path if possible
         try:
@@ -292,17 +292,17 @@ class TestValidateDirectoryExtended:
             # If relative paths don't work, skip
             pass
 
-    def test_validate_multiple_pdf_files(self, temp_output_dir):
-        """Test validation with multiple PDF files."""
-        pdf_dir = temp_output_dir / "pdfs"
-        pdf_dir.mkdir(exist_ok=True)
+    def test_validate_multiple_csv_files(self, temp_output_dir):
+        """Test validation with multiple CSV files."""
+        csv_dir = temp_output_dir / "csvs"
+        csv_dir.mkdir(exist_ok=True)
         
-        # Create multiple PDFs
+        # Create multiple CSVs
         for i in range(5):
-            pdf_file = pdf_dir / f"statement_{i}.pdf"
-            pdf_file.write_text("fake pdf")
+            csv_file = csv_dir / f"statement_{i}.csv"
+            csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
         
-        result = validate_directory(str(pdf_dir))
+        result = validate_directory(str(csv_dir))
         assert result is True
 
     def test_validate_mixed_file_types(self, temp_output_dir):
@@ -311,36 +311,36 @@ class TestValidateDirectoryExtended:
         mixed_dir.mkdir(exist_ok=True)
         
         # Create mixed files
-        (mixed_dir / "statement.pdf").write_text("pdf")
-        (mixed_dir / "data.csv").write_text("csv")
+        (mixed_dir / "statement.csv").write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
+        (mixed_dir / "data.json").write_text("{}")
         (mixed_dir / "note.txt").write_text("txt")
         
         result = validate_directory(str(mixed_dir))
-        assert result is True  # Should validate if PDF exists
+        assert result is True  # Should validate if CSV exists
 
     def test_validate_subdirectories_ignored(self, temp_output_dir):
-        """Test that validation checks only top-level PDF files."""
+        """Test that validation checks only top-level CSV files."""
         test_dir = temp_output_dir / "test"
         test_dir.mkdir(exist_ok=True)
         
-        # Create PDF in subdirectory
+        # Create CSV in subdirectory
         sub_dir = test_dir / "sub"
         sub_dir.mkdir(exist_ok=True)
-        (sub_dir / "statement.pdf").write_text("pdf")
+        (sub_dir / "statement.csv").write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
         
         result = validate_directory(str(test_dir))
         # Depends on implementation - may be False if only top-level is checked
         assert isinstance(result, bool)
 
-    def test_validate_hidden_pdf_file(self, temp_output_dir):
-        """Test validation with hidden PDF file."""
-        pdf_dir = temp_output_dir / "pdfs"
-        pdf_dir.mkdir(exist_ok=True)
+    def test_validate_csv_file(self, temp_output_dir):
+        """Test validation with CSV file."""
+        csv_dir = temp_output_dir / "csvs"
+        csv_dir.mkdir(exist_ok=True)
         
-        # Create regular PDF
-        (pdf_dir / "statement.pdf").write_text("pdf")
+        # Create regular CSV
+        (csv_dir / "statement.csv").write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
         
-        result = validate_directory(str(pdf_dir))
+        result = validate_directory(str(csv_dir))
         assert result is True
 
 
@@ -564,8 +564,8 @@ class TestCLIEdgeCases:
         space_dir = temp_output_dir / "test dir with spaces"
         space_dir.mkdir(exist_ok=True)
         
-        pdf_file = space_dir / "statement.pdf"
-        pdf_file.write_text("pdf")
+        csv_file = space_dir / "statement.csv"
+        csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
         
         result = validate_directory(str(space_dir))
         assert result is True
