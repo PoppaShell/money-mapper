@@ -333,9 +333,14 @@ class CSVValidator:
 class CSVImporter:
     """Main CSV importer class."""
 
-    def __init__(self):
-        """Initialize CSV importer."""
+    def __init__(self, debug: bool = False):
+        """Initialize CSV importer.
+
+        Args:
+            debug: Enable debug output (default: False)
+        """
         self.validator = None
+        self.debug = debug
 
     def validate_file(self, csv_file_path: str) -> bool | tuple[bool, str]:
         """
@@ -387,3 +392,42 @@ class CSVImporter:
         transactions = parse_csv_transactions(csv_file_path)
 
         return transactions
+
+    def import_directory(self, directory: str) -> list[dict[str, Any]]:
+        """
+        Import transactions from all CSV files in a directory.
+
+        Args:
+            directory: Path to directory containing CSV files
+
+        Returns:
+            List of standardized transaction dictionaries from all CSV files
+        """
+        all_transactions: list[dict[str, Any]] = []
+
+        if not os.path.exists(directory):
+            print(f"Error: Directory not found: {directory}")
+            return []
+
+        if not os.path.isdir(directory):
+            print(f"Error: Path is not a directory: {directory}")
+            return []
+
+        # Find all CSV files in directory
+        csv_files = [f for f in os.listdir(directory) if f.lower().endswith(".csv")]
+
+        if not csv_files:
+            if self.debug:
+                print(f"Warning: No CSV files found in {directory}")
+            return []
+
+        # Import each CSV file
+        for csv_file in csv_files:
+            csv_path = os.path.join(directory, csv_file)
+            if self.debug:
+                print(f"Importing {csv_file}...")
+
+            transactions = self.import_csv(csv_path)
+            all_transactions.extend(transactions)
+
+        return all_transactions

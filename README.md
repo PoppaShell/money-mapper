@@ -35,14 +35,14 @@ pip install -e .[dev]         # Development install (tests, linting, type checki
 pip install -e .[ml]          # Optional: ML categorization features
 
 # Verify installation
-python src/cli.py --help
+money-mapper --help
 ```
 
 ## Quick Start
 
 ### Interactive Mode (Recommended)
 ```bash
-python src/cli.py
+money-mapper
 ```
 
 **First Run:** The setup wizard will automatically launch and guide you through:
@@ -54,9 +54,9 @@ python src/cli.py
 
 **Subsequent Runs:** You'll see the main menu with options:
 ```
-1. Extract transactions from PDFs
+1. Import transactions from CSV files
 2. Categorize transactions
-3. Extract & categorize (full process)
+3. Import & categorize (full process)
 4. Review categorization results
 5. Check configuration files
 6. Manage merchant mappings
@@ -68,29 +68,29 @@ Choose an option and follow the prompts - no need to remember commands!
 ### Command Line Usage
 ```bash
 # Import CSV transactions
-python src/cli.py parse --dir statements
+money-mapper parse --dir statements
 
 # Enrich with categories
-python src/cli.py enrich --input output/financial_transactions.json
+money-mapper enrich --input output/financial_transactions.json
 
 # Complete pipeline (import + enrich)
-python src/cli.py pipeline --dir statements
+money-mapper pipeline --dir statements
 
 # Analyze accuracy
-python src/cli.py analyze --file output/enriched_transactions.json
+money-mapper analyze --file output/enriched_transactions.json
 
 # Manage mappings
-python src/cli.py add-mappings
+money-mapper add-mappings
 ```
 
 ### Advanced Options
 ```bash
 # Enable verbose output
-python src/cli.py analyze --verbose
+money-mapper analyze --verbose
 
 # Enable debug mode for troubleshooting
-python src/cli.py parse --debug --dir statements
-python src/cli.py enrich --debug --input output/financial_transactions.json
+money-mapper parse --debug --dir statements
+money-mapper enrich --debug --input output/financial_transactions.json
 ```
 
 ## Configuration
@@ -101,10 +101,10 @@ Money Mapper includes an interactive setup wizard that runs automatically on fir
 
 ```bash
 # Setup wizard runs automatically on first launch
-python src/cli.py
+money-mapper
 
 # Or run setup manually anytime
-python src/cli.py setup
+money-mapper setup
 ```
 
 The setup wizard will:
@@ -123,7 +123,7 @@ The setup wizard will:
 - Interactively configures names, employers, and locations to redact
 
 **Automatic Processing (if you opt in):**
-- Parses all PDF statements in `statements/` directory
+- Imports all CSV files from `statements/` directory
 - Enriches transactions with categories and merchant names
 - Shows categorization analysis results
 - Offers Interactive Mapping Builder for uncategorized transactions
@@ -131,9 +131,9 @@ The setup wizard will:
 
 **Manual Processing (if you decline):**
 - Shows instructions for running commands later:
-  - `python src/cli.py parse --dir statements`
-  - `python src/cli.py enrich`
-  - `python src/cli.py analyze`
+  - `money-mapper parse --dir statements`
+  - `money-mapper enrich`
+  - `money-mapper analyze`
 
 ### Configuration Files
 
@@ -143,7 +143,6 @@ Money Mapper uses a **public/private configuration split** for security:
 - `config/public_settings.toml` - Application settings (paths, thresholds, processing options)
 - `config/public_mappings.toml` - National chain merchant mappings (580+)
 - `config/plaid_categories.toml` - Plaid Personal Finance Category taxonomy
-- `config/statement_patterns.toml` - PDF parsing patterns
 
 **Private Configuration** (gitignored, user-specific):
 - `config/private_settings.toml` - Privacy settings (names, employers, locations to redact)
@@ -487,7 +486,7 @@ money-mapper/
     "account_type": "credit",
     "reference_number": "4321",
     "account_suffix": "5678",
-    "source_file": "statement_2025_01.pdf"
+    "source_file": "statement_2025_01.csv"
 }
 ```
 
@@ -499,7 +498,7 @@ money-mapper/
     "amount": 2500.00,
     "account_type": "checking",
     "account_number": "****9012",
-    "source_file": "checking_2025_01.pdf"
+    "source_file": "checking_2025_01.csv"
 }
 ```
 
@@ -513,7 +512,7 @@ money-mapper/
 - `account_number`: Masked account number from statement header (e.g., "****1234") - checking/savings only
 - `reference_number`: 4-digit transaction reference number - credit cards only (Bank of America)
 - `account_suffix`: Last 4 digits of card used for transaction - credit cards only (replaces account_number for credit cards)
-- `source_file`: Original PDF statement filename
+- `source_file`: Original CSV statement filename
 
 ### Enriched Transactions (`output/enriched_transactions.json`)
 ```json
@@ -526,7 +525,7 @@ money-mapper/
     "account_type": "credit",
     "reference_number": "4321",
     "account_suffix": "5678",
-    "source_file": "statement_2025_01.pdf",
+    "source_file": "statement_2025_01.csv",
     "merchant_name": "Grocery Store",
     "category": "FOOD_AND_DRINK",
     "subcategory": "GROCERIES",
@@ -591,7 +590,7 @@ Money Mapper includes a comprehensive privacy redaction system that automaticall
 
 ### Automatic Redaction (Enabled by Default)
 
-The following data types are automatically redacted during PDF parsing:
+The following data types are automatically redacted during CSV import:
 
 | Data Type | Example | Redacted As |
 |-----------|---------|-------------|
@@ -708,7 +707,7 @@ python -m pip-audit
 
 ### Extending the Parser
 
-1. **New Statement Types**: Add patterns to `config/statement_patterns.toml`
+1. **New CSV Formats**: Add bank format mapping to `config_manager.py`
 2. **New Categories**: Extend `config/plaid_categories.toml` (use official PFC taxonomy)
 3. **Custom Merchants**: Add to `config/private_mappings.toml` or `config/public_mappings.toml`
 4. **Parsing Logic**: Modify functions in `src/statement_parser.py`
@@ -721,7 +720,7 @@ Money Mapper uses a split configuration system for security:
 **Public Settings** (`config/public_settings.toml`) - Shared application settings:
 ```toml
 [directories]
-statements = "statements"      # PDF input directory
+statements = "statements"      # CSV input directory
 output = "output"             # JSON output directory
 
 [file_paths]
@@ -759,26 +758,26 @@ The configuration manager automatically merges both files, with private settings
 ### Common Issues
 
 **No transactions found**:
-- Check PDF file format and bank compatibility
-- Verify PDF files are in the `statements/` directory
-- Enable debug mode: `python src/cli.py parse --debug --dir statements`
-- Check if PDF text can be extracted (try copying text from PDF)
+- Check CSV file format and verify column headers
+- Verify CSV files are in the `statements/` directory
+- Enable debug mode: `money-mapper parse --debug --dir statements`
+- Verify the CSV file can be opened in a spreadsheet application
 
 **Low categorization confidence**:
 - Add custom mappings for your frequent merchants
-- Run analysis: `python src/cli.py analyze --file output/enriched_transactions.json`
+- Run analysis: `money-mapper analyze --file output/enriched_transactions.json`
 - Check for typos in merchant names
 - Review uncategorized transactions and add mappings
 
 **Configuration errors**:
 - Validate TOML syntax (use a TOML validator)
-- Run: `python src/cli.py validate`
+- Run: `money-mapper validate`
 - Check file paths in `config/public_settings.toml`
 - Ensure `config/private_settings.toml` exists (run setup wizard if missing)
 - Ensure required fields are present in mappings
 
 **Mapping conflicts**:
-- Run: `python src/cli.py add-mappings`
+- Run: `money-mapper add-mappings`
 - Choose to resolve duplicates interactively
 - Review conflict messages and keep appropriate mapping
 
@@ -791,10 +790,10 @@ Enable detailed output for troubleshooting:
 python src/cli.py parse --debug --dir statements
 
 # Debug enrichment
-python src/cli.py enrich --debug --input output/financial_transactions.json
+money-mapper enrich --debug --input output/financial_transactions.json
 
 # Debug mapping management
-python src/cli.py add-mappings --debug
+money-mapper add-mappings --debug
 ```
 
 Debug mode shows:
@@ -847,4 +846,4 @@ This project is provided as-is for personal financial management. Please ensure 
 ## Acknowledgments
 
 - **Plaid**: For the Personal Finance Category (PFC) taxonomy
-- **pypdf**: For PDF text extraction capabilities
+- **pandas**: For CSV parsing and data manipulation

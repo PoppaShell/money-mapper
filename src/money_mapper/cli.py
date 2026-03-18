@@ -41,7 +41,7 @@ def print_banner():
 
 def validate_directory(directory: str) -> bool:
     """
-    Validate that directory exists and contains PDF files.
+    Validate that directory exists and contains CSV files.
 
     Args:
         directory: Directory path to validate
@@ -60,14 +60,14 @@ def validate_directory(directory: str) -> bool:
         print(f"Error: '{directory}' is not a directory")
         return False
 
-    # Check for PDF files
-    pdf_files = [f for f in os.listdir(directory) if f.lower().endswith(".pdf")]
-    if not pdf_files:
-        print(f"Warning: No PDF files found in '{directory}'")
-        print("Please add PDF files to process or check your directory configuration")
+    # Check for CSV files
+    csv_files = [f for f in os.listdir(directory) if f.lower().endswith(".csv")]
+    if not csv_files:
+        print(f"Warning: No CSV files found in '{directory}'")
+        print("Please add CSV files to process or check your directory configuration")
         return False
 
-    print(f"Found {len(pdf_files)} PDF files in '{directory}'")
+    print(f"Found {len(csv_files)} CSV files in '{directory}'")
     return True
 
 
@@ -417,7 +417,7 @@ def run_full_pipeline_interactive():
     print(f"  Enriched output: {enriched_file}", flush=True)
 
     # Allow user to override input directory
-    directory = input("\nEnter directory containing PDF files (Enter for default): ").strip()
+    directory = input("\nEnter directory containing CSV files (Enter for default): ").strip()
     if not directory:
         directory = default_dir
 
@@ -442,7 +442,7 @@ def run_full_pipeline_interactive():
 
     try:
         # Step 1: Parse statements (debug mode disabled in interactive mode - use CLI flags for debug)
-        print(f"\nStep 1: Processing PDF files in '{directory}'...")
+        print(f"\nStep 1: Importing CSV transactions from '{directory}'...")
         transactions = process_pdf_statements(directory, debug=False)
 
         if not transactions:
@@ -500,7 +500,7 @@ def main():
         epilog="""
 Examples:
   %(prog)s                           # Interactive mode
-  %(prog)s parse --dir statements    # Parse PDFs in statements directory
+  %(prog)s parse --dir statements    # Import CSV transactions from statements directory
   %(prog)s enrich --input output/txns.json  # Enrich existing transactions
   %(prog)s pipeline --dir statements # Complete parse + enrich pipeline
   %(prog)s validate                  # Validate TOML configuration files
@@ -518,7 +518,7 @@ Examples:
 
     # Parse command
     parse_parser = subparsers.add_parser("parse", help="Import transactions from CSV files")
-    parse_parser.add_argument("--dir", help="Directory containing PDF files (default: from config)")
+    parse_parser.add_argument("--dir", help="Directory containing CSV files (default: from config)")
     parse_parser.add_argument("--output", help="Output JSON file (default: from config)")
     parse_parser.add_argument("--debug", action="store_true", help="Enable debug output")
 
@@ -535,7 +535,7 @@ Examples:
     # Pipeline command
     pipeline_parser = subparsers.add_parser("pipeline", help="Run complete parse + enrich pipeline")
     pipeline_parser.add_argument(
-        "--dir", help="Directory containing PDF files (default: from config)"
+        "--dir", help="Directory containing CSV files (default: from config)"
     )
     pipeline_parser.add_argument("--debug", action="store_true", help="Enable debug output")
 
@@ -594,7 +594,7 @@ Examples:
 
     # Check for first-run and launch setup wizard if needed
     try:
-        from setup_wizard import check_first_run, run_setup_wizard
+        from money_mapper.setup_wizard import check_first_run, run_setup_wizard
 
         if check_first_run():
             print()
@@ -681,7 +681,7 @@ Examples:
         transactions = importer.import_directory(directory)
 
         if transactions:
-            from utils import save_transactions_to_json
+            from money_mapper.utils import save_transactions_to_json
 
             save_transactions_to_json(transactions, output_file)
             print(f"Successfully imported {len(transactions)} transactions")
@@ -750,7 +750,7 @@ Examples:
             print("No transactions found")
             sys.exit(1)
 
-        from utils import save_transactions_to_json
+        from money_mapper.utils import save_transactions_to_json
 
         save_transactions_to_json(transactions, parsed_file)
         print(f"Imported {len(transactions)} transactions")
@@ -867,7 +867,7 @@ Examples:
 
     elif args.command == "check-deps":
         # Check dependencies
-        from utils import format_dependency_status
+        from money_mapper.utils import format_dependency_status
 
         print("\n" + "=" * 60)
         print("Dependency Status Check")
@@ -904,7 +904,7 @@ Examples:
 
     elif args.command == "setup":
         # Run setup wizard manually
-        from setup_wizard import run_setup_wizard
+        from money_mapper.setup_wizard import run_setup_wizard
 
         config_dir = args.config if args.config else "config"
         print("\nRunning setup wizard...")
@@ -921,7 +921,7 @@ Examples:
         # Interactive mode
         print("\nWhat would you like to do?")
         print()
-        print("1. Extract transactions from PDFs")
+        print("1. Import transactions from CSV files")
         print("2. Categorize transactions")
         print("3. Extract & categorize (full process)")
         print("4. Review categorization results")
