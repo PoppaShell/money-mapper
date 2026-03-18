@@ -868,8 +868,8 @@ def try_similarity_prediction(
 
     try:
         from money_mapper.similarity_matcher import (
-            load_merchant_embeddings,
             find_similar_merchant,
+            load_merchant_embeddings,
         )
     except ImportError:
         return None

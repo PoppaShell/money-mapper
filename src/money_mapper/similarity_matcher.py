@@ -4,8 +4,9 @@ This module provides similarity-based merchant matching as Stage 3b of the ML pi
 Uses pre-computed sentence transformer embeddings for high-accuracy categorization.
 """
 
-import numpy as np
 from typing import Any
+
+import numpy as np
 
 
 def load_merchant_embeddings(vectors_file: str) -> tuple[dict[str, Any], np.ndarray]:

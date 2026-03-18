@@ -1,15 +1,15 @@
 """Tests for similarity-based merchant matching."""
 
-import pytest
-import numpy as np
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
+import numpy as np
 
 from money_mapper.similarity_matcher import (
-    load_merchant_embeddings,
-    embed_text,
     calculate_similarity,
+    embed_text,
     find_similar_merchant,
+    load_merchant_embeddings,
 )
 
 
