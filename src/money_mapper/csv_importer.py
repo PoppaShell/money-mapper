@@ -8,6 +8,7 @@ This module provides functionality to import transactions from various CSV forma
 
 import csv
 import os
+from pathlib import Path
 from typing import Any
 
 from money_mapper.utils import standardize_date
@@ -355,6 +356,35 @@ class CSVImporter:
         validator = CSVValidator()
         return validator.validate(csv_file_path)
 
+    def import_file(self, file_path: str) -> list[dict[str, Any]]:
+        """
+        Import transactions from file (auto-detects CSV, OFX, or QFX format).
+
+        Args:
+            file_path: Path to CSV, OFX, or QFX file
+
+        Returns:
+            List of standardized transaction dictionaries
+        """
+        if not os.path.exists(file_path):
+            if self.debug:
+                print(f"Error: File not found: {file_path}")
+            return []
+
+        # Determine file type by extension
+        ext = Path(file_path).suffix.lower()
+
+        if ext == ".csv":
+            return self.import_csv(file_path)
+        elif ext in [".ofx", ".qfx"]:
+            if self.debug:
+                print(f"Importing {ext.upper()} file: {file_path}")
+            return parse_ofx_file(file_path, self.debug)
+        else:
+            if self.debug:
+                print(f"Warning: Unsupported file type: {ext}")
+            return []
+
     def import_csv(self, csv_file_path: str, csv_type: str | None = None) -> list[dict[str, Any]]:
         """
         Import transactions from CSV file.
@@ -395,39 +425,112 @@ class CSVImporter:
 
     def import_directory(self, directory: str) -> list[dict[str, Any]]:
         """
-        Import transactions from all CSV files in a directory.
+        Import transactions from all CSV/OFX/QFX files in a directory.
 
         Args:
-            directory: Path to directory containing CSV files
+            directory: Path to directory containing financial files
 
         Returns:
-            List of standardized transaction dictionaries from all CSV files
+            List of standardized transaction dictionaries from all files
         """
         all_transactions: list[dict[str, Any]] = []
 
         if not os.path.exists(directory):
-            print(f"Error: Directory not found: {directory}")
+            if self.debug:
+                print(f"Error: Directory not found: {directory}")
             return []
 
         if not os.path.isdir(directory):
-            print(f"Error: Path is not a directory: {directory}")
+            if self.debug:
+                print(f"Error: Path is not a directory: {directory}")
             return []
 
-        # Find all CSV files in directory
-        csv_files = [f for f in os.listdir(directory) if f.lower().endswith(".csv")]
+        # Find all supported files (CSV, OFX, QFX)
+        supported_files = [
+            f for f in os.listdir(directory)
+            if f.lower().endswith((".csv", ".ofx", ".qfx"))
+        ]
 
-        if not csv_files:
+        if not supported_files:
             if self.debug:
-                print(f"Warning: No CSV files found in {directory}")
+                print(f"Warning: No CSV/OFX/QFX files found in {directory}")
             return []
 
-        # Import each CSV file
-        for csv_file in csv_files:
-            csv_path = os.path.join(directory, csv_file)
+        # Import each file
+        for file_name in supported_files:
+            file_path = os.path.join(directory, file_name)
             if self.debug:
-                print(f"Importing {csv_file}...")
+                print(f"Importing {file_name}...")
 
-            transactions = self.import_csv(csv_path)
+            transactions = self.import_file(file_path)
             all_transactions.extend(transactions)
 
         return all_transactions
+
+
+def parse_ofx_file(filepath: str, debug: bool = False) -> list[dict[str, Any]]:
+    """
+    Parse OFX/QFX file and convert to standardized transaction format.
+
+    Args:
+        filepath: Path to .ofx or .qfx file
+        debug: Enable debug output
+
+    Returns:
+        List of transaction dicts matching CSV format
+    """
+    try:
+        from ofxtools.Parser import OFXTree
+    except ImportError:
+        if debug:
+            print("Warning: ofxtools not installed, skipping OFX parsing")
+        return []
+
+    transactions: list[dict[str, Any]] = []
+
+    # Check if file is empty
+    if os.path.getsize(filepath) == 0:
+        return transactions
+
+    try:
+        with open(filepath, "rb") as f:
+            parser = OFXTree()
+            parser.parse(f)
+            ofx = parser.convert()
+
+            # Extract transactions from all accounts
+            if hasattr(ofx, "accounts"):
+                for account in ofx.accounts:
+                    if hasattr(account, "statements"):
+                        for stmt in account.statements:
+                            if hasattr(stmt, "transactions"):
+                                for txn in stmt.transactions:
+                                    # Extract date
+                                    try:
+                                        date_str = txn.dtposted.strftime("%Y-%m-%d")
+                                    except (AttributeError, TypeError):
+                                        date_str = standardize_date(str(txn.dtposted)) if hasattr(txn, "dtposted") else ""
+
+                                    # Extract amount (handle sign for debits/credits)
+                                    amount = float(txn.trnamt) if hasattr(txn, "trnamt") else 0.0
+
+                                    # Extract memo/description
+                                    memo = txn.memo if hasattr(txn, "memo") and txn.memo else ""
+
+                                    transactions.append({
+                                        "date": date_str,
+                                        "description": memo,
+                                        "amount": amount,
+                                        "type": txn.trntype if hasattr(txn, "trntype") else "",
+                                        "reference": txn.fitid if hasattr(txn, "fitid") and txn.fitid else "",
+                                    })
+
+        if debug:
+            print(f"  Parsed {len(transactions)} transactions from {filepath}")
+
+        return transactions
+
+    except Exception as e:
+        if debug:
+            print(f"  Error parsing OFX file: {e}")
+        return []
