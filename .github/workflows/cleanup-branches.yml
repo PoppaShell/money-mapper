@@ -21,22 +21,27 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Delete merged branches
+        shell: bash
         run: |
           echo "🧹 Cleaning up merged branches..."
           git fetch origin
 
           # Get all remote branches merged to main
-          branches=$(git branch -r --merged origin/main | grep -v "origin/main" | grep -v "origin/HEAD")
+          branches=$(git branch -r --merged origin/main | grep -v "origin/main" | grep -v "origin/HEAD" || true)
 
           if [ -z "$branches" ]; then
             echo "✅ No merged branches to clean up"
             exit 0
           fi
 
-          for branch in $branches; do
+          while IFS= read -r branch; do
             branch_name=$(echo "$branch" | sed 's|origin/||')
             echo "Deleting $branch_name..."
-            git push origin --delete "$branch_name" 2>/dev/null || echo "  (Already deleted or protected)"
-          done
+            if git push origin --delete "$branch_name" 2>/dev/null; then
+              echo "  ✓ Deleted"
+            else
+              echo "  (Already deleted or protected)"
+            fi
+          done <<< "$branches"
 
           echo "✅ Cleanup complete"
