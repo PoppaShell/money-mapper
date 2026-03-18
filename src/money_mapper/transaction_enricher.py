@@ -400,6 +400,7 @@ def enrich_transaction(
     plaid_categories: dict,
     fuzzy_threshold: float = 0.7,
     debug: bool = False,
+    ml_model: Any = None,
 ) -> dict:
     """
     Enrich a single transaction with category and merchant information.
@@ -411,6 +412,7 @@ def enrich_transaction(
         plaid_categories: Plaid category definitions
         fuzzy_threshold: Threshold for fuzzy matching
         debug: Enable debug output
+        ml_model: Pre-trained ML model for Stage 3a (optional)
 
     Returns:
         Enriched transaction dictionary
@@ -430,6 +432,12 @@ def enrich_transaction(
     category_result = find_merchant_mapping(
         description, private_mappings, public_mappings, plaid_categories, fuzzy_threshold, debug
     )
+
+    # Try ML prediction if mapping failed (Stage 3a)
+    if category_result.get("category") == "UNCATEGORIZED" and ml_model is not None:
+        ml_result = try_ml_prediction(enriched, plaid_categories, ml_model, debug)
+        if ml_result:
+            category_result = ml_result
 
     # Add categorization results
     enriched.update(category_result)
@@ -721,6 +729,93 @@ def apply_plaid_keyword_matching(
                 }
 
     return best_match
+
+
+def is_valid_plaid_category(category: str, subcategory: str, plaid_categories: dict) -> bool:
+    """
+    Validate that a category exists in the Plaid taxonomy.
+
+    Args:
+        category: Main category name
+        subcategory: Subcategory name (full key like "CATEGORY_SUBCATEGORY")
+        plaid_categories: Plaid category definitions
+
+    Returns:
+        True if category exists, False otherwise
+    """
+    # Check if subcategory exists as a key
+    if subcategory in plaid_categories:
+        return True
+
+    # Check if it follows the format CATEGORY_SUBCATEGORY
+    for key in plaid_categories.keys():
+        if key.lower() == subcategory.lower():
+            return True
+        if key.split(".")[0].lower() == category.lower():
+            return True
+
+    return False
+
+
+def try_ml_prediction(
+    transaction: dict,
+    plaid_categories: dict,
+    ml_model: Any = None,
+    debug: bool = False,
+) -> dict | None:
+    """
+    Try ML-based category prediction if mapping failed.
+
+    Stage 3a of categorization pipeline (after mappings, before uncategorized).
+
+    Args:
+        transaction: Transaction with merchant_name, amount, etc.
+        plaid_categories: Plaid categories for validation
+        ml_model: Pre-trained ML model (None skips ML)
+        debug: Enable debug output
+
+    Returns:
+        Categorization result dict with confidence, or None if ML unavailable/low confidence
+    """
+    if ml_model is None:
+        return None
+
+    try:
+        from money_mapper.ml_categorizer import predict_category
+    except ImportError:
+        return None
+
+    category, subcategory = predict_category(ml_model, transaction)
+
+    if category == "UNKNOWN":
+        return None
+
+    # Validate category exists in Plaid taxonomy
+    if not is_valid_plaid_category(category, subcategory, plaid_categories):
+        if debug:
+            print(f"    ML predicted invalid category: {category}/{subcategory}")
+        return None
+
+    # Calculate confidence (simple heuristic for now)
+    confidence = 0.65  # Fixed confidence for ML predictions
+
+    if confidence < 0.5:
+        if debug:
+            print(f"    ML confidence too low: {confidence}")
+        return None
+
+    if debug:
+        print(f"    ML prediction: {category}/{subcategory} (confidence: {confidence})")
+
+    return create_mapping_result(
+        mapping_data={
+            "name": transaction.get("merchant_name", ""),
+            "category": category,
+            "subcategory": subcategory,
+        },
+        method="ml_prediction",
+        confidence=confidence,
+    )
 
 
 def fuzzy_match_similarity(text1: str, text2: str) -> float:
