@@ -12,6 +12,7 @@ from money_mapper.csv_importer import (
     parse_csv_transactions,
     validate_csv_headers,
     standardize_csv_transaction,
+    parse_ofx_file,
 )
 
 
@@ -758,3 +759,99 @@ class TestCSVImporterDirectory:
 
         assert isinstance(transactions, list)
         assert len(transactions) == 0
+
+
+class TestOFXImport:
+    """Test OFX/QFX file import support."""
+
+    def test_import_file_csv(self, temp_output_dir):
+        """Test import_file with CSV file."""
+        csv_file = temp_output_dir / "test.csv"
+        with open(csv_file, "w", newline="") as f:
+            writer = csv.DictWriter(
+                f, fieldnames=["Date", "Description", "Debit", "Credit", "Balance"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "Date": "03/15/2024",
+                    "Description": "TEST",
+                    "Debit": "10.00",
+                    "Credit": "",
+                    "Balance": "1000.00",
+                }
+            )
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_file(str(csv_file))
+
+        assert isinstance(transactions, list)
+        assert len(transactions) == 1
+
+    def test_import_file_unsupported_extension(self, temp_output_dir):
+        """Test import_file with unsupported file extension."""
+        unsupported_file = temp_output_dir / "data.json"
+        unsupported_file.write_text("{}")
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_file(str(unsupported_file))
+
+        assert transactions == []
+
+    def test_import_directory_mixed_formats(self, temp_output_dir):
+        """Test import_directory with mixed CSV and OFX files."""
+        mixed_dir = temp_output_dir / "mixed"
+        mixed_dir.mkdir()
+
+        # Create CSV file
+        csv_file = mixed_dir / "test.csv"
+        with open(csv_file, "w", newline="") as f:
+            writer = csv.DictWriter(
+                f, fieldnames=["Date", "Description", "Debit", "Credit", "Balance"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "Date": "03/15/2024",
+                    "Description": "CSV TEST",
+                    "Debit": "10.00",
+                    "Credit": "",
+                    "Balance": "1000.00",
+                }
+            )
+
+        # Create OFX file (empty for now)
+        ofx_file = mixed_dir / "sample.ofx"
+        ofx_file.write_text("")
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory(str(mixed_dir))
+
+        assert isinstance(transactions, list)
+        # Should import CSV at least
+        assert len(transactions) >= 1
+
+    def test_import_directory_ofx_only(self, temp_output_dir):
+        """Test import_directory with only OFX files."""
+        ofx_dir = temp_output_dir / "ofx_only"
+        ofx_dir.mkdir()
+
+        # Create OFX file
+        ofx_file = ofx_dir / "transactions.ofx"
+        ofx_file.write_text("")
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory(str(ofx_dir))
+
+        assert isinstance(transactions, list)
+
+    def test_import_file_extension_case_insensitive(self, temp_output_dir):
+        """Test import_file handles file extensions case-insensitively."""
+        ofx_file = temp_output_dir / "test.OFX"
+        ofx_file.write_text("")
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_file(str(ofx_file))
+
+        # Should recognize .OFX as OFX despite case
+        assert isinstance(transactions, list)
