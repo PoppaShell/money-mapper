@@ -829,6 +829,65 @@ python src/cli.py analyze --help
 - **Pattern Pre-compilation** (Issue #29): PatternMatcher class caches compiled regex patterns
 - **Similarity Caching** (Issue #31): Mapping consolidation caches similarity scores
 
+## Development
+
+### Branch Cleanup
+
+To keep the repository clean, merged branches are deleted through:
+
+1. **GitHub Auto-Delete** (primary): Enabled in repository Settings
+2. **Manual Cleanup Script**: Run on-demand with `poe cleanup-branches`
+
+See [docs/BRANCH_CLEANUP_WORKFLOW.md](./docs/BRANCH_CLEANUP_WORKFLOW.md) for detailed configuration and troubleshooting.
+
+### Running Tests
+
+```bash
+# Run all tests with coverage
+pytest
+
+# Run specific test class
+pytest tests/test_transaction_enricher.py::TestMLIntegration
+
+# Run with verbose output
+pytest -v
+
+# Run without coverage report
+pytest --no-cov
+```
+
+### Code Quality
+
+```bash
+# Lint code with ruff
+ruff check src/
+
+# Format code
+ruff format src/ tests/
+
+# Type check with mypy
+mypy src/
+
+# Security check with bandit
+bandit -r src/
+
+# Audit dependencies
+pip-audit
+
+# All checks (local pre-commit)
+pre-commit run --all-files
+```
+
+### Development Workflow
+
+1. Create a feature branch: `git checkout -b feature/your-feature`
+2. Make changes and add tests
+3. Run: `pytest`, `ruff check`, `mypy`, `bandit`
+4. Push to remote: `git push -u origin feature/your-feature`
+5. Create a Pull Request
+6. GitHub Actions will validate all checks
+7. After merge, branch is automatically deleted
+
 ## Contributing
 
 Contributions welcome! Please:
@@ -838,6 +897,7 @@ Contributions welcome! Please:
 3. **Test with various statement formats** before submitting
 4. **Update documentation** for new features
 5. **Maintain backwards compatibility** when possible
+6. **Run tests locally** before pushing (see Development section above)
 
 ## License
 
