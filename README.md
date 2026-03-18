@@ -833,11 +833,10 @@ python src/cli.py analyze --help
 
 ### Branch Cleanup
 
-To keep the repository clean, merged branches are automatically deleted through:
+To keep the repository clean, merged branches are deleted through:
 
 1. **GitHub Auto-Delete** (primary): Enabled in repository Settings
-2. **Weekly Cleanup Workflow**: Runs automatically every Sunday
-3. **Manual Cleanup Script**: Run on-demand with `poe cleanup-branches` (bash) or `scripts/cleanup-branches.bat` (Windows)
+2. **Manual Cleanup Script**: Run on-demand with `poe cleanup-branches`
 
 See [docs/BRANCH_CLEANUP_WORKFLOW.md](./docs/BRANCH_CLEANUP_WORKFLOW.md) for detailed configuration and troubleshooting.
 

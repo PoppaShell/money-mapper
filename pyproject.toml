@@ -93,4 +93,4 @@ exclude_lines = [
 ]
 
 [tool.poe.tasks]
-cleanup-branches = { shell = "bash scripts/cleanup-branches.sh", help = "Delete merged branches locally and remotely" }
+cleanup-branches = "bash scripts/cleanup-branches.sh"
