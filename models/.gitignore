@@ -1,0 +1,9 @@
+# Private models - do not commit
+private_*.pkl
+private_*.npy
+*.pkl.bak
+*.npy.bak
+
+# Temporary files
+*.tmp
+*.temp
