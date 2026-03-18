@@ -576,3 +576,185 @@ class TestCSVEdgeCases:
         
         transactions = parse_csv_transactions(str(csv_file))
         assert isinstance(transactions, list)
+
+
+class TestCSVImporterDirectory:
+    """Test CSVImporter directory import functionality."""
+
+    def test_import_directory_initialization(self):
+        """Test CSVImporter initialization with debug parameter."""
+        importer = CSVImporter(debug=True)
+        assert importer is not None
+        assert importer.debug is True
+
+        importer_no_debug = CSVImporter(debug=False)
+        assert importer_no_debug.debug is False
+
+    def test_import_directory_empty_directory(self, temp_output_dir):
+        """Test import_directory with empty directory."""
+        empty_dir = temp_output_dir / "empty"
+        empty_dir.mkdir(exist_ok=True)
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory(str(empty_dir))
+
+        assert isinstance(transactions, list)
+        assert len(transactions) == 0
+
+    def test_import_directory_nonexistent(self):
+        """Test import_directory with nonexistent directory."""
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory("/nonexistent/directory/path")
+
+        assert isinstance(transactions, list)
+        assert len(transactions) == 0
+
+    def test_import_directory_single_csv(self, temp_output_dir):
+        """Test import_directory with single CSV file."""
+        csv_dir = temp_output_dir / "csvs"
+        csv_dir.mkdir(exist_ok=True)
+
+        csv_file = csv_dir / "checking.csv"
+        with open(csv_file, "w", newline="") as f:
+            writer = csv.DictWriter(
+                f, fieldnames=["Date", "Description", "Debit", "Credit", "Balance"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "Date": "03/15/2024",
+                    "Description": "STARBUCKS",
+                    "Debit": "5.50",
+                    "Credit": "",
+                    "Balance": "1000.00",
+                }
+            )
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory(str(csv_dir))
+
+        assert isinstance(transactions, list)
+
+    def test_import_directory_multiple_csv_files(self, temp_output_dir):
+        """Test import_directory with multiple CSV files."""
+        csv_dir = temp_output_dir / "csvs"
+        csv_dir.mkdir(exist_ok=True)
+
+        # Create checking CSV
+        checking_file = csv_dir / "checking.csv"
+        with open(checking_file, "w", newline="") as f:
+            writer = csv.DictWriter(
+                f, fieldnames=["Date", "Description", "Debit", "Credit", "Balance"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "Date": "03/15/2024",
+                    "Description": "STORE",
+                    "Debit": "25.00",
+                    "Credit": "",
+                    "Balance": "1000.00",
+                }
+            )
+
+        # Create credit CSV
+        credit_file = csv_dir / "credit.csv"
+        with open(credit_file, "w", newline="") as f:
+            writer = csv.DictWriter(
+                f, fieldnames=["Transaction Date", "Description", "Amount", "Balance"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "Transaction Date": "03/16/2024",
+                    "Description": "RESTAURANT",
+                    "Amount": "-50.00",
+                    "Balance": "500.00",
+                }
+            )
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory(str(csv_dir))
+
+        assert isinstance(transactions, list)
+
+    def test_import_directory_mixed_file_types(self, temp_output_dir):
+        """Test import_directory ignores non-CSV files."""
+        csv_dir = temp_output_dir / "csvs"
+        csv_dir.mkdir(exist_ok=True)
+
+        # Create CSV
+        csv_file = csv_dir / "checking.csv"
+        with open(csv_file, "w", newline="") as f:
+            writer = csv.DictWriter(
+                f, fieldnames=["Date", "Description", "Debit", "Credit", "Balance"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "Date": "03/15/2024",
+                    "Description": "TEST",
+                    "Debit": "10.00",
+                    "Credit": "",
+                    "Balance": "1000.00",
+                }
+            )
+
+        # Create non-CSV files (should be ignored)
+        (csv_dir / "notes.txt").write_text("some notes")
+        (csv_dir / "data.json").write_text("{}")
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory(str(csv_dir))
+
+        assert isinstance(transactions, list)
+
+    def test_import_directory_with_debug(self, temp_output_dir, capsys):
+        """Test import_directory with debug output."""
+        csv_dir = temp_output_dir / "csvs"
+        csv_dir.mkdir(exist_ok=True)
+
+        csv_file = csv_dir / "checking.csv"
+        with open(csv_file, "w", newline="") as f:
+            writer = csv.DictWriter(
+                f, fieldnames=["Date", "Description", "Debit", "Credit", "Balance"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "Date": "03/15/2024",
+                    "Description": "TEST",
+                    "Debit": "10.00",
+                    "Credit": "",
+                    "Balance": "1000.00",
+                }
+            )
+
+        importer = CSVImporter(debug=True)
+        transactions = importer.import_directory(str(csv_dir))
+
+        assert isinstance(transactions, list)
+
+    def test_import_directory_file_not_directory(self, temp_output_dir):
+        """Test import_directory with file path instead of directory."""
+        csv_file = temp_output_dir / "file.csv"
+        with open(csv_file, "w", newline="") as f:
+            writer = csv.DictWriter(
+                f, fieldnames=["Date", "Description", "Debit", "Credit", "Balance"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "Date": "03/15/2024",
+                    "Description": "TEST",
+                    "Debit": "10.00",
+                    "Credit": "",
+                    "Balance": "1000.00",
+                }
+            )
+
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory(str(csv_file))
+
+        assert isinstance(transactions, list)
+        assert len(transactions) == 0
