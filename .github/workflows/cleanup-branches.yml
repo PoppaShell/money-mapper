@@ -1,0 +1,42 @@
+name: Cleanup Stale Branches
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Delete merged branches
+        run: |
+          echo "🧹 Cleaning up merged branches..."
+          git fetch origin
+
+          # Get all remote branches merged to main
+          branches=$(git branch -r --merged origin/main | grep -v "origin/main" | grep -v "origin/HEAD")
+
+          if [ -z "$branches" ]; then
+            echo "✅ No merged branches to clean up"
+            exit 0
+          fi
+
+          for branch in $branches; do
+            branch_name=$(echo "$branch" | sed 's|origin/||')
+            echo "Deleting $branch_name..."
+            git push origin --delete "$branch_name" 2>/dev/null || echo "  (Already deleted or protected)"
+          done
+
+          echo "✅ Cleanup complete"
