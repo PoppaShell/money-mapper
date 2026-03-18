@@ -4,11 +4,10 @@ This document explains how branch cleanup is automated and configured in this re
 
 ## Overview
 
-Merged branches are automatically cleaned up through multiple mechanisms:
+Merged branches are cleaned up through:
 
 1. **GitHub Auto-Delete** - Primary mechanism (enabled in Settings)
-2. **GitHub Actions Workflow** - Weekly safety net for stragglers
-3. **Manual Cleanup Script** - On-demand cleanup when needed
+2. **Manual Cleanup Script** - On-demand cleanup when needed
 
 ## 1. GitHub Auto-Delete (Primary)
 
@@ -36,37 +35,7 @@ gh api repos/{owner}/{repo} --jq '.delete_branch_on_merge'
 
 Should return `true`.
 
-## 2. GitHub Actions Workflow (Weekly)
-
-### Purpose
-
-Catches merged branches that weren't auto-deleted (e.g., from old PRs before auto-delete was enabled).
-
-### Configuration
-
-File: `.github/workflows/cleanup-branches.yml`
-
-- **Trigger**: Runs weekly on Sundays at midnight UTC
-- **Manual trigger**: Can be run manually from Actions tab
-- **Permissions**: Requires `contents: write` to delete branches
-
-### How It Works
-
-1. Fetches all branches from remote
-2. Identifies branches merged to `main`
-3. Deletes them from remote
-4. Logs results for audit trail
-
-### Running Manually
-
-```bash
-gh workflow run cleanup-branches.yml
-```
-
-Or via GitHub UI:
-- Settings → Actions → Workflows → "Cleanup Stale Branches" → Run workflow
-
-## 3. Manual Cleanup Script
+## 2. Manual Cleanup Script
 
 ### Purpose
 
@@ -112,7 +81,7 @@ poe cleanup-branches
 
 1. **Ensure auto-delete is enabled** in Settings (check on first setup)
 2. **Use "Delete branch" option** when GitHub prompts after merge
-3. **Run cleanup manually** periodically:
+3. **Run cleanup manually** before starting new work:
    ```bash
    poe cleanup-branches
    ```
@@ -120,9 +89,8 @@ poe cleanup-branches
 ### For Repository Maintainers
 
 1. **Verify auto-delete is enabled** when onboarding
-2. **Monitor cleanup workflow** in Actions for failures
-3. **Document this workflow** in contributor guide
-4. **Review branch protection rules** to ensure they don't prevent cleanup
+2. **Document this workflow** in contributor guide
+3. **Review branch protection rules** to ensure they don't prevent cleanup
 
 ## Protected Branches
 
@@ -137,15 +105,6 @@ gh api repos/{owner}/{repo}/branches/main/protection
 ```
 
 ## Troubleshooting
-
-### Cleanup workflow fails silently
-
-This is expected - it continues even if individual branches fail to delete (e.g., if already deleted).
-
-Check the workflow run logs:
-```bash
-gh workflow view cleanup-branches.yml --json runs -q '.[0]'
-```
 
 ### Branches not deleted after merge
 
@@ -169,36 +128,20 @@ git pull origin main
 poe cleanup-branches
 ```
 
-## Configuration Changes
-
-### Changing Schedule
-
-Edit `.github/workflows/cleanup-branches.yml`:
-
-```yaml
-on:
-  schedule:
-    - cron: '0 0 * * 0'  # Change this cron expression
-```
-
-Cron format: `minute hour day-of-month month day-of-week`
-
-Examples:
-- `'0 0 * * 0'` - Weekly (Sunday midnight UTC)
-- `'0 0 * * *'` - Daily (midnight UTC)
-- `'0 2 * * 1'` - Mondays at 2 AM UTC
+## Customization
 
 ### Excluding Branches
 
-Edit `.github/workflows/cleanup-branches.yml` to add exclusions:
+Edit `scripts/cleanup-branches.sh` or `scripts/cleanup-branches.bat` to add exclusions:
 
-```yaml
-# Add after "grep -v "origin/HEAD"" line
+For example, to exclude a branch from deletion:
+
+```bash
+# In cleanup-branches.sh, modify the grep to exclude
 branches=$(git branch -r --merged origin/main | grep -v "origin/main" | grep -v "origin/HEAD" | grep -v "origin/keep-this-branch")
 ```
 
 ## Related Documentation
 
 - [Git Workflow](./GIT_WORKFLOW.md) - PR and branching strategy
-- [GitHub Actions](https://docs.github.com/en/actions) - CI/CD configuration
 - [GitHub Branch Protection](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches) - Protection rules
