@@ -296,18 +296,18 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
 
     if not os.path.exists(statements_dir):
         print(f"No statements directory found at: {statements_dir}")
-        print("Create the directory and add PDF statements to get started.")
+        print("Create the directory and add CSV files to get started.")
         return stats
 
-    # Check for PDF files
-    pdf_files = [f for f in os.listdir(statements_dir) if f.lower().endswith(".pdf")]
+    # Check for CSV files
+    csv_files = [f for f in os.listdir(statements_dir) if f.lower().endswith(".csv")]
 
-    if not pdf_files:
-        print(f"No PDF files found in: {statements_dir}")
-        print("Add PDF statements to that directory to get started.")
+    if not csv_files:
+        print(f"No CSV files found in: {statements_dir}")
+        print("Add CSV files to that directory to get started.")
         return stats
 
-    print(f"Found {len(pdf_files)} PDF file(s) in {statements_dir}")
+    print(f"Found {len(csv_files)} CSV file(s) in {statements_dir}")
     print()
 
     if not prompt_yes_no("Would you like to parse these statements now?", default=True):
@@ -324,19 +324,20 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
     try:
         # Step 1: Parse statements
         print("\n" + "-" * 60)
-        print("Parsing Statements")
+        print("Importing Transactions")
         print("-" * 60)
-        print(f"Parsing statements from '{statements_dir}' directory...")
+        print(f"Importing transactions from '{statements_dir}' directory...")
 
-        from statement_parser import process_pdf_statements
-        from utils import save_transactions_to_json
+        from money_mapper.csv_importer import CSVImporter
+        from money_mapper.utils import save_transactions_to_json
 
-        transactions = process_pdf_statements(statements_dir, debug=False)
+        importer = CSVImporter(debug=False)
+        transactions = importer.import_directory(statements_dir)
 
         if not transactions:
-            print("\n✗ No transactions found in PDF files")
+            print("\n✗ No transactions found in CSV files")
             print("You can try again later with:")
-            print("  python src/cli.py parse --dir statements")
+            print("  money-mapper parse --dir statements")
             return stats
 
         # Save transactions
@@ -346,7 +347,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         stats["num_transactions"] = num_transactions
 
         print(
-            f"✓ Successfully parsed {num_transactions} transaction(s) from {len(pdf_files)} file(s)"
+            f"✓ Successfully imported {num_transactions} transaction(s) from {len(csv_files)} file(s)"
         )
         print(f"  Output: {parsed_file}")
 
@@ -434,12 +435,12 @@ def display_setup_complete(
     # Show next steps
     print("Next steps:")
     if not stats or stats.get("num_transactions", 0) == 0:
-        print("  1. Add PDF statements to 'statements/' directory")
-        print("  2. Run: python src/cli.py")
+        print("  1. Add CSV files to 'statements/' directory")
+        print("  2. Run: money-mapper")
         print("  3. Choose option 3 for complete processing pipeline")
     else:
-        print("  1. Add new statements to 'statements/' directory")
-        print("  2. Run: python src/cli.py")
+        print("  1. Add new CSV files to 'statements/' directory")
+        print("  2. Run: money-mapper")
         print("  3. Choose option 3 to process new statements")
 
     print()
