@@ -447,8 +447,7 @@ class CSVImporter:
 
         # Find all supported files (CSV, OFX, QFX)
         supported_files = [
-            f for f in os.listdir(directory)
-            if f.lower().endswith((".csv", ".ofx", ".qfx"))
+            f for f in os.listdir(directory) if f.lower().endswith((".csv", ".ofx", ".qfx"))
         ]
 
         if not supported_files:
@@ -509,7 +508,11 @@ def parse_ofx_file(filepath: str, debug: bool = False) -> list[dict[str, Any]]:
                                     try:
                                         date_str = txn.dtposted.strftime("%Y-%m-%d")
                                     except (AttributeError, TypeError):
-                                        date_str = standardize_date(str(txn.dtposted)) if hasattr(txn, "dtposted") else ""
+                                        date_str = (
+                                            standardize_date(str(txn.dtposted))
+                                            if hasattr(txn, "dtposted")
+                                            else ""
+                                        )
 
                                     # Extract amount (handle sign for debits/credits)
                                     amount = float(txn.trnamt) if hasattr(txn, "trnamt") else 0.0
@@ -517,13 +520,17 @@ def parse_ofx_file(filepath: str, debug: bool = False) -> list[dict[str, Any]]:
                                     # Extract memo/description
                                     memo = txn.memo if hasattr(txn, "memo") and txn.memo else ""
 
-                                    transactions.append({
-                                        "date": date_str,
-                                        "description": memo,
-                                        "amount": amount,
-                                        "type": txn.trntype if hasattr(txn, "trntype") else "",
-                                        "reference": txn.fitid if hasattr(txn, "fitid") and txn.fitid else "",
-                                    })
+                                    transactions.append(
+                                        {
+                                            "date": date_str,
+                                            "description": memo,
+                                            "amount": amount,
+                                            "type": txn.trntype if hasattr(txn, "trntype") else "",
+                                            "reference": txn.fitid
+                                            if hasattr(txn, "fitid") and txn.fitid
+                                            else "",
+                                        }
+                                    )
 
         if debug:
             print(f"  Parsed {len(transactions)} transactions from {filepath}")
