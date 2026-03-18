@@ -335,7 +335,7 @@ class CSVImporter:
 
     def __init__(self, debug: bool = False):
         """Initialize CSV importer.
-        
+
         Args:
             debug: Enable debug output (default: False)
         """
