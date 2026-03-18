@@ -3,7 +3,7 @@ name: Cleanup Stale Branches
 on:
   schedule:
     - cron: '0 0 * * 0'
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   cleanup:
@@ -21,27 +21,17 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Delete merged branches
-        shell: bash
         run: |
-          echo "🧹 Cleaning up merged branches..."
+          echo "Cleaning up merged branches..."
           git fetch origin
-
-          # Get all remote branches merged to main
           branches=$(git branch -r --merged origin/main | grep -v "origin/main" | grep -v "origin/HEAD" || true)
-
           if [ -z "$branches" ]; then
-            echo "✅ No merged branches to clean up"
+            echo "No merged branches to clean up"
             exit 0
           fi
-
           while IFS= read -r branch; do
             branch_name=$(echo "$branch" | sed 's|origin/||')
             echo "Deleting $branch_name..."
-            if git push origin --delete "$branch_name" 2>/dev/null; then
-              echo "  ✓ Deleted"
-            else
-              echo "  (Already deleted or protected)"
-            fi
+            git push origin --delete "$branch_name" 2>/dev/null || true
           done <<< "$branches"
-
-          echo "✅ Cleanup complete"
+          echo "Cleanup complete"
