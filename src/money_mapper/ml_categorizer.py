@@ -516,7 +516,7 @@ def get_model_stats(model_file: str) -> dict[str, Any] | None:
             return None
 
         with open(model_path, "rb") as f:
-            model_data = pickle.load(f)  # nosec: loading trusted model file
+            model_data: Any = pickle.load(f)  # nosec: loading trusted model file
 
         if isinstance(model_data, dict) and "stats" in model_data:
             stats = model_data["stats"]
