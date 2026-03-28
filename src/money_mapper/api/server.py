@@ -9,7 +9,6 @@ Provides 5 main pages:
 """
 
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import HTMLResponse
@@ -60,9 +59,9 @@ def create_app() -> FastAPI:
     # ===== Transactions Route =====
     @app.get("/transactions", response_class=HTMLResponse)
     async def transactions_list(
-        date: Optional[str] = None,
-        category: Optional[str] = None,
-        merchant: Optional[str] = None,
+        date: str | None = None,
+        category: str | None = None,
+        merchant: str | None = None,
     ) -> HTMLResponse:
         """List transactions with optional filtering.
 
@@ -99,7 +98,7 @@ def create_app() -> FastAPI:
 
     @app.post("/transactions/{transaction_id}", response_class=HTMLResponse)
     async def update_transaction(
-        transaction_id: int, category: Optional[str] = None
+        transaction_id: int, category: str | None = None
     ) -> HTMLResponse:
         """Update transaction category.
 
@@ -226,7 +225,7 @@ def create_app() -> FastAPI:
         return HTMLResponse(template.render(**data))
 
     @app.post("/settings", response_class=HTMLResponse)
-    async def update_settings(body: Optional[str] = None) -> HTMLResponse:
+    async def update_settings(body: str | None = None) -> HTMLResponse:
         """Update settings.
 
         Args:
