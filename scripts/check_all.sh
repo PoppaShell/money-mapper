@@ -78,8 +78,9 @@ echo ""
 
 # 7. Coverage check
 echo "${YELLOW}7️⃣  Checking test coverage...${NC}"
-if python -m pytest tests/ --cov=src/money_mapper --cov-report=term-missing; then
-    echo "${GREEN}✓ Coverage report generated${NC}"
+mkdir -p .local/reports/htmlcov
+if python -m pytest tests/ --cov=src/money_mapper --cov-report=term-missing --cov-report=html:.local/reports/htmlcov --cov-report=xml:.local/reports/coverage.xml; then
+    echo "${GREEN}✓ Coverage report generated at: .local/reports/htmlcov/index.html${NC}"
 else
     echo "${RED}✗ Coverage check failed${NC}"
     failed=1

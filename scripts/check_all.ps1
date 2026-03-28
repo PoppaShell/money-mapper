@@ -84,8 +84,9 @@ Write-Host ""
 
 # 7. Coverage check
 Write-Host "7️⃣  Checking test coverage..." -ForegroundColor Yellow
-if (python -m pytest tests/ --cov=src/money_mapper --cov-report=term-missing 2>&1) {
-    Write-Host "✓ Coverage report generated" -ForegroundColor Green
+New-Item -ItemType Directory -Force -Path ".local/reports/htmlcov" | Out-Null
+if (python -m pytest tests/ --cov=src/money_mapper --cov-report=term-missing --cov-report=html:.local/reports/htmlcov --cov-report=xml:.local/reports/coverage.xml 2>&1) {
+    Write-Host "✓ Coverage report generated at: .local/reports/htmlcov/index.html" -ForegroundColor Green
     $checks += "coverage: PASS"
 } else {
     Write-Host "✗ Coverage check failed" -ForegroundColor Red

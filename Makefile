@@ -62,9 +62,10 @@ test:
 
 coverage:
 	@echo "📊 Running tests with coverage..."
-	python -m pytest tests/ --cov=src/money_mapper --cov-report=term-missing --cov-report=html
+	mkdir -p .local/reports/htmlcov
+	python -m pytest tests/ --cov=src/money_mapper --cov-report=term-missing --cov-report=html:.local/reports/htmlcov --cov-report=xml:.local/reports/coverage.xml
 	@echo ""
-	@echo "📊 Coverage report generated at: htmlcov/index.html"
+	@echo "📊 Coverage report generated at: .local/reports/htmlcov/index.html"
 
 # Comprehensive check (matches all CI checks)
 check-all: lint format type-check security test coverage

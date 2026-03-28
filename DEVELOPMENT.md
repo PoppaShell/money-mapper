@@ -55,6 +55,24 @@ This runs all CI checks locally:
 
 ---
 
+## Local Directory Structure
+
+All temporary files stay in `.local/` directory:
+
+```
+.local/
+├── cache/      # Python/tool caches (auto-generated)
+├── sessions/   # Session summaries (personal notes)
+├── reports/    # Coverage & test reports (temporary)
+└── notes/      # Development notes (never public)
+```
+
+**Key Point:** Everything in `.local/` is ignored by git. It's safe to commit changes to this directory - git will silently ignore it.
+
+See `.local/README.md` for details.
+
+---
+
 ## Understanding Each Check
 
 ### 🔍 **Ruff (Linting & Formatting)**
