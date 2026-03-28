@@ -294,9 +294,7 @@ class TestEndToEndFlow:
     @patch("money_mapper.community_flow.create_contribution_branch")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     @patch("money_mapper.community_flow.audit_merchant_name")
-    def test_full_workflow_happy_path(
-        self, mock_audit, mock_gh, mock_branch, mock_pr
-    ):
+    def test_full_workflow_happy_path(self, mock_audit, mock_gh, mock_branch, mock_pr):
         """Complete flow from validation to PR creation should work."""
         mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
         mock_gh.return_value = True
@@ -330,9 +328,7 @@ class TestEndToEndFlow:
     @patch("money_mapper.community_flow.create_contribution_branch")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     @patch("money_mapper.community_flow.audit_merchant_name")
-    def test_workflow_creates_feature_branch(
-        self, mock_audit, mock_gh, mock_branch, mock_pr
-    ):
+    def test_workflow_creates_feature_branch(self, mock_audit, mock_gh, mock_branch, mock_pr):
         """Workflow should create feature branch with proper name."""
         mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
         mock_gh.return_value = True
@@ -345,9 +341,7 @@ class TestEndToEndFlow:
     @patch("money_mapper.community_flow.create_contribution_branch")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     @patch("money_mapper.community_flow.audit_merchant_name")
-    def test_workflow_generates_proper_pr(
-        self, mock_audit, mock_gh, mock_branch, mock_pr
-    ):
+    def test_workflow_generates_proper_pr(self, mock_audit, mock_gh, mock_branch, mock_pr):
         """Final PR should have all required information."""
         mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
         mock_gh.return_value = True

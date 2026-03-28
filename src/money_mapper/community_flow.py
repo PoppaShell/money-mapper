@@ -50,7 +50,7 @@ def validate_merchant_for_community(merchant_name: str) -> dict[str, Any]:
     audit_result = audit_merchant_name(merchant_name)
     score = audit_result.get("score", 0)
     findings = audit_result.get("findings", [])
-    issues = [f['reason'] for f in findings] if findings else []
+    issues = [f["reason"] for f in findings] if findings else []
 
     passed = score < 30
 
@@ -61,9 +61,7 @@ def validate_merchant_for_community(merchant_name: str) -> dict[str, Any]:
     }
 
 
-def format_mapping_entry(
-    merchant: str, category: str, source: str
-) -> str:
+def format_mapping_entry(merchant: str, category: str, source: str) -> str:
     """Format a merchant mapping as a TOML entry.
 
     Args:
@@ -78,16 +76,11 @@ def format_mapping_entry(
     escaped_merchant = merchant.replace('"', '\\"')
     escaped_source = source.replace('"', '\\"')
 
-    entry = (
-        f'"{escaped_merchant}" = '
-        f'{{ category = "{category}", source = "{escaped_source}" }}'
-    )
+    entry = f'"{escaped_merchant}" = {{ category = "{category}", source = "{escaped_source}" }}'
     return entry
 
 
-def generate_pr_template(
-    merchant: str, category: str, source: str
-) -> dict[str, str]:
+def generate_pr_template(merchant: str, category: str, source: str) -> dict[str, str]:
     """Generate a GitHub PR template for the merchant contribution.
 
     Args:
@@ -200,9 +193,7 @@ def create_community_pr(template: dict[str, str]) -> str | None:
         return None
 
 
-def submit_community_contribution(
-    merchant: str, category: str, source: str
-) -> dict[str, Any]:
+def submit_community_contribution(merchant: str, category: str, source: str) -> dict[str, Any]:
     """Complete community contribution workflow.
 
     Validates merchant, creates branch, generates PR template, and submits PR.
