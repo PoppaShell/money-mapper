@@ -587,6 +587,14 @@ Examples:
     # Check dependencies command
     subparsers.add_parser("check-deps", help="Check required dependencies")
 
+    # Web interface command
+    web_parser = subparsers.add_parser("web", help="Launch web interface")
+    web_parser.add_argument(
+        "--host", default="localhost", help="Host to bind to (default: localhost)"
+    )
+    web_parser.add_argument("--port", default="8000", help="Port to bind to (default: 8000)")
+    web_parser.add_argument("--no-browser", action="store_true", help="Don't auto-open web browser")
+
     args = parser.parse_args()
 
     # Print banner first
@@ -916,6 +924,12 @@ Examples:
         else:
             print("\nSetup wizard was not completed.")
             sys.exit(1)
+
+    elif args.command == "web":
+        # Launch web interface
+        from money_mapper.web_command import web_command
+
+        sys.exit(web_command(args))
 
     else:
         # Interactive mode
