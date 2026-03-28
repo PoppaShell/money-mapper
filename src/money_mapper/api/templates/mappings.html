@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Mappings - Money Mapper{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="info">
+    <strong>Mappings:</strong> Manage merchant-to-category mappings
+</div>
+
+{% if privacy_warnings %}
+    <div class="warning">
+        <strong>Privacy Warnings:</strong>
+        <ul>
+            {% for warning in privacy_warnings %}
+                <li>{{ warning }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<h2>Create New Mapping</h2>
+<form method="post">
+    <input type="text" name="merchant" placeholder="Merchant name" required>
+    <input type="text" name="category" placeholder="Category" required>
+    <input type="text" name="source" placeholder="Source (transaction/manual)" required>
+    <button type="submit">Create Mapping</button>
+</form>
+
+<h2>Public Mappings</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Merchant</th>
+            <th>Category</th>
+            <th>Uses</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for mapping in public_mappings %}
+            <tr>
+                <td>{{ mapping.merchant }}</td>
+                <td>{{ mapping.category }}</td>
+                <td>
+                    <a href="#">View</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">No public mappings</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Private Mappings</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Merchant</th>
+            <th>Category</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for mapping in private_mappings %}
+            <tr>
+                <td>{{ mapping.merchant }}</td>
+                <td>{{ mapping.category }}</td>
+                <td>
+                    <a href="#">Edit</a> | <a href="#">Delete</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">No private mappings</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Contribution Opportunities</h2>
+<p><a href="#">Analyze opportunities →</a> to contribute new public mappings</p>
+{% endblock %}
