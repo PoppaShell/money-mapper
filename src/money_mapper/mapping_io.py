@@ -9,11 +9,11 @@ Handles all file I/O operations for mapping files including:
 
 import json
 import shutil
+import tomllib
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import tomllib
 import toml
 
 
@@ -65,7 +65,7 @@ def load_private_mappings(mapping_file: str | None = None) -> list[Any] | dict[s
         if not file_path.exists():
             return None
 
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             content = f.read()
             if not content.strip():
                 return None
