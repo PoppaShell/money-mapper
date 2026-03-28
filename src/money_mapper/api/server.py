@@ -97,9 +97,7 @@ def create_app() -> FastAPI:
         return HTMLResponse(template.render(**data))
 
     @app.post("/transactions/{transaction_id}", response_class=HTMLResponse)
-    async def update_transaction(
-        transaction_id: int, category: str | None = None
-    ) -> HTMLResponse:
+    async def update_transaction(transaction_id: int, category: str | None = None) -> HTMLResponse:
         """Update transaction category.
 
         Args:
