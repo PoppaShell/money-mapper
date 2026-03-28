@@ -32,7 +32,8 @@ dev = [
     "httpx>=0.25.0",
     "actionlint-py>=1.7.11",
     "sentence-transformers>=2.7.0",
-    "ofxtools>=0.9.5"
+    "ofxtools>=0.9.5",
+    "types-toml>=0.10.8"
 ]
 
 [project.scripts]
