@@ -4,8 +4,7 @@ Enables users to contribute new merchant mappings to the public mapping database
 via GitHub pull requests after passing privacy audit validation.
 """
 
-import subprocess
-import sys
+import subprocess  # nosec B404
 from datetime import datetime
 from typing import Any
 
@@ -19,7 +18,7 @@ def check_gh_cli_available() -> bool:
         bool: True if gh CLI is available, False otherwise
     """
     try:
-        subprocess.run(
+        subprocess.run(  # nosec B603, B607
             ["gh", "--version"],
             capture_output=True,
             check=True,
@@ -175,7 +174,7 @@ def create_community_pr(template: dict[str, str]) -> str | None:
         return None
 
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603, B607
             [
                 "gh",
                 "pr",
