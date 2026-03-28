@@ -518,10 +518,13 @@ def get_model_stats(model_file: str) -> dict[str, Any] | None:
             return None
 
         with open(model_path, "rb") as f:
-            model_data = pickle.load(f)
+            model_data: Any = pickle.load(f)
 
         if isinstance(model_data, dict) and "stats" in model_data:
-            return model_data["stats"]
+            stats = model_data["stats"]
+            if isinstance(stats, dict):
+                return stats
+            return None
 
         return None
 
