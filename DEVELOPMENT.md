@@ -36,12 +36,12 @@ Run the comprehensive check script to catch issues **before** pushing:
 
 #### On Windows (PowerShell):
 ```powershell
-./scripts/check_all.ps1
+./.local/scripts/check_all.ps1
 ```
 
 #### On macOS/Linux (Bash):
 ```bash
-bash scripts/check_all.sh
+bash ./.local/scripts/check_all.sh
 ```
 
 This runs all CI checks locally:
