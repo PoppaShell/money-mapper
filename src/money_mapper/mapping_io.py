@@ -70,12 +70,14 @@ def load_private_mappings(mapping_file: str | None = None) -> list[Any] | dict[s
             if not content.strip():
                 return None
 
-            mappings = json.loads(content)
+            mappings: list[Any] | dict[str, Any] = json.loads(content)
 
         if not mappings:
             return None
 
-        return mappings
+        if isinstance(mappings, (list, dict)):
+            return mappings
+        return None
 
     except (json.JSONDecodeError, ValueError):
         return None
@@ -83,9 +85,7 @@ def load_private_mappings(mapping_file: str | None = None) -> list[Any] | dict[s
         return None
 
 
-def save_mappings(
-    mappings: dict[str, Any] | list[Any], output_file: str
-) -> str | None:
+def save_mappings(mappings: dict[str, Any] | list[Any], output_file: str) -> str | None:
     """
     Save mappings to file (TOML or JSON based on extension).
 
@@ -104,8 +104,11 @@ def save_mappings(
 
         # Save based on file extension
         if output_file.endswith(".toml"):
-            with open(output_path, "w") as f:
-                toml.dump(mappings, f)
+            if isinstance(mappings, dict):
+                with open(output_path, "w") as f:
+                    toml.dump(mappings, f)
+            else:
+                return None
         elif output_file.endswith(".json"):
             with open(output_path, "w") as f:
                 json.dump(mappings, f, indent=2)

@@ -348,8 +348,6 @@ def rebuild_public_model(output_dir: str = "models", debug: bool = False) -> dic
     Returns:
         Dictionary with model statistics or None if rebuild failed
     """
-    import json
-    import os
     import pickle
     from datetime import datetime
     from pathlib import Path
@@ -446,7 +444,7 @@ def rebuild_private_model(
                 print(f"Warning: {enriched_file} not found")
             return None
 
-        with open(trans_path, "r") as f:
+        with open(trans_path) as f:
             transactions = json.load(f)
 
         if not transactions:
@@ -518,7 +516,7 @@ def get_model_stats(model_file: str) -> dict[str, Any] | None:
             return None
 
         with open(model_path, "rb") as f:
-            model_data: Any = pickle.load(f)
+            model_data: Any = pickle.load(f)  # nosec: loading trusted model file
 
         if isinstance(model_data, dict) and "stats" in model_data:
             stats = model_data["stats"]
