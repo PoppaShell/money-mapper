@@ -224,7 +224,8 @@ class TestCommunityPRCreation:
         mock_available.return_value = True
         mock_run.return_value = MagicMock(stdout="https://github.com/user/repo/pull/123\n")
         result = create_community_pr({"title": "T", "body": "B"})
-        assert "github.com" in result
+        assert result is not None
+        assert result.startswith("https://github.com/")
 
     @patch("money_mapper.community_flow.check_gh_cli_available")
     def test_create_pr_handles_missing_gh(self, mock_available):
