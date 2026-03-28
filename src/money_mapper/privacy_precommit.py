@@ -7,7 +7,6 @@ for PII leaks before allowing commits.
 import os
 import subprocess
 import sys
-from typing import Any
 
 from money_mapper.privacy_audit import audit_merchant_name
 
@@ -113,7 +112,7 @@ def run_precommit_check(threshold: str = "high") -> int:
 
     for file_path in mapping_files:
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 content = f.read()
 
             # Parse file based on extension
