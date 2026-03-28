@@ -93,7 +93,7 @@ def start_web_server(
         sys.exit(1)
 
     # Build the URL
-    url = f"http://{host if host != '0.0.0.0' else 'localhost'}:{port}"
+    url = f"http://{host if host != '0.0.0.0' else 'localhost'}:{port}"  # nosec: B104
 
     # Display startup message
     print("=" * 60)
