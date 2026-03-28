@@ -6,8 +6,6 @@ Tests GitHub CLI integration, merchant validation, PR generation, and branch man
 import subprocess
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from money_mapper.community_flow import (
     check_gh_cli_available,
     create_community_pr,
@@ -263,7 +261,7 @@ class TestIntegrationWithPrivacyAudit:
     def test_validates_against_privacy_audit(self, mock_audit):
         """Should use privacy_audit module for validation."""
         mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
-        result = validate_merchant_for_community("Test")
+        validate_merchant_for_community("Test")
         mock_audit.assert_called_once()
 
     @patch("money_mapper.community_flow.audit_merchant_name")
