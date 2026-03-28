@@ -592,12 +592,8 @@ Examples:
     web_parser.add_argument(
         "--host", default="localhost", help="Host to bind to (default: localhost)"
     )
-    web_parser.add_argument(
-        "--port", default="8000", help="Port to bind to (default: 8000)"
-    )
-    web_parser.add_argument(
-        "--no-browser", action="store_true", help="Don't auto-open web browser"
-    )
+    web_parser.add_argument("--port", default="8000", help="Port to bind to (default: 8000)")
+    web_parser.add_argument("--no-browser", action="store_true", help="Don't auto-open web browser")
 
     args = parser.parse_args()
 

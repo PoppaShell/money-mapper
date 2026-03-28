@@ -32,9 +32,7 @@ def find_available_port(start: int = 8000) -> int:
         except OSError:
             continue
 
-    raise RuntimeError(
-        f"Could not find available port between {start} and {start + 100}"
-    )
+    raise RuntimeError(f"Could not find available port between {start} and {start + 100}")
 
 
 def launch_browser(url: str, no_browser: bool = False) -> None:
@@ -52,7 +50,7 @@ def launch_browser(url: str, no_browser: bool = False) -> None:
 
     try:
         webbrowser.open(url)
-    except Exception:
+    except Exception:  # noqa: B110
         # Silent fail - user can manually open browser
         pass
 
