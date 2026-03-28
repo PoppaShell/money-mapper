@@ -1,3 +1,7 @@
+# SYNC CONTRACT: This file and .local/scripts/check_all.ps1 must stay in sync.
+# When you change one, change the other in the same commit.
+# Commands must be identical: same tool, same flags, same order.
+
 name: CI
 
 on:
@@ -109,7 +113,9 @@ jobs:
         run: bandit -r src/ -ll
 
       - name: Audit dependencies with pip-audit
-        run: pip-audit
+        run: pip-audit --ignore-vuln CVE-2026-4539
+        # CVE-2026-4539 (pygments): No patched version available yet as of 2026-03-28
+        # Remove this ignore when pygments releases a fix
 
   # Run tests with pytest (Python 3.11 & 3.12, ~120 seconds each)
   test:
