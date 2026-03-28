@@ -187,7 +187,10 @@ def create_community_pr(template: dict[str, str]) -> str | None:
 
         # Extract PR URL from output
         pr_url = result.stdout.strip()
-        return pr_url if pr_url else None
+        # Validate URL format before returning
+        if pr_url and pr_url.startswith("https://github.com/"):
+            return pr_url
+        return None
 
     except (subprocess.CalledProcessError, FileNotFoundError, OSError):
         return None
