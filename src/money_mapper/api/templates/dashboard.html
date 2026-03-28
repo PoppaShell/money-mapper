@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Money Mapper{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="info">
+    <strong>Dashboard:</strong> Spending overview and recent transactions
+</div>
+
+<h2>Monthly Spending by Category</h2>
+<div id="spending-chart" style="background: white; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+    <p>Spending categories chart ({{ spending.categories|length }} categories)</p>
+    {% if spending.categories %}
+        <ul>
+        {% for category in spending.categories %}
+            <li>{{ category }}: ${{ spending.amounts[loop.index0] }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No spending data available</p>
+    {% endif %}
+</div>
+
+<h2>Recent Transactions</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Merchant</th>
+            <th>Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for txn in recent_transactions %}
+            <tr>
+                <td>{{ txn.date }}</td>
+                <td>{{ txn.merchant }}</td>
+                <td>${{ txn.amount }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">No recent transactions</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p><a href="/transactions">View all transactions →</a></p>
+{% endblock %}
