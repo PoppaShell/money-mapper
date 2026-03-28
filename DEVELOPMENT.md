@@ -245,6 +245,75 @@ git commit -m "deps: Add new-package"
 
 ---
 
+## Multi-PR Development (Important!)
+
+### Cross-PR File Consistency
+
+When multiple PRs are open and they **modify the same files**, you must ensure they stay consistent.
+
+**Example from real experience:**
+- PR #97 fixed `ml_categorizer.py` (removed unused imports, fixed types)
+- PR #98 and #99 were created earlier and also modify `ml_categorizer.py`
+- **Result**: PRs #98 and #99 failed CI because they had the old broken code
+
+### How to Avoid This
+
+1. **Check what files each PR modifies**
+   ```bash
+   # See which files this PR will change
+   git diff main...feature/my-feature --name-only
+   ```
+
+2. **Look for open PRs touching the same files**
+   ```bash
+   # Check open PRs on GitHub
+   gh pr list --state open
+   
+   # For each PR, see what it modifies
+   gh pr view <number> --json files
+   ```
+
+3. **When you fix a shared file, apply the fix to related PRs**
+   ```bash
+   # If you fix something in PR #110, check if #111, #112, #113 need it too
+   git checkout feature/111-branch
+   # Apply the same fixes manually or cherry-pick the commits
+   ```
+
+4. **Test changes across all affected branches**
+   ```bash
+   # Run local checks on each related branch
+   git checkout feature/98-branch
+   ./.local/scripts/check_all.ps1
+   
+   git checkout feature/99-branch
+   ./.local/scripts/check_all.ps1
+   ```
+
+### The SYNC CONTRACT Pattern
+
+We've adopted a **SYNC CONTRACT** principle for files that span multiple PRs:
+
+**Rule**: When you change a file that affects multiple open PRs:
+1. Apply the change to ALL affected PRs in the same logical commit
+2. Use consistent commit messages across PRs
+3. Test each branch independently
+4. Document the relationship in commit messages
+
+**Example commit message**:
+```
+fix: Apply shared file fixes to match PR #113
+
+- Remove unused imports from rebuild_public_model
+- Fix type annotation for model_data['stats']
+- Auto-format with ruff
+
+These fixes ensure consistency with PR #110 and #113
+that touched the same ml_categorizer.py code.
+```
+
+---
+
 ## Questions?
 
 Refer to tool documentation:
