@@ -215,9 +215,7 @@ def classify_risk_level(score: int) -> str:
         return "high"
 
 
-def audit_merchant_name(
-    merchant_name: str, min_score: int = 0
-) -> dict[str, Any]:
+def audit_merchant_name(merchant_name: str, min_score: int = 0) -> dict[str, Any]:
     """
     Perform comprehensive privacy audit on merchant name.
 
@@ -236,32 +234,40 @@ def audit_merchant_name(
     # Add keyword findings
     keywords_result = detect_pii_keywords(merchant_name)
     if keywords_result:
-        findings.append({
-            "type": "keywords",
-            "reason": f"Contains PII keywords: {', '.join(keywords_result['keywords'])}",
-            "categories": keywords_result["categories"],
-        })
+        findings.append(
+            {
+                "type": "keywords",
+                "reason": f"Contains PII keywords: {', '.join(keywords_result['keywords'])}",
+                "categories": keywords_result["categories"],
+            }
+        )
 
     # Add email findings
     if detect_email_pattern(merchant_name):
-        findings.append({
-            "type": "email",
-            "reason": "Contains email address pattern",
-        })
+        findings.append(
+            {
+                "type": "email",
+                "reason": "Contains email address pattern",
+            }
+        )
 
     # Add phone findings
     if detect_phone_pattern(merchant_name):
-        findings.append({
-            "type": "phone",
-            "reason": "Contains phone number pattern",
-        })
+        findings.append(
+            {
+                "type": "phone",
+                "reason": "Contains phone number pattern",
+            }
+        )
 
     # Add name findings
     if detect_name_pattern(merchant_name):
-        findings.append({
-            "type": "personal_name",
-            "reason": "Appears to be personal full name rather than brand name",
-        })
+        findings.append(
+            {
+                "type": "personal_name",
+                "reason": "Appears to be personal full name rather than brand name",
+            }
+        )
 
     return {
         "merchant_name": merchant_name,

@@ -128,12 +128,14 @@ def run_precommit_check(threshold: str = "high") -> int:
                             if merchant_name:
                                 audit = audit_merchant_name(merchant_name)
                                 if audit["score"] >= block_threshold:
-                                    violations.append({
-                                        "file": file_path,
-                                        "merchant": merchant_name,
-                                        "score": audit["score"],
-                                        "findings": audit["findings"],
-                                    })
+                                    violations.append(
+                                        {
+                                            "file": file_path,
+                                            "merchant": merchant_name,
+                                            "score": audit["score"],
+                                            "findings": audit["findings"],
+                                        }
+                                    )
 
             elif file_path.endswith(".toml"):
                 # For TOML mapping files, sample merchant names
@@ -144,12 +146,14 @@ def run_precommit_check(threshold: str = "high") -> int:
                 for merchant_name in merchants:
                     audit = audit_merchant_name(merchant_name)
                     if audit["score"] >= block_threshold:
-                        violations.append({
-                            "file": file_path,
-                            "merchant": merchant_name,
-                            "score": audit["score"],
-                            "findings": audit["findings"],
-                        })
+                        violations.append(
+                            {
+                                "file": file_path,
+                                "merchant": merchant_name,
+                                "score": audit["score"],
+                                "findings": audit["findings"],
+                            }
+                        )
 
         except Exception as e:
             print(f"Error auditing {file_path}: {e}")
@@ -162,8 +166,10 @@ def run_precommit_check(threshold: str = "high") -> int:
             file=sys.stderr,
         )
         for violation in violations:
-            print(f"  - {violation['file']}: {violation['merchant']} (score: {violation['score']})",
-                  file=sys.stderr)
+            print(
+                f"  - {violation['file']}: {violation['merchant']} (score: {violation['score']})",
+                file=sys.stderr,
+            )
             for finding in violation["findings"]:
                 print(f"    * {finding.get('reason', 'Unknown risk')}", file=sys.stderr)
         return 1
