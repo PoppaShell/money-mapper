@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Import - Money Mapper{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="info">
+    <strong>Import Transactions:</strong> Upload a CSV, OFX, or QFX file to import transactions
+</div>
+
+<h2>Supported Formats</h2>
+<ul>
+    {% for fmt in supported_formats %}
+        <li>{{ fmt }}</li>
+    {% endfor %}
+</ul>
+
+<p>{{ instructions }}</p>
+
+<h2>Upload File</h2>
+<form method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv,.ofx,.qfx" required>
+    <button type="submit">Import</button>
+</form>
+
+<h2>Instructions</h2>
+<div class="info">
+    <h3>CSV Format</h3>
+    <p>Your CSV file should contain columns: date, description, amount</p>
+    
+    <h3>OFX/QFX Format</h3>
+    <p>Open Financial Exchange format files are automatically parsed</p>
+</div>
+{% endblock %}
