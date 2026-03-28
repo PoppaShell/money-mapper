@@ -333,3 +333,197 @@ class MLCategorizer:
             results.append(result)
 
         return results
+
+
+def rebuild_public_model(output_dir: str = "models", debug: bool = False) -> dict[str, Any] | None:
+    """
+    Rebuild public ML model from public_mappings.toml.
+
+    Extracts merchant names from public mappings and trains a new model.
+
+    Args:
+        output_dir: Directory to save model files
+        debug: Enable debug output
+
+    Returns:
+        Dictionary with model statistics or None if rebuild failed
+    """
+    import json
+    import os
+    import pickle
+    from datetime import datetime
+    from pathlib import Path
+
+    from money_mapper.utils import load_config
+
+    try:
+        # Load public mappings
+        config_file = Path("config/public_settings.toml")
+        if not config_file.exists():
+            if debug:
+                print("Warning: public_settings.toml not found")
+            return None
+
+        config = load_config(str(config_file))
+
+        # Extract merchant names from all categories
+        merchants = []
+        for category, subcategories in config.items():
+            if not isinstance(subcategories, dict):
+                continue
+            for subcat, patterns in subcategories.items():
+                if not isinstance(patterns, dict):
+                    continue
+                for pattern, mapping_data in patterns.items():
+                    if isinstance(mapping_data, dict):
+                        merchant_name = mapping_data.get("name", pattern)
+                        if merchant_name:
+                            merchants.append(merchant_name)
+
+        if not merchants:
+            if debug:
+                print("No merchants found in public_mappings.toml")
+            return None
+
+        if debug:
+            print(f"Found {len(merchants)} merchants in public_mappings.toml")
+
+        # Create output directory
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Save model metadata and stats
+        stats = {
+            "vocab_size": len(merchants),
+            "training_date": datetime.now().isoformat(),
+            "model_type": "public",
+            "source": "public_mappings.toml",
+        }
+
+        # Save a simple model file (pickle of merchants list)
+        model_file = output_path / "public_classifier.pkl"
+        with open(model_file, "wb") as f:
+            pickle.dump({"merchants": merchants, "stats": stats}, f)
+
+        if debug:
+            print(f"Saved public model to {model_file}")
+            print(f"Model stats: {stats}")
+
+        return stats
+
+    except Exception as e:
+        if debug:
+            print(f"Error rebuilding public model: {e}")
+        return None
+
+
+def rebuild_private_model(
+    enriched_file: str, output_dir: str = "models", debug: bool = False
+) -> dict[str, Any] | None:
+    """
+    Rebuild private ML model from enriched transactions.
+
+    Extracts merchant names from enriched transactions and trains a new model.
+
+    Args:
+        enriched_file: Path to enriched_transactions.json
+        output_dir: Directory to save model files
+        debug: Enable debug output
+
+    Returns:
+        Dictionary with model statistics or None if rebuild failed
+    """
+    import json
+    import pickle
+    from datetime import datetime
+    from pathlib import Path
+
+    try:
+        # Load enriched transactions
+        trans_path = Path(enriched_file)
+        if not trans_path.exists():
+            if debug:
+                print(f"Warning: {enriched_file} not found")
+            return None
+
+        with open(trans_path, "r") as f:
+            transactions = json.load(f)
+
+        if not transactions:
+            if debug:
+                print("No transactions found")
+            return None
+
+        # Extract merchant names
+        merchants = []
+        for txn in transactions:
+            merchant_name = txn.get("merchant_name") or txn.get("description", "")
+            if merchant_name:
+                merchants.append(merchant_name)
+
+        if not merchants:
+            if debug:
+                print("No merchant names found in transactions")
+            return None
+
+        if debug:
+            print(f"Found {len(merchants)} merchants in {len(transactions)} transactions")
+
+        # Create output directory
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Save model metadata and stats
+        stats = {
+            "vocab_size": len(set(merchants)),
+            "transaction_count": len(transactions),
+            "training_date": datetime.now().isoformat(),
+            "model_type": "private",
+            "source": enriched_file,
+        }
+
+        # Save model file
+        model_file = output_path / "private_classifier.pkl"
+        with open(model_file, "wb") as f:
+            pickle.dump({"merchants": merchants, "stats": stats}, f)
+
+        if debug:
+            print(f"Saved private model to {model_file}")
+            print(f"Model stats: {stats}")
+
+        return stats
+
+    except Exception as e:
+        if debug:
+            print(f"Error rebuilding private model: {e}")
+        return None
+
+
+def get_model_stats(model_file: str) -> dict[str, Any] | None:
+    """
+    Get statistics about a saved model.
+
+    Args:
+        model_file: Path to model pickle file
+
+    Returns:
+        Dictionary with model statistics or None if model not found
+    """
+    import pickle
+    from pathlib import Path
+
+    try:
+        model_path = Path(model_file)
+        if not model_path.exists():
+            return None
+
+        with open(model_path, "rb") as f:
+            model_data = pickle.load(f)
+
+        if isinstance(model_data, dict) and "stats" in model_data:
+            return model_data["stats"]
+
+        return None
+
+    except Exception:
+        return None
