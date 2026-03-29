@@ -1,10 +1,10 @@
 """Shared pytest configuration and fixtures for Money Mapper tests."""
 
 import json
-import os
-from pathlib import Path
-import pytest
 import tempfile
+from pathlib import Path
+
+import pytest
 import toml
 
 

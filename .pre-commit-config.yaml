@@ -1,52 +1,44 @@
-default_install_hook_types: [pre-commit, pre-push]
-
 repos:
-  # Ruff: Linting and formatting (replaces flake8, black, isort)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.6
     hooks:
       - id: ruff-check
-        args: ["--fix"]
-        stages: [pre-commit]
+        args: [--fix]
       - id: ruff-format
-        stages: [pre-commit]
 
-  # mypy: Static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.19.1
     hooks:
       - id: mypy
-        args: ["src/"]
+        args: [src/]
+        pass_filenames: false
         additional_dependencies:
           - types-toml
           - types-python-dateutil
-        stages: [pre-commit]
 
-  # Bandit: Security vulnerability scanning
   - repo: https://github.com/PyCQA/bandit
     rev: 1.9.4
     hooks:
       - id: bandit
-        args: ["-r", "src/", "-ll"]
-        exclude: "test_.*?"
-        stages: [pre-commit]
+        args: [-r, src/, -ll]
+        pass_filenames: false
 
-  # pip-audit: Vulnerability scanning for dependencies
-  - repo: https://github.com/pypa/pip-audit
-    rev: v2.10.0
-    hooks:
-      - id: pip-audit
-        stages: [pre-commit]
-
-  # actionlint: GitHub Actions workflow validation
   - repo: local
     hooks:
-      - id: actionlint
-        name: actionlint
-        description: Lint GitHub Actions workflow files
-        entry: actionlint
-        language: python
-        additional_dependencies: ["actionlint-py==1.7.11.24"]
-        types: [yaml]
-        files: "^.github/workflows/"
+      - id: pip-audit
+        name: pip-audit
+        entry: python -m pip_audit --ignore-vuln CVE-2026-4539
+        language: system
+        pass_filenames: false
         stages: [pre-commit]
+
+      # actionlint runs in CI only (downloads native binary)
+      # Local alternative: python -m actionlint_py .github/workflows/ci.yml

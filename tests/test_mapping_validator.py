@@ -1,14 +1,10 @@
 """Tests for money_mapper.mapping_validator module."""
 
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-
 from money_mapper.mapping_validator import (
-    validate_mappings,
-    validate_single_mapping,
     check_required_files,
     validate_mapping_structure,
+    validate_mappings,
+    validate_single_mapping,
 )
 
 
@@ -23,21 +19,21 @@ class TestValidateMappings:
                     "name": "Starbucks",
                     "category": "FOOD_AND_DRINK",
                     "subcategory": "FOOD_AND_DRINK_COFFEE",
-                    "scope": "public"
+                    "scope": "public",
                 }
             }
         }
-        
+
         issues = validate_mappings(mappings)
-        
+
         assert isinstance(issues, list)
 
     def test_validate_mappings_empty(self):
         """Test validation of empty mappings."""
         mappings = {}
-        
+
         issues = validate_mappings(mappings)
-        
+
         assert issues == []
 
     def test_validate_mappings_missing_scope(self):
@@ -51,9 +47,9 @@ class TestValidateMappings:
                 }
             }
         }
-        
+
         issues = validate_mappings(mappings)
-        
+
         # Should find missing scope
         assert len(issues) > 0
 
@@ -65,13 +61,13 @@ class TestValidateMappings:
                     "name": "Starbucks",
                     "category": "INVALID_CATEGORY",
                     "subcategory": "FOOD_AND_DRINK_COFFEE",
-                    "scope": "public"
+                    "scope": "public",
                 }
             }
         }
-        
+
         issues = validate_mappings(mappings)
-        
+
         # Should find invalid category
         assert any("category" in str(issue).lower() for issue in issues)
 
@@ -83,13 +79,13 @@ class TestValidateMappings:
                     "name": "Starbucks",
                     "category": "FOOD_AND_DRINK",
                     "subcategory": "FOOD_AND_DRINK_COFFEE",
-                    "scope": "invalid"
+                    "scope": "invalid",
                 }
             }
         }
-        
+
         issues = validate_mappings(mappings)
-        
+
         # Should find invalid scope
         assert any("scope" in str(issue).lower() for issue in issues)
 
@@ -105,9 +101,9 @@ class TestValidateMappings:
                 }
             }
         }
-        
+
         issues = validate_mappings(mappings)
-        
+
         assert len(issues) > 1
 
 
@@ -120,11 +116,11 @@ class TestValidateSingleMapping:
             "name": "Starbucks",
             "category": "FOOD_AND_DRINK",
             "subcategory": "FOOD_AND_DRINK_COFFEE",
-            "scope": "public"
+            "scope": "public",
         }
-        
+
         issues = validate_single_mapping("starbucks", mapping)
-        
+
         assert issues == []
 
     def test_validate_single_mapping_missing_name(self):
@@ -132,35 +128,27 @@ class TestValidateSingleMapping:
         mapping = {
             "category": "FOOD_AND_DRINK",
             "subcategory": "FOOD_AND_DRINK_COFFEE",
-            "scope": "public"
+            "scope": "public",
         }
-        
+
         issues = validate_single_mapping("starbucks", mapping)
-        
+
         assert any("name" in issue.lower() for issue in issues)
 
     def test_validate_single_mapping_missing_category(self):
         """Test validation detects missing category."""
-        mapping = {
-            "name": "Starbucks",
-            "subcategory": "FOOD_AND_DRINK_COFFEE",
-            "scope": "public"
-        }
-        
+        mapping = {"name": "Starbucks", "subcategory": "FOOD_AND_DRINK_COFFEE", "scope": "public"}
+
         issues = validate_single_mapping("starbucks", mapping)
-        
+
         assert any("category" in issue.lower() for issue in issues)
 
     def test_validate_single_mapping_missing_subcategory(self):
         """Test validation detects missing subcategory."""
-        mapping = {
-            "name": "Starbucks",
-            "category": "FOOD_AND_DRINK",
-            "scope": "public"
-        }
-        
+        mapping = {"name": "Starbucks", "category": "FOOD_AND_DRINK", "scope": "public"}
+
         issues = validate_single_mapping("starbucks", mapping)
-        
+
         assert any("subcategory" in issue.lower() for issue in issues)
 
     def test_validate_single_mapping_missing_scope(self):
@@ -170,9 +158,9 @@ class TestValidateSingleMapping:
             "category": "FOOD_AND_DRINK",
             "subcategory": "FOOD_AND_DRINK_COFFEE",
         }
-        
+
         issues = validate_single_mapping("starbucks", mapping)
-        
+
         assert any("scope" in issue.lower() for issue in issues)
 
     def test_validate_single_mapping_invalid_scope(self):
@@ -181,11 +169,11 @@ class TestValidateSingleMapping:
             "name": "Starbucks",
             "category": "FOOD_AND_DRINK",
             "subcategory": "FOOD_AND_DRINK_COFFEE",
-            "scope": "invalid_scope"
+            "scope": "invalid_scope",
         }
-        
+
         issues = validate_single_mapping("starbucks", mapping)
-        
+
         assert any("scope" in issue.lower() for issue in issues)
 
     def test_validate_single_mapping_invalid_category(self):
@@ -194,11 +182,11 @@ class TestValidateSingleMapping:
             "name": "Starbucks",
             "category": "INVALID_CATEGORY",
             "subcategory": "FOOD_AND_DRINK_COFFEE",
-            "scope": "public"
+            "scope": "public",
         }
-        
+
         issues = validate_single_mapping("starbucks", mapping)
-        
+
         assert any("category" in issue.lower() for issue in issues)
 
 
@@ -212,12 +200,9 @@ class TestCheckRequiredFiles:
         public_file = tmp_path / "public_mappings.toml"
         private_file.write_text("")
         public_file.write_text("")
-        
-        result = check_required_files(
-            str(private_file),
-            str(public_file)
-        )
-        
+
+        result = check_required_files(str(private_file), str(public_file))
+
         assert result is True
 
     def test_check_required_files_missing_private(self, tmp_path):
@@ -225,12 +210,9 @@ class TestCheckRequiredFiles:
         private_file = tmp_path / "private_mappings.toml"
         public_file = tmp_path / "public_mappings.toml"
         public_file.write_text("")
-        
-        result = check_required_files(
-            str(private_file),
-            str(public_file)
-        )
-        
+
+        result = check_required_files(str(private_file), str(public_file))
+
         assert result is False
 
     def test_check_required_files_missing_public(self, tmp_path):
@@ -238,21 +220,15 @@ class TestCheckRequiredFiles:
         private_file = tmp_path / "private_mappings.toml"
         public_file = tmp_path / "public_mappings.toml"
         private_file.write_text("")
-        
-        result = check_required_files(
-            str(private_file),
-            str(public_file)
-        )
-        
+
+        result = check_required_files(str(private_file), str(public_file))
+
         assert result is False
 
     def test_check_required_files_both_missing(self):
         """Test checking when both files are missing."""
-        result = check_required_files(
-            "/nonexistent/private.toml",
-            "/nonexistent/public.toml"
-        )
-        
+        result = check_required_files("/nonexistent/private.toml", "/nonexistent/public.toml")
+
         assert result is False
 
 
@@ -267,40 +243,36 @@ class TestValidateMappingStructure:
                     "name": "Starbucks",
                     "category": "FOOD_AND_DRINK",
                     "subcategory": "FOOD_AND_DRINK_COFFEE",
-                    "scope": "public"
+                    "scope": "public",
                 }
             }
         }
-        
+
         issues = validate_mapping_structure(mappings)
-        
+
         assert isinstance(issues, list)
 
     def test_validate_mapping_structure_not_dict(self):
         """Test validation with non-dict structure."""
         result = validate_mapping_structure("not a dict")
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
 
     def test_validate_mapping_structure_with_invalid_nested_mapping(self):
         """Test validation with invalid nested mapping."""
-        mappings = {
-            "FOOD_AND_DRINK": {
-                "starbucks": "not a dict"
-            }
-        }
-        
+        mappings = {"FOOD_AND_DRINK": {"starbucks": "not a dict"}}
+
         issues = validate_mapping_structure(mappings)
-        
+
         assert len(issues) > 0
 
     def test_validate_mapping_structure_empty(self):
         """Test validation of empty structure."""
         mappings = {}
-        
+
         issues = validate_mapping_structure(mappings)
-        
+
         assert issues == []
 
 
@@ -312,14 +284,14 @@ class TestValidatorIntegration:
         # Create test files
         private_file = tmp_path / "private_mappings.toml"
         public_file = tmp_path / "public_mappings.toml"
-        
+
         private_file.write_text("")
         public_file.write_text("")
-        
+
         # Check files exist
         files_exist = check_required_files(str(private_file), str(public_file))
         assert files_exist is True
-        
+
         # Validate structure
         mappings = {
             "FOOD_AND_DRINK": {
@@ -327,11 +299,11 @@ class TestValidatorIntegration:
                     "name": "Starbucks",
                     "category": "FOOD_AND_DRINK",
                     "subcategory": "FOOD_AND_DRINK_COFFEE",
-                    "scope": "public"
+                    "scope": "public",
                 }
             }
         }
-        
+
         issues = validate_mappings(mappings)
         assert len(issues) == 0
 
@@ -343,25 +315,25 @@ class TestValidatorIntegration:
                     "name": "Starbucks",
                     "category": "FOOD_AND_DRINK",
                     "subcategory": "FOOD_AND_DRINK_COFFEE",
-                    "scope": "public"
+                    "scope": "public",
                 },
                 "mcdonalds*": {
                     "name": "McDonald's",
                     "category": "FOOD_AND_DRINK",
                     "subcategory": "FOOD_AND_DRINK_FAST_FOOD",
-                    "scope": "public"
-                }
+                    "scope": "public",
+                },
             },
             "TRANSPORTATION": {
                 "shell*gas": {
                     "name": "Shell",
                     "category": "TRANSPORTATION",
                     "subcategory": "TRANSPORTATION_GAS",
-                    "scope": "public"
+                    "scope": "public",
                 }
-            }
+            },
         }
-        
+
         issues = validate_mappings(mappings)
-        
+
         assert len(issues) == 0

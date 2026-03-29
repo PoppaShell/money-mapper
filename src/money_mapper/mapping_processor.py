@@ -412,7 +412,7 @@ class MappingProcessor:
     def _get_private_mappings_header(self) -> str:
         """Get the header template for private mappings file."""
         return """# Private Financial Transaction Mappings - Personal and Local Businesses
-# 
+#
 # This file contains YOUR specific merchant mappings for local businesses,
 # personal services, and location-specific patterns. These mappings have
 # HIGHEST priority and override both public_mappings.toml and plaid_categories.toml.
@@ -429,7 +429,7 @@ class MappingProcessor:
 # SCOPE GUIDELINES:
 # Use scope = "private" for:
 # - Local businesses (restaurants, services, shops)
-# - Personal service providers (doctors, dentists, salons) 
+# - Personal service providers (doctors, dentists, salons)
 # - Regional chains not widely known
 # - Your employer and income sources
 # - Location-specific patterns
@@ -442,9 +442,9 @@ class MappingProcessor:
     def _get_public_mappings_header(self) -> str:
         """Get the header template for public mappings file."""
         return """# Public Financial Transaction Mappings - National Chains and Services
-# 
+#
 # This file contains mappings for well-known national chains and services
-# that are widely applicable. These mappings have MEDIUM priority 
+# that are widely applicable. These mappings have MEDIUM priority
 # (after private_mappings.toml, before plaid_categories.toml).
 #
 # STRUCTURE:

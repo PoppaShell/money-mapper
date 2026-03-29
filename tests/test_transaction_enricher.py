@@ -3,13 +3,13 @@
 import pytest
 
 from money_mapper.transaction_enricher import (
+    create_mapping_result,
     extract_merchant_name,
     find_merchant_mapping,
-    wildcard_pattern_match,
-    create_mapping_result,
     fuzzy_match_similarity,
-    try_ml_prediction,
     is_valid_plaid_category,
+    try_ml_prediction,
+    wildcard_pattern_match,
 )
 
 
@@ -877,7 +877,6 @@ class TestMLIntegration:
 
     def test_try_ml_prediction_returns_none_when_no_model(self):
         """Test that try_ml_prediction returns None when model is None."""
-        from money_mapper.transaction_enricher import try_ml_prediction
 
         transaction = {
             "description": "TEST",
@@ -891,7 +890,6 @@ class TestMLIntegration:
 
     def test_is_valid_plaid_category(self):
         """Test category validation."""
-        from money_mapper.transaction_enricher import is_valid_plaid_category
 
         plaid_categories = {
             "FOOD_AND_DRINK": {"keywords": []},
@@ -909,7 +907,6 @@ class TestMLIntegration:
 
     def test_try_ml_prediction_validates_category(self):
         """Test that ML predictions are validated against Plaid taxonomy."""
-        from money_mapper.transaction_enricher import try_ml_prediction
 
         transaction = {
             "description": "TEST",

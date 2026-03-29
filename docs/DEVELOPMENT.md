@@ -40,10 +40,10 @@ from typing import Optional, List, Dict
 
 def load_transactions(file_path: str) -> List[Dict[str, str]]:
     """Load transactions from file.
-    
+
     Args:
         file_path: Path to transaction file
-        
+
     Returns:
         List of transaction dictionaries
     """
@@ -196,13 +196,13 @@ from money_mapper.utils import load_transactions_from_json
 
 class TestLoadTransactions:
     """Test transaction loading functionality."""
-    
+
     def test_load_valid_file(self, sample_transactions, temp_output_dir):
         """Test loading valid transaction JSON file."""
         test_file = temp_output_dir / "transactions.json"
         # Write and test
         assert len(loaded) == 4
-        
+
     def test_load_empty_file(self, temp_output_dir):
         """Test loading empty file."""
         test_file = temp_output_dir / "empty.json"

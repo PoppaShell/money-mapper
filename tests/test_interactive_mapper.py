@@ -4,9 +4,9 @@ import pytest
 
 from money_mapper.interactive_mapper import (
     get_transaction_frequency,
+    load_category_taxonomy,
     suggest_keyword,
     suggest_name,
-    load_category_taxonomy,
 )
 
 
@@ -25,7 +25,7 @@ class TestGetTransactionFrequency:
             {"description": "STARBUCKS", "amount": 5.5},
         ]
         result = get_transaction_frequency(transactions)
-        
+
         assert isinstance(result, dict)
         assert len(result) > 0
 
@@ -38,7 +38,7 @@ class TestGetTransactionFrequency:
             {"description": "WHOLE FOODS", "amount": 50.0},
         ]
         result = get_transaction_frequency(transactions)
-        
+
         assert isinstance(result, dict)
         assert len(result) >= 1
 
@@ -48,7 +48,7 @@ class TestGetTransactionFrequency:
             {"description": "TEST", "amount": 10.0},
         ]
         result = get_transaction_frequency(transactions)
-        
+
         for key, value in result.items():
             assert isinstance(value, int)
             assert value >= 0
@@ -81,16 +81,19 @@ class TestSuggestKeyword:
             "WHOLE FOODS MARKET",
             "APPLE STORE",
         ]
-        
+
         for merchant in merchants:
             result = suggest_keyword(merchant)
             assert isinstance(result, str)
 
-    @pytest.mark.parametrize("description", [
-        "MERCHANT NAME HERE",
-        "STORE #12345 LOCATION",
-        "COMPANY WITH LONG NAME",
-    ])
+    @pytest.mark.parametrize(
+        "description",
+        [
+            "MERCHANT NAME HERE",
+            "STORE #12345 LOCATION",
+            "COMPANY WITH LONG NAME",
+        ],
+    )
     def test_suggest_keyword_various_formats(self, description):
         """Test keyword suggestion with various formats."""
         result = suggest_keyword(description)
@@ -120,13 +123,16 @@ class TestSuggestName:
         result = suggest_name("WHOLE FOODS MARKET SEATTLE WASHINGTON")
         assert isinstance(result, str)
 
-    @pytest.mark.parametrize("description", [
-        "STARBUCKS",
-        "AMAZON.COM",
-        "WHOLE FOODS",
-        "APPLE STORE",
-        "WALMART SUPERCENTER",
-    ])
+    @pytest.mark.parametrize(
+        "description",
+        [
+            "STARBUCKS",
+            "AMAZON.COM",
+            "WHOLE FOODS",
+            "APPLE STORE",
+            "WALMART SUPERCENTER",
+        ],
+    )
     def test_suggest_name_merchants(self, description):
         """Test name suggestion for various merchants."""
         result = suggest_name(description)
@@ -161,22 +167,22 @@ class TestLoadCategoryTaxonomy:
     def test_taxonomy_categories_have_content(self):
         """Test that categories are populated."""
         categories, _, _ = load_category_taxonomy()
-        
+
         # Should have at least one category
         assert len(categories) > 0
-        
+
         # Categories should have valid structure
         for category, subcats in categories.items():
             assert isinstance(category, str)
             # subcats can be dict or list depending on structure
-            assert (isinstance(subcats, dict) or isinstance(subcats, list))
+            assert isinstance(subcats, dict) or isinstance(subcats, list)
             assert len(subcats) > 0
 
     def test_taxonomy_consistency(self):
         """Test that taxonomy loading is consistent."""
         result1 = load_category_taxonomy()
         result2 = load_category_taxonomy()
-        
+
         # Should return same data on multiple calls
         assert result1[0] == result2[0]  # Categories
         assert result1[1] == result2[1]  # Descriptions
@@ -189,6 +195,7 @@ class TestInteractiveMapperImports:
         """Test that module can be imported."""
         try:
             from money_mapper import interactive_mapper
+
             assert interactive_mapper is not None
         except ImportError:
             pytest.fail("Could not import interactive_mapper module")
@@ -196,17 +203,17 @@ class TestInteractiveMapperImports:
     def test_all_functions_exist(self):
         """Test that all major functions exist."""
         from money_mapper import interactive_mapper
-        
+
         required_functions = [
-            'get_transaction_frequency',
-            'suggest_keyword',
-            'suggest_name',
-            'load_category_taxonomy',
-            'display_category_menu',
-            'create_mapping_entry',
-            'run_mapping_wizard',
+            "get_transaction_frequency",
+            "suggest_keyword",
+            "suggest_name",
+            "load_category_taxonomy",
+            "display_category_menu",
+            "create_mapping_entry",
+            "run_mapping_wizard",
         ]
-        
+
         for func_name in required_functions:
             assert hasattr(interactive_mapper, func_name), f"Missing function: {func_name}"
             assert callable(getattr(interactive_mapper, func_name)), f"Not callable: {func_name}"
@@ -220,11 +227,11 @@ class TestInteractiveMapperIntegration:
         # Load taxonomy
         categories, _, _ = load_category_taxonomy()
         assert len(categories) > 0
-        
+
         # Suggest keyword
         keyword = suggest_keyword("STARBUCKS COFFEE")
         assert isinstance(keyword, str)
-        
+
         # Suggest name
         name = suggest_name("STARBUCKS")
         assert isinstance(name, str)
@@ -236,11 +243,11 @@ class TestInteractiveMapperIntegration:
             {"description": "AMAZON", "amount": 25.0},
             {"description": "STARBUCKS", "amount": 5.5},
         ]
-        
+
         # Get frequency
         frequency = get_transaction_frequency(transactions)
         assert isinstance(frequency, dict)
-        
+
         # Suggest keywords for frequent merchants
         for merchant in frequency.keys():
             keyword = suggest_keyword(merchant)
@@ -250,35 +257,38 @@ class TestInteractiveMapperIntegration:
         """Test full mapping preparation workflow."""
         # Load taxonomy
         categories, descriptions, scopes = load_category_taxonomy()
-        
+
         # All should be populated
         assert len(categories) > 0
         assert len(descriptions) > 0
         assert isinstance(scopes, dict)
-        
+
         # Suggest names
         name = suggest_name("TEST MERCHANT")
         assert isinstance(name, str)
-        
+
         # Suggest keywords
         keyword = suggest_keyword("TEST MERCHANT")
         assert isinstance(keyword, str)
 
-    @pytest.mark.parametrize("description", [
-        "STARBUCKS COFFEE",
-        "AMAZON STORE",
-        "WHOLE FOODS",
-    ])
+    @pytest.mark.parametrize(
+        "description",
+        [
+            "STARBUCKS COFFEE",
+            "AMAZON STORE",
+            "WHOLE FOODS",
+        ],
+    )
     def test_suggestion_consistency(self, description):
         """Test that suggestions are consistent."""
         name1 = suggest_name(description)
         name2 = suggest_name(description)
-        
+
         # Should return same suggestion
         assert name1 == name2
-        
+
         keyword1 = suggest_keyword(description)
         keyword2 = suggest_keyword(description)
-        
+
         # Should return same suggestion
         assert keyword1 == keyword2

@@ -1,11 +1,5 @@
 """Tests for privacy audit functionality."""
 
-import json
-import tempfile
-from pathlib import Path
-
-import pytest
-
 from money_mapper.privacy_audit import (
     audit_merchant_name,
     classify_risk_level,
@@ -92,7 +86,7 @@ class TestPatternDetection:
     def test_detect_ssn_pattern(self):
         """Test SSN partial pattern detection."""
         # SSN patterns: XXX-XX or similar
-        result = detect_phone_pattern("123-45-6789")  # Could also be SSN-like
+        detect_phone_pattern("123-45-6789")  # Could also be SSN-like
         # Result depends on implementation
 
     def test_detect_name_pattern_full_name(self):

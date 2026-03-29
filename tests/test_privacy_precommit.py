@@ -1,12 +1,7 @@
 """Tests for privacy audit pre-commit hook integration."""
 
-import json
 import os
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from money_mapper.privacy_precommit import (
     check_staged_files,

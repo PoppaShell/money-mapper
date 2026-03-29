@@ -58,7 +58,7 @@ select = [
 ignore = [
     "E501",      # Line too long (handled by formatter)
     "W291",      # Trailing whitespace
-    
+
     # Deferred violations - acceptable tradeoffs (reviewed Phase 6)
     "C901",      # Function complexity (28 violations) - requires refactoring
     "B007",      # Unused loop variables (2 violations) - style issue

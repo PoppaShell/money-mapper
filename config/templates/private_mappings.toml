@@ -1,5 +1,5 @@
 # Private Financial Transaction Mappings - Personal and Local Businesses
-# 
+#
 # This file contains YOUR specific merchant mappings for local businesses,
 # personal services, and location-specific patterns. These mappings have
 # HIGHEST priority and override both public_mappings.toml and plaid_categories.toml.
@@ -16,7 +16,7 @@
 # SCOPE GUIDELINES:
 # Use scope = "private" for:
 # - Local businesses (restaurants, services, shops)
-# - Personal service providers (doctors, dentists, salons) 
+# - Personal service providers (doctors, dentists, salons)
 # - Regional chains not widely known
 # - Your employer and income sources
 # - Location-specific patterns

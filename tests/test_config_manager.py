@@ -1,11 +1,5 @@
 """Tests for money_mapper.config_manager module."""
 
-import os
-import tempfile
-from pathlib import Path
-import pytest
-import tomllib
-
 from money_mapper.config_manager import ConfigManager, get_config_manager
 
 
@@ -16,7 +10,7 @@ class TestConfigManagerInitialization:
         """Test initialization with a valid config directory."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         cm = ConfigManager(config_dir=str(config_dir))
         assert cm.config_dir == str(config_dir)
 
@@ -30,7 +24,7 @@ class TestConfigManagerInitialization:
         """Test that initialization sets up file paths."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         cm = ConfigManager(config_dir=str(config_dir))
         assert cm.public_settings_file is not None
         assert cm.private_settings_file is not None
@@ -40,7 +34,7 @@ class TestConfigManagerInitialization:
         """Test that initialization loads settings."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         cm = ConfigManager(config_dir=str(config_dir))
         assert cm.settings is not None
         assert isinstance(cm.settings, dict)
@@ -52,32 +46,32 @@ class TestConfigManagerDirectoryPaths:
     def test_get_directory_path_statements(self):
         """Test getting statements directory path."""
         cm = get_config_manager()
-        path = cm.get_directory_path('statements')
-        
+        path = cm.get_directory_path("statements")
+
         assert path is not None
         assert isinstance(path, str)
 
     def test_get_directory_path_output(self):
         """Test getting output directory path."""
         cm = get_config_manager()
-        path = cm.get_directory_path('output')
-        
+        path = cm.get_directory_path("output")
+
         assert path is not None
         assert isinstance(path, str)
 
     def test_get_directory_path_config(self):
         """Test getting config directory path."""
         cm = get_config_manager()
-        path = cm.get_directory_path('config')
-        
+        path = cm.get_directory_path("config")
+
         assert path is not None
         assert isinstance(path, str)
 
     def test_get_directory_path_invalid_key(self):
         """Test getting invalid directory key constructs path."""
         cm = get_config_manager()
-        path = cm.get_directory_path('nonexistent_directory')
-        
+        path = cm.get_directory_path("nonexistent_directory")
+
         # Should return a path (might be constructed from config_dir)
         assert path is not None
         assert isinstance(path, str)
@@ -89,8 +83,8 @@ class TestConfigManagerFilePaths:
     def test_get_file_path_public_mappings(self):
         """Test getting public mappings file path."""
         cm = get_config_manager()
-        path = cm.get_file_path('public_mappings')
-        
+        path = cm.get_file_path("public_mappings")
+
         assert path is not None
         assert isinstance(path, str)
         assert "public_mappings" in path.lower()
@@ -98,24 +92,24 @@ class TestConfigManagerFilePaths:
     def test_get_file_path_private_mappings(self):
         """Test getting private mappings file path."""
         cm = get_config_manager()
-        path = cm.get_file_path('private_mappings')
-        
+        path = cm.get_file_path("private_mappings")
+
         assert path is not None
         assert isinstance(path, str)
 
     def test_get_file_path_statement_patterns(self):
         """Test getting statement patterns file path."""
         cm = get_config_manager()
-        path = cm.get_file_path('statement_patterns')
-        
+        path = cm.get_file_path("statement_patterns")
+
         assert path is not None
         assert isinstance(path, str)
 
     def test_get_file_path_invalid_key(self):
         """Test getting invalid file key constructs path."""
         cm = get_config_manager()
-        path = cm.get_file_path('nonexistent_file')
-        
+        path = cm.get_file_path("nonexistent_file")
+
         # Should return a path (might be constructed from config_dir)
         assert path is not None
         assert isinstance(path, str)
@@ -123,8 +117,8 @@ class TestConfigManagerFilePaths:
     def test_get_default_file_path(self):
         """Test getting default file paths."""
         cm = get_config_manager()
-        path = cm.get_default_file_path('parsed_transactions')
-        
+        path = cm.get_default_file_path("parsed_transactions")
+
         assert path is not None
         assert isinstance(path, str)
 
@@ -136,7 +130,7 @@ class TestConfigManagerEnrichmentFiles:
         """Test getting all enrichment files."""
         cm = get_config_manager()
         files = cm.get_enrichment_files()
-        
+
         assert isinstance(files, dict)
         assert len(files) > 0
 
@@ -144,7 +138,7 @@ class TestConfigManagerEnrichmentFiles:
         """Test enrichment files include mappings."""
         cm = get_config_manager()
         files = cm.get_enrichment_files()
-        
+
         # Should include both private and public mappings
         assert "private_mappings" in files or len(files) > 0
 
@@ -156,7 +150,7 @@ class TestConfigManagerMappingProcessor:
         """Test getting mapping processor files."""
         cm = get_config_manager()
         files = cm.get_mapping_processor_files()
-        
+
         assert isinstance(files, dict)
         assert len(files) > 0
 
@@ -164,7 +158,7 @@ class TestConfigManagerMappingProcessor:
         """Test mapping processor files have expected keys."""
         cm = get_config_manager()
         files = cm.get_mapping_processor_files()
-        
+
         # Should have mappings and directories
         assert any("mapping" in key.lower() for key in files.keys()) or len(files) > 0
 
@@ -176,7 +170,7 @@ class TestConfigManagerAllConfigFiles:
         """Test getting all config files."""
         cm = get_config_manager()
         files = cm.get_all_config_files()
-        
+
         assert isinstance(files, list)
         assert len(files) >= 0
 
@@ -184,7 +178,7 @@ class TestConfigManagerAllConfigFiles:
         """Test that all config files are strings."""
         cm = get_config_manager()
         files = cm.get_all_config_files()
-        
+
         for file in files:
             assert isinstance(file, str)
 
@@ -195,58 +189,58 @@ class TestConfigManagerThresholds:
     def test_get_fuzzy_threshold_high(self):
         """Test getting high fuzzy threshold."""
         cm = get_config_manager()
-        threshold = cm.get_fuzzy_threshold('high')
-        
+        threshold = cm.get_fuzzy_threshold("high")
+
         assert isinstance(threshold, float)
         assert 0.0 <= threshold <= 1.0
 
     def test_get_fuzzy_threshold_medium(self):
         """Test getting medium fuzzy threshold."""
         cm = get_config_manager()
-        threshold = cm.get_fuzzy_threshold('medium')
-        
+        threshold = cm.get_fuzzy_threshold("medium")
+
         assert isinstance(threshold, float)
         assert 0.0 <= threshold <= 1.0
 
     def test_get_fuzzy_threshold_low(self):
         """Test getting low fuzzy threshold."""
         cm = get_config_manager()
-        threshold = cm.get_fuzzy_threshold('low')
-        
+        threshold = cm.get_fuzzy_threshold("low")
+
         assert isinstance(threshold, float)
         assert 0.0 <= threshold <= 1.0
 
     def test_get_fuzzy_threshold_ordering(self):
         """Test that threshold levels are properly ordered."""
         cm = get_config_manager()
-        high = cm.get_fuzzy_threshold('high')
-        medium = cm.get_fuzzy_threshold('medium')
-        low = cm.get_fuzzy_threshold('low')
-        
+        high = cm.get_fuzzy_threshold("high")
+        medium = cm.get_fuzzy_threshold("medium")
+        low = cm.get_fuzzy_threshold("low")
+
         # High should be >= medium >= low
         assert high >= medium >= low
 
     def test_get_confidence_threshold_high(self):
         """Test getting high confidence threshold."""
         cm = get_config_manager()
-        threshold = cm.get_confidence_threshold('high')
-        
+        threshold = cm.get_confidence_threshold("high")
+
         assert isinstance(threshold, float)
         assert 0.0 <= threshold <= 1.0
 
     def test_get_confidence_threshold_medium(self):
         """Test getting medium confidence threshold."""
         cm = get_config_manager()
-        threshold = cm.get_confidence_threshold('medium')
-        
+        threshold = cm.get_confidence_threshold("medium")
+
         assert isinstance(threshold, float)
         assert 0.0 <= threshold <= 1.0
 
     def test_get_confidence_threshold_low(self):
         """Test getting low confidence threshold."""
         cm = get_config_manager()
-        threshold = cm.get_confidence_threshold('low')
-        
+        threshold = cm.get_confidence_threshold("low")
+
         assert isinstance(threshold, float)
         assert 0.0 <= threshold <= 1.0
 
@@ -257,16 +251,16 @@ class TestConfigManagerDisplaySettings:
     def test_get_display_setting_column_width(self):
         """Test getting column width display setting."""
         cm = get_config_manager()
-        width = cm.get_display_setting('column_width')
-        
+        width = cm.get_display_setting("column_width")
+
         assert isinstance(width, int)
         assert width > 0
 
     def test_get_display_setting_max_results(self):
         """Test getting max results display setting."""
         cm = get_config_manager()
-        max_results = cm.get_display_setting('max_results')
-        
+        max_results = cm.get_display_setting("max_results")
+
         # Should return int or 0 if not configured
         assert isinstance(max_results, int)
 
@@ -274,7 +268,7 @@ class TestConfigManagerDisplaySettings:
         """Test checking if auto-alphabetize is enabled."""
         cm = get_config_manager()
         enabled = cm.is_auto_alphabetize_enabled()
-        
+
         assert isinstance(enabled, bool)
 
 
@@ -284,22 +278,22 @@ class TestConfigManagerProcessingSettings:
     def test_get_processing_setting_validate_on_load(self):
         """Test getting validation on load setting."""
         cm = get_config_manager()
-        setting = cm.get_processing_setting('validate_on_load')
-        
+        setting = cm.get_processing_setting("validate_on_load")
+
         assert isinstance(setting, bool)
 
     def test_get_processing_setting_auto_backup(self):
         """Test getting auto backup setting."""
         cm = get_config_manager()
-        setting = cm.get_processing_setting('auto_backup')
-        
+        setting = cm.get_processing_setting("auto_backup")
+
         assert isinstance(setting, bool)
 
     def test_get_processing_setting_empty_key(self):
         """Test getting processing setting with missing key."""
         cm = get_config_manager()
-        setting = cm.get_processing_setting('nonexistent_setting')
-        
+        setting = cm.get_processing_setting("nonexistent_setting")
+
         # Should return False for missing settings
         assert isinstance(setting, bool)
 
@@ -311,14 +305,14 @@ class TestConfigManagerPrivacySettings:
         """Test getting privacy settings."""
         cm = get_config_manager()
         privacy = cm.get_privacy_settings()
-        
+
         assert isinstance(privacy, dict)
 
     def test_privacy_settings_structure(self):
         """Test privacy settings have expected structure."""
         cm = get_config_manager()
         privacy = cm.get_privacy_settings()
-        
+
         # Privacy settings should be accessible even if empty
         assert privacy is not None
 
@@ -330,7 +324,7 @@ class TestConfigManagerFirstRun:
         """Test checking if first run."""
         cm = get_config_manager()
         is_first_run = cm.check_first_run()
-        
+
         assert isinstance(is_first_run, bool)
 
 
@@ -347,7 +341,7 @@ class TestGetConfigManager:
         """Test that get_config_manager returns consistent results."""
         cm1 = get_config_manager()
         cm2 = get_config_manager()
-        
+
         # Both should have same config directory
         assert cm1.config_dir == cm2.config_dir
 
@@ -355,6 +349,6 @@ class TestGetConfigManager:
         """Test getting config manager with custom directory."""
         config_dir = temp_output_dir / "custom_config"
         config_dir.mkdir(exist_ok=True)
-        
+
         cm = get_config_manager(config_dir=str(config_dir))
         assert str(config_dir) in cm.config_dir

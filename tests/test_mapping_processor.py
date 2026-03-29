@@ -1,9 +1,8 @@
 """Tests for money_mapper.mapping_processor module."""
 
 import os
+
 import pytest
-import tempfile
-from pathlib import Path
 
 from money_mapper.mapping_processor import MappingProcessor
 
@@ -15,7 +14,7 @@ class TestMappingProcessorInitialization:
         """Test initialization with temporary config directory."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir), debug_mode=False)
         assert mp.config_dir == str(config_dir)
         assert mp.debug_mode is False
@@ -24,7 +23,7 @@ class TestMappingProcessorInitialization:
         """Test initialization with debug mode enabled."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir), debug_mode=True)
         assert mp.debug_mode is True
 
@@ -32,7 +31,7 @@ class TestMappingProcessorInitialization:
         """Test that initialization creates backup directory."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         # Backup directory should be created or accessible
         assert mp.backup_dir is not None
@@ -41,7 +40,7 @@ class TestMappingProcessorInitialization:
         """Test that initialization loads config."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         assert mp.config is not None
 
@@ -54,7 +53,7 @@ class TestMappingProcessorFileOperations:
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
         mp = MappingProcessor(config_dir=str(config_dir))
-        
+
         result = mp._load_toml_file("/nonexistent/path/file.toml")
         assert result == {}
 
@@ -62,14 +61,14 @@ class TestMappingProcessorFileOperations:
         """Test loading valid TOML file."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         # Create test TOML file
         toml_file = temp_output_dir / "test.toml"
         toml_file.write_text("[section]\nkey = 'value'\n")
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         result = mp._load_toml_file(str(toml_file))
-        
+
         assert "section" in result
         assert result["section"]["key"] == "value"
 
@@ -78,7 +77,7 @@ class TestMappingProcessorFileOperations:
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
         mp = MappingProcessor(config_dir=str(config_dir))
-        
+
         result = mp._backup_file("/nonexistent/file.toml")
         assert result == ""
 
@@ -86,14 +85,14 @@ class TestMappingProcessorFileOperations:
         """Test backup file creation."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         # Create file to backup
         test_file = temp_output_dir / "mappings.toml"
         test_file.write_text("[test]\ndata = 'value'\n")
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         backup_path = mp._backup_file(str(test_file))
-        
+
         # Backup should be created and path returned
         assert backup_path != ""
         assert os.path.exists(backup_path)
@@ -103,13 +102,13 @@ class TestMappingProcessorFileOperations:
         """Test backup planning without actually creating file."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         test_file = temp_output_dir / "mappings.toml"
         test_file.write_text("[test]\ndata = 'value'\n")
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         backup_path = mp._backup_file(str(test_file), actually_backup=False)
-        
+
         # Backup should be reported but not actually created
         assert backup_path != ""
 
@@ -121,10 +120,10 @@ class TestMappingProcessorDebugMode:
         """Test debug print doesn't output when debug disabled."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir), debug_mode=False)
         mp._debug_print("test message")
-        
+
         # When debug mode is off, nothing should be printed
         captured = capsys.readouterr()
         assert "test message" not in captured.out
@@ -133,10 +132,10 @@ class TestMappingProcessorDebugMode:
         """Test debug print outputs when debug enabled."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir), debug_mode=True)
         mp._debug_print("test message")
-        
+
         # When debug mode is on, message should be printed
         captured = capsys.readouterr()
         assert "test message" in captured.out or "DEBUG:" in captured.out
@@ -149,9 +148,9 @@ class TestMappingProcessorIntegration:
         """Test complete initialization of MappingProcessor."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
-        
+
         # All key attributes should be initialized
         assert mp.config_dir == str(config_dir)
         assert mp.private_mappings is not None
@@ -162,10 +161,10 @@ class TestMappingProcessorIntegration:
         """Test loading settings from config manager."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         settings = mp._load_settings()
-        
+
         assert "processing" in settings
         assert "fuzzy_matching" in settings
 
@@ -173,11 +172,11 @@ class TestMappingProcessorIntegration:
         """Test getting description for valid category."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         # Using a common PFC category
         description = mp._get_category_description("FOOD_AND_DINING")
-        
+
         assert description is not None
         assert isinstance(description, str)
 
@@ -185,10 +184,10 @@ class TestMappingProcessorIntegration:
         """Test getting description for invalid category."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         description = mp._get_category_description("NONEXISTENT_CATEGORY")
-        
+
         # Should return default description
         assert description == "Financial transaction category"
 
@@ -196,10 +195,10 @@ class TestMappingProcessorIntegration:
         """Test that settings are returned as dictionary."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         settings = mp._load_settings()
-        
+
         assert isinstance(settings, dict)
         assert len(settings) > 0
 
@@ -208,7 +207,7 @@ class TestMappingProcessorIntegration:
         """Test processor initialization with various debug modes."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir), debug_mode=debug_mode)
         assert mp.debug_mode == debug_mode
 
@@ -220,7 +219,7 @@ class TestMappingProcessorBackupCleanup:
         """Test cleanup when no backups exist."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         # Should not raise error
         mp._cleanup_old_backups()
@@ -229,10 +228,10 @@ class TestMappingProcessorBackupCleanup:
         """Test cleanup with empty backup directory."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         backup_dir = temp_output_dir / "backups"
         backup_dir.mkdir(exist_ok=True)
-        
+
         mp = MappingProcessor(config_dir=str(config_dir))
         mp.backup_dir = str(backup_dir)
         # Should not raise error
