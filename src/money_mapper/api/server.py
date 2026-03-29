@@ -404,15 +404,30 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             HTMLResponse: Rendered HTML settings page
         """
         template = env.get_template("settings.html")
+
+        options = []
+        settings_path = os.path.join(base_dir, "config", "public_settings.toml")
+        if os.path.exists(settings_path):
+            try:
+                with open(settings_path, "rb") as f:
+                    settings = tomllib.load(f)
+                for section_name, section in settings.items():
+                    if isinstance(section, dict):
+                        for key, value in section.items():
+                            options.append({"name": f"{section_name}.{key}", "value": str(value)})
+            except Exception:
+                pass
+
         data = {
             "title": "Settings",
-            "options": [
-                {"name": "Default Currency", "value": "USD"},
-                {"name": "Privacy Audit Threshold", "value": "30"},
-            ],
+            "options": options if options else [{"name": "No settings found", "value": ""}],
             "tools": [
-                {"name": "Rebuild Model", "description": "Retrain ML model"},
-                {"name": "Privacy Audit", "description": "Scan for PII in mappings"},
+                {
+                    "name": "Rebuild Model",
+                    "description": "Retrain ML categorization model from mappings",
+                },
+                {"name": "Privacy Audit", "description": "Scan public mappings for PII risks"},
+                {"name": "Validate Mappings", "description": "Check mappings against PFC taxonomy"},
             ],
         }
         return HTMLResponse(template.render(**data))

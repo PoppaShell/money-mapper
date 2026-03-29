@@ -613,3 +613,26 @@ class TestMappingsRealData:
         assert response.status_code == 201
         # Verify file was created
         assert (config_dir / "new_mappings.toml").exists()
+
+
+class TestSettingsRealData:
+    """Test settings route with real data."""
+
+    def test_settings_loads_config(self, tmp_path):
+        """Settings page loads real config from TOML."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        (config_dir / "public_settings.toml").write_text(
+            '[directories]\nstatements = "statements"\noutput = "output"\n'
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/settings")
+        assert response.status_code == 200
+
+    def test_settings_empty_state(self):
+        """Settings page works when no config file exists."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.get("/settings")
+        assert response.status_code == 200
