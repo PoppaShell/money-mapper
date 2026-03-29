@@ -7,12 +7,25 @@
 venv/
 env/
 
+# Python bytecode
+__pycache__/
+*.pyc
+
 # Build and distribution
 build/
 dist/
 *.egg-info/
 .eggs/
 wheel/
+
+# Coverage (pytest-cov defaults)
+.coverage
+htmlcov/
+
+# Tool caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
 # Financial statements (sensitive data)
 statements/

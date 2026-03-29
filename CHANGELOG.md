@@ -88,8 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sentence-transformers` moved to optional `[ml]` extra dependency
 - mypy now fully enforced in CI (removed `|| true`)
 - CI action versions: `actions/setup-python@v5`, `codecov/codecov-action@v4`
-- Updated development workflow to be issue-driven with comprehensive CLAUDE.md documentation
-- Enforced testing-first workflow in DEVELOPMENT.md and CLAUDE.md
+- Updated development workflow to be issue-driven with comprehensive documentation
+- Enforced testing-first workflow in development documentation
   - Clear numbered steps: Code → Test → Document → Commit
   - Added warning: "NEVER update CHANGELOG, README, or commit UNTIL testing passes!"
 
