@@ -8,6 +8,7 @@ Provides 5 main pages:
 - /settings: Configuration and tools
 """
 
+import html
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, UploadFile
@@ -110,7 +111,9 @@ def create_app() -> FastAPI:
         if not category or category.strip() == "":
             return HTMLResponse("Category cannot be empty", status_code=400)
 
-        return HTMLResponse(f"Updated transaction {transaction_id} to {category}", status_code=200)
+        safe_id = html.escape(str(transaction_id))
+        safe_category = html.escape(str(category))
+        return HTMLResponse(f"Updated transaction {safe_id} to {safe_category}", status_code=200)
 
     @app.get("/transactions/export", response_class=HTMLResponse)
     async def export_transactions() -> HTMLResponse:
@@ -198,7 +201,9 @@ def create_app() -> FastAPI:
         if not merchant or not category:
             return HTMLResponse("Merchant and category required", status_code=400)
 
-        return HTMLResponse(f"Created mapping: {merchant} → {category}", status_code=201)
+        safe_merchant = html.escape(str(merchant))
+        safe_category = html.escape(str(category))
+        return HTMLResponse(f"Created mapping: {safe_merchant} - {safe_category}", status_code=201)
 
     # ===== Settings Route =====
     @app.get("/settings", response_class=HTMLResponse)
