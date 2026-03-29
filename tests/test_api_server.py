@@ -390,3 +390,51 @@ class TestDataHelpers:
         result = _compute_spending_by_category([])
         assert result["categories"] == []
         assert result["amounts"] == []
+
+
+class TestDashboardRealData:
+    """Test dashboard with real data loading."""
+
+    def test_dashboard_empty_state(self):
+        """Dashboard renders without crashing when no data exists."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.get("/dashboard")
+        assert response.status_code == 200
+        assert "text/html" in response.headers.get("content-type", "")
+
+    def test_dashboard_with_transactions(self, tmp_path):
+        """Dashboard shows spending data from transactions file."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        txn_file = output_dir / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-03-28",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK",
+                    },
+                    {
+                        "date": "2026-03-27",
+                        "merchant_name": "Shell",
+                        "amount": -45.00,
+                        "category": "TRANSPORTATION",
+                    },
+                ]
+            )
+        )
+
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/dashboard")
+        assert response.status_code == 200
+
+    def test_root_shows_dashboard(self, tmp_path):
+        """Root route should render dashboard template."""
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/")
+        assert response.status_code == 200
