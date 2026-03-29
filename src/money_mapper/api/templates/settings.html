@@ -6,7 +6,7 @@
 <h1>{{ title }}</h1>
 
 <div class="info">
-    <strong>Settings:</strong> Configure Money Mapper and manage tools
+    <strong>Settings:</strong> View Money Mapper configuration
 </div>
 
 <h2>Configuration</h2>
@@ -18,26 +18,8 @@
     <button type="submit">Save Settings</button>
 </form>
 
-<h2>Tools & Utilities</h2>
-<div style="background: white; padding: 1rem; border-radius: 4px;">
-    {% for tool in tools %}
-        <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #ddd;">
-            <h3>{{ tool.name }}</h3>
-            <p>{{ tool.description }}</p>
-            <button onclick="alert('Tool: {{ tool.name }}')">Run {{ tool.name }}</button>
-        </div>
-    {% endfor %}
-</div>
-
-<h2>Privacy & Security</h2>
-<div class="info">
-    <p><strong>Privacy Audit:</strong> Scans mappings for personally identifiable information</p>
-    <p><strong>Model Rebuild:</strong> Retrains the ML categorization model</p>
-</div>
-
 <h2>About</h2>
 <div class="info">
     <p>Money Mapper v0.7.0</p>
-    <p><a href="#">View documentation →</a></p>
 </div>
 {% endblock %}

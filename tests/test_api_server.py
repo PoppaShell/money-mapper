@@ -231,15 +231,15 @@ class TestSettingsRoute:
         response = client.post("/settings", json={"option": "value"})
         assert response.status_code in [200, 400]
 
-    def test_settings_has_model_rebuild_button(self, client):
-        """Settings should have model rebuild option."""
+    def test_settings_has_about_section(self, client):
+        """Settings should have an About section."""
         response = client.get("/settings")
-        assert "model" in response.text.lower() or "rebuild" in response.text.lower()
+        assert "about" in response.text.lower() or "money mapper" in response.text.lower()
 
-    def test_settings_has_privacy_scan_option(self, client):
-        """Settings should have privacy audit option."""
+    def test_settings_has_save_button(self, client):
+        """Settings should have a Save Settings button."""
         response = client.get("/settings")
-        assert "privacy" in response.text.lower() or "audit" in response.text.lower()
+        assert "save" in response.text.lower()
 
 
 class TestErrorHandling:
@@ -636,3 +636,167 @@ class TestSettingsRealData:
         client = TestClient(app)
         response = client.get("/settings")
         assert response.status_code == 200
+
+
+class TestBrowserRendering:
+    """Test all pages render correctly with real fixture data."""
+
+    def test_dashboard_shows_spending_categories(self, tmp_path):
+        """Dashboard should show spending breakdown from enriched data."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2024-01-15",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK",
+                        "categorization_method": "public_mapping",
+                        "confidence": 0.95,
+                    },
+                    {
+                        "date": "2024-01-16",
+                        "merchant_name": "Shell",
+                        "amount": -45.00,
+                        "category": "TRANSPORTATION",
+                        "categorization_method": "public_mapping",
+                        "confidence": 0.95,
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/dashboard")
+        assert response.status_code == 200
+        text = response.text.lower()
+        assert "food_and_drink" in text or "starbucks" in text
+
+    def test_dashboard_empty_state(self, tmp_path):
+        """Dashboard renders without crashing when no data exists."""
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/dashboard")
+        assert response.status_code == 200
+
+    def test_transactions_shows_real_data(self, tmp_path):
+        """Transactions page shows real transaction rows."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2024-01-15",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK",
+                        "categorization_method": "public_mapping",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions")
+        assert response.status_code == 200
+        assert "starbucks" in response.text.lower()
+
+    def test_transactions_filter_by_category(self, tmp_path):
+        """Category filter narrows transaction list."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2024-01-15",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD",
+                    },
+                    {
+                        "date": "2024-01-16",
+                        "merchant_name": "Shell",
+                        "amount": -45.00,
+                        "category": "TRANSPORT",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions?category=FOOD")
+        assert response.status_code == 200
+
+    def test_import_page_has_upload_form(self, tmp_path):
+        """Import page renders file upload form."""
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/import")
+        assert response.status_code == 200
+        text = response.text.lower()
+        assert "file" in text
+        assert "import" in text
+
+    def test_mappings_page_loads_real_data(self, tmp_path):
+        """Mappings page loads real mappings from TOML."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        (config_dir / "public_mappings.toml").write_text(
+            "[FOOD_AND_DRINK.COFFEE]\n"
+            '"starbucks*" = {name = "Starbucks", category = "FOOD_AND_DRINK", '
+            'subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public"}\n'
+        )
+        (config_dir / "private_mappings.toml").write_text("")
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/mappings")
+        assert response.status_code == 200
+        assert "starbucks" in response.text.lower()
+
+    def test_settings_page_shows_config(self, tmp_path):
+        """Settings page displays real config from TOML."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        (config_dir / "public_settings.toml").write_text(
+            '[directories]\nstatements = "statements"\noutput = "output"\n'
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/settings")
+        assert response.status_code == 200
+        assert "statements" in response.text
+
+    def test_all_nav_links_return_200(self, tmp_path):
+        """Every navigation link should resolve to 200."""
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        for path in ["/", "/dashboard", "/transactions", "/import", "/mappings", "/settings"]:
+            response = client.get(path)
+            assert response.status_code == 200, f"{path} returned {response.status_code}"
+
+    def test_csv_export_returns_csv(self, tmp_path):
+        """Export endpoint returns CSV with real data."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2024-01-15",
+                        "merchant_name": "Store",
+                        "amount": -50.0,
+                        "category": "Shopping",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions/export")
+        assert response.status_code == 200
+        assert "text/csv" in response.headers.get("content-type", "")
+        assert "Store" in response.text

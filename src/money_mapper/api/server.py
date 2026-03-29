@@ -421,14 +421,6 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         data = {
             "title": "Settings",
             "options": options if options else [{"name": "No settings found", "value": ""}],
-            "tools": [
-                {
-                    "name": "Rebuild Model",
-                    "description": "Retrain ML categorization model from mappings",
-                },
-                {"name": "Privacy Audit", "description": "Scan public mappings for PII risks"},
-                {"name": "Validate Mappings", "description": "Check mappings against PFC taxonomy"},
-            ],
         }
         return HTMLResponse(template.render(**data))
 
