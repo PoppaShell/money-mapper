@@ -370,7 +370,7 @@ def validate_config() -> tuple[bool, list[str], list[str]]:
     missing_required = []
     missing_optional = []
 
-    # Check required files (statement_patterns removed — was for PDF parsing)
+    # Check required files (statement_patterns removed -- was for PDF parsing)
     required_files = ["plaid_categories"]
     for file_key in required_files:
         file_path = config.get_file_path(file_key)
@@ -402,12 +402,12 @@ if __name__ == "__main__":
     print("\nDirectories:")
     for key in ["statements", "output", "config"]:
         path = config.get_directory_path(key)
-        exists = "✓" if os.path.exists(path) else "✗"
+        exists = "[OK]" if os.path.exists(path) else "[MISSING]"
         print(f"  {key}: {path} {exists}")
 
     print("\nConfiguration files:")
     for file_path in config.get_all_config_files():
-        exists = "✓" if os.path.exists(file_path) else "✗"
+        exists = "[OK]" if os.path.exists(file_path) else "[MISSING]"
         filename = os.path.basename(file_path)
         print(f"  {filename}: {file_path} {exists}")
 

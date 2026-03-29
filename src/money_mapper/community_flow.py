@@ -97,7 +97,7 @@ def generate_pr_template(merchant: str, category: str, source: str) -> dict[str,
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     branch_name = f"feature/merchant-contributions-{timestamp}"
 
-    title = f"Add merchant mapping: {merchant} → {category}"
+    title = f"Add merchant mapping: {merchant} -> {category}"
 
     body = f"""# Community Contribution: Merchant Mapping
 

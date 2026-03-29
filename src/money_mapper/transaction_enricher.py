@@ -989,7 +989,7 @@ def analyze_categorization_accuracy(
     low_confidence = sum(1 for t in transactions if t.get("confidence", 0) < 0.5)
 
     print("\nConfidence Distribution:")
-    print(f"  High (≥0.8): {high_confidence} ({(high_confidence / len(transactions)) * 100:.1f}%)")
+    print(f"  High (>=0.8): {high_confidence} ({(high_confidence / len(transactions)) * 100:.1f}%)")
     print(
         f"  Medium (0.5-0.8): {medium_confidence} ({(medium_confidence / len(transactions)) * 100:.1f}%)"
     )
@@ -1053,7 +1053,10 @@ def analyze_categorization_accuracy(
         uncategorized_list = [t for t in transactions if t.get("category") == "UNCATEGORIZED"]
 
         if uncategorized_list:
-            from interactive_mapper import get_transaction_frequency, run_mapping_wizard
+            from money_mapper.interactive_mapper import (
+                get_transaction_frequency,
+                run_mapping_wizard,
+            )
 
             print("\n--- Top Uncategorized Transactions ---")
             print("Analyzing transaction frequency...")

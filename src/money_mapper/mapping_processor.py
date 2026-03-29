@@ -572,7 +572,7 @@ class MappingProcessor:
                                     wildcard_patterns[section_key].append((pattern, pattern_info))
 
         # Now check for patterns covered by wildcards in the same category
-        from transaction_enricher import wildcard_pattern_match
+        from money_mapper.transaction_enricher import wildcard_pattern_match
 
         for pattern, pattern_info in all_patterns.items():
             # Skip wildcards themselves
@@ -735,14 +735,14 @@ class MappingProcessor:
 
         print("Configuration files:")
         if os.path.exists(public_settings):
-            print(f"  ✓ Public settings exists: {public_settings}")
+            print(f"  [OK] Public settings exists: {public_settings}")
         else:
-            print(f"  ✗ Public settings missing: {public_settings}")
+            print(f"  [MISSING] Public settings missing: {public_settings}")
 
         if os.path.exists(private_settings):
-            print(f"  ✓ Private settings exists: {private_settings}")
+            print(f"  [OK] Private settings exists: {private_settings}")
         else:
-            print(f"  ✗ Private settings missing: {private_settings}")
+            print(f"  [MISSING] Private settings missing: {private_settings}")
             print("     Run setup wizard to create private configuration")
 
         print("   Settings include fuzzy matching thresholds and processing options")
@@ -973,7 +973,7 @@ class MappingProcessor:
 
             # Provide different prompts based on conflict type
             if is_cross_file:
-                print("\n⚠️  CROSS-FILE DUPLICATE DETECTED")
+                print("\n[!]  CROSS-FILE DUPLICATE DETECTED")
                 print(f"This pattern exists in {conflict['file']} but you're trying to add it")
                 print(f"with scope='{new_scope}' which would put it in a different file.")
                 print("\nOptions:")
@@ -986,15 +986,15 @@ class MappingProcessor:
                     choice = input("\nResolve cross-file duplicate (k/r/u/a): ").lower().strip()
 
                     if choice == "k":
-                        print(f"✓ Keeping existing mapping in {conflict['file']}, skipping new")
+                        print(f"[OK] Keeping existing mapping in {conflict['file']}, skipping new")
                         break
                     elif choice == "r":
-                        print(f"✓ Will remove from {conflict['file']} and add new mapping")
+                        print(f"[OK] Will remove from {conflict['file']} and add new mapping")
                         conflict["action"] = "replace_cross_file"
                         break
                     elif choice == "u":
                         print(
-                            f"✓ Will update existing mapping's scope to '{new_scope}' and use new details"
+                            f"[OK] Will update existing mapping's scope to '{new_scope}' and use new details"
                         )
                         conflict["action"] = "update_scope"
                         break
@@ -1004,7 +1004,7 @@ class MappingProcessor:
                     else:
                         print("Please enter 'k', 'r', 'u', or 'a'")
             else:
-                print("\n⚠️  SAME-FILE DUPLICATE DETECTED")
+                print("\n[!]  SAME-FILE DUPLICATE DETECTED")
                 print(f"This pattern already exists in {conflict['file']}.")
                 print("\nOptions:")
                 print("  (s) Skip - Keep existing mapping, don't add new one")
@@ -1015,10 +1015,10 @@ class MappingProcessor:
                     choice = input("\nResolve same-file duplicate (s/o/a): ").lower().strip()
 
                     if choice == "s":
-                        print("✓ Skipping new mapping, keeping existing")
+                        print("[OK] Skipping new mapping, keeping existing")
                         break
                     elif choice == "o":
-                        print("✓ Will overwrite existing mapping with new details")
+                        print("[OK] Will overwrite existing mapping with new details")
                         conflict["action"] = "overwrite"
                         break
                     elif choice == "a":
@@ -1411,10 +1411,10 @@ class MappingProcessor:
 
                     if self._confirm_action("\nProcess these new mappings?"):
                         if self._process_new_mappings():
-                            print("✓ New mappings processed successfully")
+                            print("[OK] New mappings processed successfully")
                             new_mappings_processed = True
                         else:
-                            print("✗ Failed to process new mappings")
+                            print("[FAIL] Failed to process new mappings")
                             return False
                     else:
                         print("Skipping new mappings processing")
@@ -1432,11 +1432,11 @@ class MappingProcessor:
                 if self.config.get_processing_setting("interactive_conflicts"):
                     if self._confirm_action("\nFix validation issues interactively?"):
                         fixed_count = self._interactive_fix_validation_issues(validation_issues)
-                        print(f"✓ Fixed {fixed_count} validation issues")
+                        print(f"[OK] Fixed {fixed_count} validation issues")
                 else:
                     print("Interactive mode disabled - run with interactive_conflicts=true to fix")
             else:
-                print("✓ All existing mappings are valid")
+                print("[OK] All existing mappings are valid")
 
             # Step 5: Detect and resolve duplicates interactively
             print("\nDUPLICATES:")
@@ -1447,13 +1447,13 @@ class MappingProcessor:
                 if self.config.get_processing_setting("interactive_conflicts"):
                     if self._confirm_action("\nResolve duplicates interactively?"):
                         resolved_count = self._interactive_resolve_duplicates(duplicates)
-                        print(f"✓ Resolved {resolved_count} duplicate patterns")
+                        print(f"[OK] Resolved {resolved_count} duplicate patterns")
                 else:
                     print(
                         "Interactive mode disabled - run with interactive_conflicts=true to resolve"
                     )
             else:
-                print("✓ No duplicate patterns found")
+                print("[OK] No duplicate patterns found")
 
             # Step 6: Wildcard consolidation opportunities
             print("\nWILDCARD CONSOLIDATION:")
@@ -1469,7 +1469,7 @@ class MappingProcessor:
 
                     # Process the new wildcard mappings
                     if self._process_new_mappings():
-                        print(f"✓ Processed {wildcards_added} wildcard pattern(s)")
+                        print(f"[OK] Processed {wildcards_added} wildcard pattern(s)")
 
                         # Re-detect and resolve duplicates (wildcards likely created duplicates)
                         print("\nRE-CHECKING FOR DUPLICATES:")
@@ -1482,20 +1482,20 @@ class MappingProcessor:
                                     resolved_count = self._interactive_resolve_duplicates(
                                         duplicates
                                     )
-                                    print(f"✓ Resolved {resolved_count} duplicate patterns")
+                                    print(f"[OK] Resolved {resolved_count} duplicate patterns")
                         else:
-                            print("✓ No duplicates found")
+                            print("[OK] No duplicates found")
                     else:
-                        print("✗ Failed to process wildcard mappings")
+                        print("[FAIL] Failed to process wildcard mappings")
 
             # Summary
             print("\n" + "=" * 60)
             print("MAPPING MANAGEMENT COMPLETE")
 
             if new_mappings_processed or wildcards_added > 0:
-                print("\n✓ New mappings integrated")
+                print("\n[OK] New mappings integrated")
                 if wildcards_added > 0:
-                    print(f"✓ {wildcards_added} wildcard pattern(s) added")
+                    print(f"[OK] {wildcards_added} wildcard pattern(s) added")
 
             # Count remaining issues
             remaining_validation = len(
@@ -1507,9 +1507,9 @@ class MappingProcessor:
             total_remaining = remaining_validation + remaining_duplicates
 
             if total_remaining == 0:
-                print("✓ All mappings validated and clean")
+                print("[OK] All mappings validated and clean")
             else:
-                print(f"\n⚠  {total_remaining} issues remaining to fix manually")
+                print(f"\n[!]  {total_remaining} issues remaining to fix manually")
 
             return True
 
@@ -1696,7 +1696,7 @@ class MappingProcessor:
 
         new_category, new_subcategory = result
 
-        print(f"\n✓ Would update to {new_category}.{new_subcategory}")
+        print(f"\n[OK] Would update to {new_category}.{new_subcategory}")
 
         if prompt_yes_no("Apply this change?", default=True):
             issue["mapping"]["category"] = new_category
@@ -1805,11 +1805,11 @@ class MappingProcessor:
                         dup["duplicate_primary"],
                         dup["duplicate_subcategory"],
                     ):
-                        print(f"✓ Removed exact pattern from {dup['duplicate_file']}")
+                        print(f"[OK] Removed exact pattern from {dup['duplicate_file']}")
                         resolved_count += 1
                         dup["resolved"] = True
                     else:
-                        print("✗ Failed to remove pattern")
+                        print("[FAIL] Failed to remove pattern")
                 else:
                     print("Skipped - keeping both patterns")
 
@@ -1832,11 +1832,11 @@ class MappingProcessor:
                             dup["duplicate_primary"],
                             dup["duplicate_subcategory"],
                         ):
-                            print(f"✓ Removed duplicate from {dup['duplicate_file']}")
+                            print(f"[OK] Removed duplicate from {dup['duplicate_file']}")
                             resolved_count += 1
                             dup["resolved"] = True
                         else:
-                            print("✗ Failed to remove duplicate")
+                            print("[FAIL] Failed to remove duplicate")
                         break
                     elif choice == "2":
                         # Keep duplicate, remove existing
@@ -1847,11 +1847,11 @@ class MappingProcessor:
                             dup["existing_primary"],
                             dup["existing_subcategory"],
                         ):
-                            print(f"✓ Removed duplicate from {dup['existing_file']}")
+                            print(f"[OK] Removed duplicate from {dup['existing_file']}")
                             resolved_count += 1
                             dup["resolved"] = True
                         else:
-                            print("✗ Failed to remove duplicate")
+                            print("[FAIL] Failed to remove duplicate")
                         break
                     elif choice.lower() == "s":
                         print("Skipped duplicate resolution")
@@ -2124,7 +2124,7 @@ class MappingProcessor:
             return True
 
         except Exception as e:
-            print(f"  ✗ Error adding to new_mappings.toml: {e}")
+            print(f"  [FAIL] Error adding to new_mappings.toml: {e}")
             if self.debug_mode:
                 import traceback
 
@@ -2149,12 +2149,12 @@ class MappingProcessor:
         similar_groups = self._detect_similar_patterns()
 
         if not similar_groups:
-            print("✓ No consolidation opportunities found.")
+            print("[OK] No consolidation opportunities found.")
             print("  All mappings are already optimized!")
             return True
 
         print(
-            f"\n�� Found {len(similar_groups)} consolidation opportunit{'y' if len(similar_groups) == 1 else 'ies'}!\n"
+            f"\n[!] Found {len(similar_groups)} consolidation opportunit{'y' if len(similar_groups) == 1 else 'ies'}!\n"
         )
 
         consolidated_count = 0
@@ -2173,7 +2173,7 @@ class MappingProcessor:
                 print(f'  - "{pattern}"')
             print()
             print("Suggested wildcard pattern:")
-            print(f'  → "{group["suggested_wildcard"]}"')
+            print(f'  -> "{group["suggested_wildcard"]}"')
             print()
             print(f"This would replace {len(group['patterns'])} patterns with 1 wildcard pattern.")
             print()
@@ -2207,7 +2207,7 @@ class MappingProcessor:
                 print(f'\nCurrent suggestion: "{final_wildcard}"')
                 print("Enter your custom wildcard pattern (or press Enter to use suggestion):")
                 print("Wildcards: * = any characters, ? = single character", flush=True)
-                custom_pattern = input("→ ").strip()
+                custom_pattern = input("-> ").strip()
 
                 if custom_pattern:
                     final_wildcard = custom_pattern
@@ -2216,7 +2216,7 @@ class MappingProcessor:
                     print(f'Using suggested pattern: "{final_wildcard}"')
 
             # Issue #18: Prompt for file selection
-            print("\n→ Destination file for consolidated pattern:")
+            print("\n-> Destination file for consolidated pattern:")
             source_file = group["file"]
             source_scope = "private" if "private" in source_file else "public"
             other_scope = "public" if source_scope == "private" else "private"
@@ -2230,12 +2230,12 @@ class MappingProcessor:
             destination_file = source_file
             if prompt_yes_no("Swap to other mapping file?", default=False):
                 destination_file = other_file
-                print(f"  ✓ Will save to {other_file}")
+                print(f"  [OK] Will save to {other_file}")
             else:
-                print(f"  ✓ Will save to {source_file}")
+                print(f"  [OK] Will save to {source_file}")
 
             # Add wildcard to new_mappings.toml
-            print("\n→ Adding wildcard to new_mappings.toml...")
+            print("\n-> Adding wildcard to new_mappings.toml...")
 
             success = self._add_wildcard_to_new_mappings(
                 wildcard=final_wildcard,
@@ -2247,10 +2247,10 @@ class MappingProcessor:
 
             if success:
                 consolidated_count += 1
-                print(f'  ✓ Added wildcard pattern: "{final_wildcard}"')
-                print(f"  ✓ Will replace {len(group['patterns'])} pattern(s) when processed\n")
+                print(f'  [OK] Added wildcard pattern: "{final_wildcard}"')
+                print(f"  [OK] Will replace {len(group['patterns'])} pattern(s) when processed\n")
             else:
-                print("  ✗ Failed to add pattern. Skipping...\n")
+                print("  [FAIL] Failed to add pattern. Skipping...\n")
                 skipped_count += 1
 
         print("\n" + "=" * 70)
@@ -2261,7 +2261,7 @@ class MappingProcessor:
         print(f"Total analyzed: {len(similar_groups)}")
 
         if consolidated_count > 0:
-            print(f"\n✓ Added {consolidated_count} wildcard pattern(s) to new_mappings.toml")
+            print(f"\n[OK] Added {consolidated_count} wildcard pattern(s) to new_mappings.toml")
 
         return consolidated_count > 0  # Return True if any patterns were added
 
