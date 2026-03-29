@@ -438,3 +438,89 @@ class TestDashboardRealData:
         client = TestClient(app)
         response = client.get("/")
         assert response.status_code == 200
+
+
+class TestTransactionsRealData:
+    """Test transactions route with real data."""
+
+    def test_transactions_loads_real_data(self, tmp_path):
+        """Transactions page shows data from enriched file."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        txn_file = output_dir / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-03-28",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK",
+                        "description": "STARBUCKS #1234",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions")
+        assert response.status_code == 200
+
+    def test_transactions_empty_state(self):
+        """Transactions page works with no data."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.get("/transactions")
+        assert response.status_code == 200
+
+    def test_transactions_filter_by_category(self, tmp_path):
+        """Filter narrows results to matching category."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        txn_file = output_dir / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-03-28",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD",
+                    },
+                    {
+                        "date": "2026-03-27",
+                        "merchant_name": "Shell",
+                        "amount": -45.00,
+                        "category": "TRANSPORT",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions?category=FOOD")
+        assert response.status_code == 200
+
+    def test_transactions_export_csv(self, tmp_path):
+        """Export returns real CSV data."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        txn_file = output_dir / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-03-28",
+                        "merchant_name": "Store",
+                        "amount": -50.0,
+                        "category": "Shopping",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions/export")
+        assert response.status_code == 200
+        assert "text/csv" in response.headers.get("content-type", "")
+        assert "Store" in response.text

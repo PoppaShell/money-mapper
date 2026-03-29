@@ -156,32 +156,44 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         """List transactions with optional filtering.
 
         Args:
-            date: Filter by month (YYYY-MM)
-            category: Filter by category
-            merchant: Filter by merchant
+            date: Filter by date prefix (e.g. YYYY-MM)
+            category: Filter by category substring
+            merchant: Filter by merchant or description substring
 
         Returns:
             HTMLResponse: Rendered HTML transaction list
         """
         template = env.get_template("transactions.html")
+        transactions = _load_enriched_transactions(enriched_path)
+
+        # Apply filters
+        filtered = transactions
+        if date:
+            filtered = [t for t in filtered if t.get("date", "").startswith(date)]
+        if category:
+            filtered = [t for t in filtered if category.lower() in t.get("category", "").lower()]
+        if merchant:
+            filtered = [
+                t
+                for t in filtered
+                if merchant.lower() in t.get("merchant_name", "").lower()
+                or merchant.lower() in t.get("description", "").lower()
+            ]
+
+        formatted = [
+            {
+                "id": i,
+                "date": t.get("date", ""),
+                "merchant": t.get("merchant_name", t.get("description", "Unknown")),
+                "amount": float(t.get("amount", 0)),
+                "category": t.get("category", "Uncategorized"),
+            }
+            for i, t in enumerate(filtered)
+        ]
+
         data = {
             "title": "Transactions",
-            "transactions": [
-                {
-                    "id": 1,
-                    "date": "2026-03-28",
-                    "merchant": "Store",
-                    "amount": 50,
-                    "category": "Shopping",
-                },
-                {
-                    "id": 2,
-                    "date": "2026-03-27",
-                    "merchant": "Gas Station",
-                    "amount": 35,
-                    "category": "Transport",
-                },
-            ],
+            "transactions": formatted,
             "filters": {"date": date, "category": category, "merchant": merchant},
         }
         return HTMLResponse(template.render(**data))
@@ -211,7 +223,14 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         Returns:
             HTMLResponse: CSV data
         """
-        csv_data = "date,merchant,amount,category\n2026-03-28,Store,50,Shopping\n"
+        transactions = _load_enriched_transactions(enriched_path)
+        lines = ["date,merchant,amount,category"]
+        for t in transactions:
+            merchant = t.get("merchant_name", t.get("description", ""))
+            lines.append(
+                f"{t.get('date', '')},{merchant},{t.get('amount', 0)},{t.get('category', '')}"
+            )
+        csv_data = "\n".join(lines) + "\n"
         return HTMLResponse(csv_data, media_type="text/csv", status_code=200)
 
     # ===== Import Route =====
