@@ -9,6 +9,9 @@ Provides 5 main pages:
 """
 
 import html
+import json
+import os
+import tomllib
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, UploadFile
@@ -17,12 +20,95 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 
-def create_app() -> FastAPI:
+def _load_enriched_transactions(file_path: str) -> list[dict]:
+    """Load enriched transactions from JSON file.
+
+    Args:
+        file_path: Path to the JSON file containing enriched transactions.
+
+    Returns:
+        List of transaction dicts, or empty list if file missing/invalid.
+    """
+    if not os.path.exists(file_path):
+        return []
+    try:
+        with open(file_path) as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def _load_mappings_flat(file_path: str) -> list[dict]:
+    """Load mappings from TOML and flatten to list of {merchant, category, subcategory, name}.
+
+    Args:
+        file_path: Path to the TOML mappings file.
+
+    Returns:
+        Flattened list of mapping dicts, or empty list if file missing/invalid.
+    """
+    if not os.path.exists(file_path):
+        return []
+    try:
+        with open(file_path, "rb") as f:
+            data = tomllib.load(f)
+        flat = []
+        for section in data.values():
+            if isinstance(section, dict):
+                for subsection in section.values():
+                    if isinstance(subsection, dict):
+                        for pattern, mapping in subsection.items():
+                            if isinstance(mapping, dict):
+                                flat.append(
+                                    {
+                                        "merchant": pattern,
+                                        "category": mapping.get("category", ""),
+                                        "subcategory": mapping.get("subcategory", ""),
+                                        "name": mapping.get("name", pattern),
+                                    }
+                                )
+        return flat
+    except (OSError, tomllib.TOMLDecodeError):
+        return []
+
+
+def _compute_spending_by_category(transactions: list[dict]) -> dict:
+    """Compute spending totals grouped by category.
+
+    Args:
+        transactions: List of transaction dicts with 'category' and 'amount' keys.
+
+    Returns:
+        Dict with 'categories' (list of category names) and 'amounts' (list of floats),
+        sorted by amount descending.
+    """
+    totals: dict[str, float] = {}
+    for txn in transactions:
+        cat = txn.get("category", "Uncategorized") or "Uncategorized"
+        amount = abs(float(txn.get("amount", 0)))
+        totals[cat] = totals.get(cat, 0) + amount
+    sorted_cats = sorted(totals.items(), key=lambda x: x[1], reverse=True)
+    return {
+        "categories": [c[0] for c in sorted_cats],
+        "amounts": [round(c[1], 2) for c in sorted_cats],
+    }
+
+
+def create_app(data_dir: str | None = None) -> FastAPI:
     """Create and configure FastAPI application.
+
+    Args:
+        data_dir: Base directory for data files. Defaults to current working directory.
 
     Returns:
         FastAPI: Configured application instance
     """
+    base_dir = data_dir or os.getcwd()
+    enriched_path = os.path.join(base_dir, "output", "enriched_transactions.json")
+    public_mappings_path = os.path.join(base_dir, "config", "public_mappings.toml")
+    private_mappings_path = os.path.join(base_dir, "config", "private_mappings.toml")
+
     app = FastAPI(
         title="Money Mapper",
         description="Personal transaction parser and categorizer",
@@ -44,16 +130,21 @@ def create_app() -> FastAPI:
             HTMLResponse: Rendered HTML dashboard
         """
         template = env.get_template("dashboard.html")
+        transactions = _load_enriched_transactions(enriched_path)
+        spending = _compute_spending_by_category(transactions)
+        recent = sorted(transactions, key=lambda t: t.get("date", ""), reverse=True)[:10]
+        recent_formatted = [
+            {
+                "date": t.get("date", ""),
+                "merchant": t.get("merchant_name", t.get("description", "Unknown")),
+                "amount": abs(float(t.get("amount", 0))),
+            }
+            for t in recent
+        ]
         data = {
             "title": "Dashboard",
-            "spending": {
-                "categories": ["Food", "Transport", "Entertainment"],
-                "amounts": [150, 75, 50],
-            },
-            "recent_transactions": [
-                {"date": "2026-03-28", "merchant": "Store", "amount": 50},
-                {"date": "2026-03-27", "merchant": "Gas", "amount": 35},
-            ],
+            "spending": spending,
+            "recent_transactions": recent_formatted,
         }
         return HTMLResponse(template.render(**data))
 
@@ -67,32 +158,44 @@ def create_app() -> FastAPI:
         """List transactions with optional filtering.
 
         Args:
-            date: Filter by month (YYYY-MM)
-            category: Filter by category
-            merchant: Filter by merchant
+            date: Filter by date prefix (e.g. YYYY-MM)
+            category: Filter by category substring
+            merchant: Filter by merchant or description substring
 
         Returns:
             HTMLResponse: Rendered HTML transaction list
         """
         template = env.get_template("transactions.html")
+        transactions = _load_enriched_transactions(enriched_path)
+
+        # Apply filters
+        filtered = transactions
+        if date:
+            filtered = [t for t in filtered if t.get("date", "").startswith(date)]
+        if category:
+            filtered = [t for t in filtered if category.lower() in t.get("category", "").lower()]
+        if merchant:
+            filtered = [
+                t
+                for t in filtered
+                if merchant.lower() in t.get("merchant_name", "").lower()
+                or merchant.lower() in t.get("description", "").lower()
+            ]
+
+        formatted = [
+            {
+                "id": i,
+                "date": t.get("date", ""),
+                "merchant": t.get("merchant_name", t.get("description", "Unknown")),
+                "amount": float(t.get("amount", 0)),
+                "category": t.get("category", "Uncategorized"),
+            }
+            for i, t in enumerate(filtered)
+        ]
+
         data = {
             "title": "Transactions",
-            "transactions": [
-                {
-                    "id": 1,
-                    "date": "2026-03-28",
-                    "merchant": "Store",
-                    "amount": 50,
-                    "category": "Shopping",
-                },
-                {
-                    "id": 2,
-                    "date": "2026-03-27",
-                    "merchant": "Gas Station",
-                    "amount": 35,
-                    "category": "Transport",
-                },
-            ],
+            "transactions": formatted,
             "filters": {"date": date, "category": category, "merchant": merchant},
         }
         return HTMLResponse(template.render(**data))
@@ -122,7 +225,14 @@ def create_app() -> FastAPI:
         Returns:
             HTMLResponse: CSV data
         """
-        csv_data = "date,merchant,amount,category\n2026-03-28,Store,50,Shopping\n"
+        transactions = _load_enriched_transactions(enriched_path)
+        lines = ["date,merchant,amount,category"]
+        for t in transactions:
+            merchant = t.get("merchant_name", t.get("description", ""))
+            lines.append(
+                f"{t.get('date', '')},{merchant},{t.get('amount', 0)},{t.get('category', '')}"
+            )
+        csv_data = "\n".join(lines) + "\n"
         return HTMLResponse(csv_data, media_type="text/csv", status_code=200)
 
     # ===== Import Route =====
@@ -151,10 +261,11 @@ def create_app() -> FastAPI:
         Returns:
             HTMLResponse: Import results or error message
         """
+        import tempfile
+
         if not file:
             return HTMLResponse("No file provided", status_code=400)
 
-        # Validate file extension
         allowed_extensions = {".csv", ".ofx", ".qfx"}
         filename = file.filename or ""
         file_extension = Path(filename).suffix.lower()
@@ -162,25 +273,83 @@ def create_app() -> FastAPI:
         if file_extension not in allowed_extensions:
             return HTMLResponse("Invalid file format. Supported: CSV, OFX, QFX", status_code=400)
 
-        return HTMLResponse(f"Imported {file.filename} successfully", status_code=200)
+        output_dir = os.path.join(base_dir, "output")
+        os.makedirs(output_dir, exist_ok=True)
+
+        try:
+            content = await file.read()
+            with tempfile.NamedTemporaryFile(
+                mode="wb", suffix=file_extension, dir=output_dir, delete=False
+            ) as tmp:
+                tmp.write(content)
+                tmp_path_str = tmp.name
+
+            # Import transactions
+            from money_mapper.csv_importer import CSVImporter
+
+            importer = CSVImporter()
+            transactions = importer.import_file(tmp_path_str)
+
+            if not transactions:
+                os.unlink(tmp_path_str)
+                return HTMLResponse("No transactions found in file", status_code=200)
+
+            # Save raw transactions
+            raw_path = os.path.join(output_dir, "financial_transactions.json")
+            with open(raw_path, "w") as f:
+                json.dump(transactions, f, indent=2)
+
+            # Try enrichment
+            enriched_output = os.path.join(output_dir, "enriched_transactions.json")
+            try:
+                from money_mapper.transaction_enricher import process_transaction_enrichment
+
+                process_transaction_enrichment(
+                    raw_path, enriched_output, debug=False, use_multiprocessing=False
+                )
+                enriched = _load_enriched_transactions(enriched_output)
+                msg = f"Imported {len(transactions)} transactions, {len(enriched)} enriched"
+            except Exception:
+                msg = f"Imported {len(transactions)} transactions (enrichment skipped)"
+
+            # Cleanup temp file
+            os.unlink(tmp_path_str)
+            safe_msg = html.escape(msg)
+            return HTMLResponse(safe_msg, status_code=200)
+
+        except Exception as e:
+            safe_err = html.escape(str(e))
+            return HTMLResponse(f"Import failed: {safe_err}", status_code=500)
 
     # ===== Mappings Route =====
     @app.get("/mappings", response_class=HTMLResponse)
     async def mappings_list() -> HTMLResponse:
-        """List merchant mappings.
-
-        Returns:
-            HTMLResponse: Rendered HTML mappings list
-        """
+        """List merchant mappings."""
         template = env.get_template("mappings.html")
+        public = _load_mappings_flat(public_mappings_path)
+        private = _load_mappings_flat(private_mappings_path)
+
+        # Run privacy audit on a sample of public mappings
+        warnings = []
+        try:
+            from money_mapper.privacy_audit import audit_merchant_name
+
+            for m in public[:50]:
+                report = audit_merchant_name(m["merchant"], min_score=70)
+                if report["score"] >= 70:
+                    warnings.append(
+                        f"{m['merchant']}: {report['risk_level']} risk (score {report['score']})"
+                    )
+        except Exception:
+            pass
+
         data = {
             "title": "Mappings",
-            "public_mappings": [
-                {"merchant": "Starbucks", "category": "Food & Drink"},
-                {"merchant": "Shell Gas", "category": "Transport"},
+            "public_mappings": [{"merchant": m["name"], "category": m["category"]} for m in public],
+            "private_mappings": [
+                {"merchant": m["name"], "category": m["category"]} for m in private
             ],
-            "private_mappings": [{"merchant": "My Store", "category": "Custom"}],
-            "privacy_warnings": ["High-risk merchants detected"],
+            "privacy_warnings": warnings if warnings else None,
         }
         return HTMLResponse(template.render(**data))
 
@@ -188,22 +357,43 @@ def create_app() -> FastAPI:
     async def create_mapping(
         merchant: str = Form(...), category: str = Form(...), source: str = Form(...)
     ) -> HTMLResponse:
-        """Create new merchant mapping.
-
-        Args:
-            merchant: Merchant name
-            category: Category to map to
-            source: Source of mapping
-
-        Returns:
-            HTMLResponse: Success or error message
-        """
+        """Create new merchant mapping in staging file."""
         if not merchant or not category:
             return HTMLResponse("Merchant and category required", status_code=400)
 
-        safe_merchant = html.escape(str(merchant))
-        safe_category = html.escape(str(category))
-        return HTMLResponse(f"Created mapping: {safe_merchant} - {safe_category}", status_code=201)
+        new_mappings_path = os.path.join(base_dir, "config", "new_mappings.toml")
+        try:
+            import toml as toml_writer
+
+            existing = {}
+            if os.path.exists(new_mappings_path):
+                with open(new_mappings_path, "rb") as f:
+                    existing = tomllib.load(f)
+
+            if "STAGING" not in existing:
+                existing["STAGING"] = {}
+            if "NEW" not in existing["STAGING"]:
+                existing["STAGING"]["NEW"] = {}
+
+            existing["STAGING"]["NEW"][merchant.lower()] = {
+                "name": merchant,
+                "category": category,
+                "subcategory": category,
+                "scope": source if source in ("public", "private") else "private",
+            }
+
+            with open(new_mappings_path, "w") as f:
+                toml_writer.dump(existing, f)
+
+            safe_merchant = html.escape(str(merchant))
+            safe_category = html.escape(str(category))
+            return HTMLResponse(
+                f"Added mapping: {safe_merchant} - {safe_category} (staged in new_mappings.toml)",
+                status_code=201,
+            )
+        except Exception as e:
+            safe_err = html.escape(str(e))
+            return HTMLResponse(f"Failed to add mapping: {safe_err}", status_code=500)
 
     # ===== Settings Route =====
     @app.get("/settings", response_class=HTMLResponse)
@@ -214,15 +404,30 @@ def create_app() -> FastAPI:
             HTMLResponse: Rendered HTML settings page
         """
         template = env.get_template("settings.html")
+
+        options = []
+        settings_path = os.path.join(base_dir, "config", "public_settings.toml")
+        if os.path.exists(settings_path):
+            try:
+                with open(settings_path, "rb") as f:
+                    settings = tomllib.load(f)
+                for section_name, section in settings.items():
+                    if isinstance(section, dict):
+                        for key, value in section.items():
+                            options.append({"name": f"{section_name}.{key}", "value": str(value)})
+            except Exception:
+                pass
+
         data = {
             "title": "Settings",
-            "options": [
-                {"name": "Default Currency", "value": "USD"},
-                {"name": "Privacy Audit Threshold", "value": "30"},
-            ],
+            "options": options if options else [{"name": "No settings found", "value": ""}],
             "tools": [
-                {"name": "Rebuild Model", "description": "Retrain ML model"},
-                {"name": "Privacy Audit", "description": "Scan for PII in mappings"},
+                {
+                    "name": "Rebuild Model",
+                    "description": "Retrain ML categorization model from mappings",
+                },
+                {"name": "Privacy Audit", "description": "Scan public mappings for PII risks"},
+                {"name": "Validate Mappings", "description": "Check mappings against PFC taxonomy"},
             ],
         }
         return HTMLResponse(template.render(**data))
@@ -242,16 +447,27 @@ def create_app() -> FastAPI:
     # ===== Root Route =====
     @app.get("/", response_class=HTMLResponse)
     async def root() -> HTMLResponse:
-        """Root route redirects to dashboard.
+        """Root route shows dashboard.
 
         Returns:
-            HTMLResponse: HTML redirect or dashboard
+            HTMLResponse: Rendered HTML dashboard
         """
         template = env.get_template("dashboard.html")
+        transactions = _load_enriched_transactions(enriched_path)
+        spending = _compute_spending_by_category(transactions)
+        recent = sorted(transactions, key=lambda t: t.get("date", ""), reverse=True)[:10]
+        recent_formatted = [
+            {
+                "date": t.get("date", ""),
+                "merchant": t.get("merchant_name", t.get("description", "Unknown")),
+                "amount": abs(float(t.get("amount", 0))),
+            }
+            for t in recent
+        ]
         data = {
             "title": "Dashboard",
-            "spending": {"categories": [], "amounts": []},
-            "recent_transactions": [],
+            "spending": spending,
+            "recent_transactions": recent_formatted,
         }
         return HTMLResponse(template.render(**data))
 

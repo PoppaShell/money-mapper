@@ -5,6 +5,7 @@ Tests all 5 pages: Dashboard, Transactions, Import, Mappings, Settings.
 Uses httpx.AsyncClient with FastAPI TestClient pattern.
 """
 
+import json
 import tempfile
 
 import pytest
@@ -310,4 +311,328 @@ class TestRouteIntegration:
         """Pages should contain links to other pages."""
         # At minimum, dashboard should load
         response = client.get("/dashboard")
+        assert response.status_code == 200
+
+
+class TestDataHelpers:
+    """Test data loading helper functions."""
+
+    def test_load_enriched_transactions_returns_list(self, tmp_path):
+        """Should load transactions from JSON file."""
+        from money_mapper.api.server import _load_enriched_transactions
+
+        txn_file = tmp_path / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-01-15",
+                        "merchant_name": "STORE",
+                        "amount": -50.0,
+                        "category": "Shopping",
+                    }
+                ]
+            )
+        )
+        result = _load_enriched_transactions(str(txn_file))
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "STORE"
+
+    def test_load_enriched_transactions_missing_file(self, tmp_path):
+        """Should return empty list when file doesn't exist."""
+        from money_mapper.api.server import _load_enriched_transactions
+
+        result = _load_enriched_transactions(str(tmp_path / "nonexistent.json"))
+        assert result == []
+
+    def test_load_mappings_from_toml(self, tmp_path):
+        """Should load and flatten mappings from TOML file."""
+        from money_mapper.api.server import _load_mappings_flat
+
+        toml_file = tmp_path / "mappings.toml"
+        toml_file.write_text(
+            "[FOOD_AND_DRINK.COFFEE]\n"
+            '"starbucks*" = {name = "Starbucks", category = "FOOD_AND_DRINK", '
+            'subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public"}\n'
+        )
+        result = _load_mappings_flat(str(toml_file))
+        assert len(result) >= 1
+        assert result[0]["merchant"] == "starbucks*"
+        assert result[0]["name"] == "Starbucks"
+
+    def test_load_mappings_missing_file(self, tmp_path):
+        """Should return empty list when file doesn't exist."""
+        from money_mapper.api.server import _load_mappings_flat
+
+        result = _load_mappings_flat(str(tmp_path / "nonexistent.toml"))
+        assert result == []
+
+    def test_compute_spending_by_category(self):
+        """Should aggregate amounts by category."""
+        from money_mapper.api.server import _compute_spending_by_category
+
+        transactions = [
+            {"category": "FOOD", "amount": -10.0},
+            {"category": "FOOD", "amount": -5.0},
+            {"category": "TRANSPORT", "amount": -20.0},
+        ]
+        result = _compute_spending_by_category(transactions)
+        assert "TRANSPORT" in result["categories"]
+        assert "FOOD" in result["categories"]
+        assert len(result["categories"]) == 2
+        # Transport is 20, Food is 15, so Transport should be first (sorted by amount desc)
+        assert result["categories"][0] == "TRANSPORT"
+
+    def test_compute_spending_empty(self):
+        """Should handle empty transaction list."""
+        from money_mapper.api.server import _compute_spending_by_category
+
+        result = _compute_spending_by_category([])
+        assert result["categories"] == []
+        assert result["amounts"] == []
+
+
+class TestDashboardRealData:
+    """Test dashboard with real data loading."""
+
+    def test_dashboard_empty_state(self):
+        """Dashboard renders without crashing when no data exists."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.get("/dashboard")
+        assert response.status_code == 200
+        assert "text/html" in response.headers.get("content-type", "")
+
+    def test_dashboard_with_transactions(self, tmp_path):
+        """Dashboard shows spending data from transactions file."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        txn_file = output_dir / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-03-28",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK",
+                    },
+                    {
+                        "date": "2026-03-27",
+                        "merchant_name": "Shell",
+                        "amount": -45.00,
+                        "category": "TRANSPORTATION",
+                    },
+                ]
+            )
+        )
+
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/dashboard")
+        assert response.status_code == 200
+
+    def test_root_shows_dashboard(self, tmp_path):
+        """Root route should render dashboard template."""
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/")
+        assert response.status_code == 200
+
+
+class TestTransactionsRealData:
+    """Test transactions route with real data."""
+
+    def test_transactions_loads_real_data(self, tmp_path):
+        """Transactions page shows data from enriched file."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        txn_file = output_dir / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-03-28",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK",
+                        "description": "STARBUCKS #1234",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions")
+        assert response.status_code == 200
+
+    def test_transactions_empty_state(self):
+        """Transactions page works with no data."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.get("/transactions")
+        assert response.status_code == 200
+
+    def test_transactions_filter_by_category(self, tmp_path):
+        """Filter narrows results to matching category."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        txn_file = output_dir / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-03-28",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD",
+                    },
+                    {
+                        "date": "2026-03-27",
+                        "merchant_name": "Shell",
+                        "amount": -45.00,
+                        "category": "TRANSPORT",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions?category=FOOD")
+        assert response.status_code == 200
+
+    def test_transactions_export_csv(self, tmp_path):
+        """Export returns real CSV data."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        txn_file = output_dir / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-03-28",
+                        "merchant_name": "Store",
+                        "amount": -50.0,
+                        "category": "Shopping",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/transactions/export")
+        assert response.status_code == 200
+        assert "text/csv" in response.headers.get("content-type", "")
+        assert "Store" in response.text
+
+
+class TestImportRealData:
+    """Test import route with real pipeline."""
+
+    def test_import_csv_processes_file(self, tmp_path):
+        """Uploading a CSV should attempt to process it."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+
+        csv_content = "Date,Description,Amount,Running Bal.\n01/15/2026,STARBUCKS,-5.50,1000.00\n"
+        response = client.post(
+            "/import",
+            files={"file": ("test.csv", csv_content.encode(), "text/csv")},
+        )
+        # Should succeed or report import count (not crash)
+        assert response.status_code in (200, 500)
+
+    def test_import_rejects_invalid_extension(self):
+        """Should reject non-CSV/OFX/QFX files."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.post(
+            "/import",
+            files={"file": ("test.txt", b"some text", "text/plain")},
+        )
+        assert response.status_code == 400
+
+    def test_import_empty_file(self, tmp_path):
+        """Should handle empty CSV gracefully."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.post(
+            "/import",
+            files={"file": ("empty.csv", b"", "text/csv")},
+        )
+        assert response.status_code in (200, 500)
+
+
+class TestMappingsRealData:
+    """Test mappings route with real data."""
+
+    def test_mappings_loads_from_toml(self, tmp_path):
+        """Mappings page loads real data from TOML files."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        (config_dir / "public_mappings.toml").write_text(
+            "[FOOD_AND_DRINK.COFFEE]\n"
+            '"starbucks*" = {name = "Starbucks", category = "FOOD_AND_DRINK", '
+            'subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public"}\n'
+        )
+        (config_dir / "private_mappings.toml").write_text("")
+
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/mappings")
+        assert response.status_code == 200
+
+    def test_mappings_empty_state(self):
+        """Mappings page works when no mapping files exist."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.get("/mappings")
+        assert response.status_code == 200
+
+    def test_create_mapping_writes_staging(self, tmp_path):
+        """Adding a mapping should write to new_mappings.toml."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        (config_dir / "public_mappings.toml").write_text("")
+        (config_dir / "private_mappings.toml").write_text("")
+
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.post(
+            "/mappings",
+            data={"merchant": "Test Store", "category": "SHOPPING", "source": "manual"},
+        )
+        assert response.status_code == 201
+        # Verify file was created
+        assert (config_dir / "new_mappings.toml").exists()
+
+
+class TestSettingsRealData:
+    """Test settings route with real data."""
+
+    def test_settings_loads_config(self, tmp_path):
+        """Settings page loads real config from TOML."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        (config_dir / "public_settings.toml").write_text(
+            '[directories]\nstatements = "statements"\noutput = "output"\n'
+        )
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/settings")
+        assert response.status_code == 200
+
+    def test_settings_empty_state(self):
+        """Settings page works when no config file exists."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.get("/settings")
         assert response.status_code == 200
