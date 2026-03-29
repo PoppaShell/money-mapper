@@ -2,12 +2,14 @@
 
 import json
 import os
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from money_mapper.cli import (
     confirm_action,
     print_banner,
+    run_full_pipeline_interactive,
     validate_directory,
     validate_json_file,
     validate_output_path,
@@ -585,3 +587,35 @@ class TestCLIEdgeCases:
         output_file = unicode_dir / "résultats.json"
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert isinstance(result, bool)
+
+
+class TestRunFullPipelineInteractive:
+    """Test the full pipeline interactive function."""
+
+    @patch("money_mapper.cli.CSVImporter")
+    @patch("money_mapper.cli.process_transaction_enrichment")
+    @patch("money_mapper.cli.get_config_manager")
+    @patch("builtins.input", side_effect=["statements", "y", "n"])
+    def test_pipeline_interactive_uses_csv_importer(
+        self, mock_input, mock_config, mock_enrich, mock_csv
+    ):
+        """Interactive pipeline should use CSVImporter, not deleted PDF parser."""
+        mock_cm = MagicMock()
+        mock_cm.get_setting.return_value = "output"
+        mock_cm.get_directory_path.return_value = "statements"
+        mock_cm.get_default_file_path.return_value = "output/transactions.json"
+        mock_config.return_value = mock_cm
+
+        mock_importer = MagicMock()
+        mock_importer.import_directory.return_value = [
+            {"date": "2024-01-15", "merchant": "STORE", "amount": -10.00}
+        ]
+        mock_csv.return_value = mock_importer
+
+        with patch("money_mapper.utils.save_transactions_to_json"):
+            with patch("money_mapper.cli.validate_directory", return_value=True):
+                with patch("money_mapper.cli.validate_output_path", return_value=True):
+                    run_full_pipeline_interactive(debug=False)
+
+        mock_csv.assert_called_once()
+        mock_importer.import_directory.assert_called_once()

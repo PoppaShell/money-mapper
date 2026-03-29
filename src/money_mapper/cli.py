@@ -399,8 +399,12 @@ def manage_mappings_interactive():
             traceback.print_exc()
 
 
-def run_full_pipeline_interactive():
-    """Interactive mode for complete pipeline."""
+def run_full_pipeline_interactive(debug: bool = False):
+    """Interactive mode for complete pipeline.
+
+    Args:
+        debug: Enable debug output for detailed processing information.
+    """
     print("\n--- Complete Pipeline: Parse & Enrich ---")
 
     # Get config manager
@@ -441,15 +445,16 @@ def run_full_pipeline_interactive():
         return
 
     try:
-        # Step 1: Parse statements (debug mode disabled in interactive mode - use CLI flags for debug)
+        # Step 1: Import CSV transactions
         print(f"\nStep 1: Importing CSV transactions from '{directory}'...")
-        transactions = process_pdf_statements(directory, debug=False)
+        importer = CSVImporter(debug=debug)
+        transactions = importer.import_directory(directory)
 
         if not transactions:
-            print("No transactions found in PDF files")
+            print("No transactions found in CSV files")
             return
 
-        from utils import save_transactions_to_json
+        from money_mapper.utils import save_transactions_to_json
 
         save_transactions_to_json(transactions, parsed_file)
         print(f"Parsed {len(transactions)} transactions")
