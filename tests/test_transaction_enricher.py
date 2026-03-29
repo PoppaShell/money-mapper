@@ -1167,3 +1167,1135 @@ class TestSimilarityIntegration:
             vectors_file=None,
         )
         assert result is not None
+
+
+# ============================================================
+# New tests targeting uncovered lines
+# ============================================================
+
+
+class TestPatternMatcher:
+    """Tests for the PatternMatcher class."""
+
+    def _make_mappings(self, patterns: dict) -> dict:
+        """Build a simple mappings dict for PatternMatcher."""
+        return {"CAT": {"SUBCAT": patterns}}
+
+    def test_build_index_exact_patterns(self):
+        """PatternMatcher indexes exact patterns into exact_patterns dict."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {"starbucks": {"name": "Starbucks", "category": "FOOD", "subcategory": "COFFEE"}}
+        )
+        pm = PatternMatcher(mappings, "test")
+        assert "starbucks" in pm.exact_patterns
+
+    def test_build_index_wildcard_patterns(self):
+        """PatternMatcher indexes wildcard patterns into wildcard_patterns list."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {"starbucks*": {"name": "Starbucks", "category": "FOOD", "subcategory": "COFFEE"}}
+        )
+        pm = PatternMatcher(mappings, "test")
+        assert len(pm.wildcard_patterns) == 1
+
+    def test_build_index_question_mark_wildcard(self):
+        """PatternMatcher indexes ? wildcard patterns into wildcard_patterns list."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {"starb?cks": {"name": "Starbucks", "category": "FOOD", "subcategory": "COFFEE"}}
+        )
+        pm = PatternMatcher(mappings, "test")
+        assert len(pm.wildcard_patterns) == 1
+
+    def test_match_exact_substring(self):
+        """PatternMatcher.match returns result with 0.95 confidence for exact substring."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {"starbucks": {"name": "Starbucks", "category": "FOOD", "subcategory": "COFFEE"}}
+        )
+        pm = PatternMatcher(mappings, "test")
+        result = pm.match("STARBUCKS COFFEE SEATTLE", "starbucks", fuzzy_threshold=0.7)
+        assert result is not None
+        assert result["confidence"] == 0.95
+
+    def test_match_wildcard_in_description(self):
+        """PatternMatcher.match finds wildcard match in description."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {"amazon*": {"name": "Amazon", "category": "SHOPPING", "subcategory": "ONLINE"}}
+        )
+        pm = PatternMatcher(mappings, "test")
+        result = pm.match("amazon.com purchase", "", fuzzy_threshold=0.7)
+        assert result is not None
+        assert result["confidence"] == 0.90
+
+    def test_match_wildcard_in_merchant_name(self):
+        """PatternMatcher.match finds wildcard match in merchant_name."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {"amzn*": {"name": "Amazon", "category": "SHOPPING", "subcategory": "ONLINE"}}
+        )
+        pm = PatternMatcher(mappings, "test")
+        result = pm.match("PURCHASE 12345", "amzn marketplace", fuzzy_threshold=0.7)
+        assert result is not None
+        assert result["confidence"] == 0.89
+
+    def test_match_no_match_returns_none(self):
+        """PatternMatcher.match returns None when no pattern matches."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {"starbucks": {"name": "Starbucks", "category": "FOOD", "subcategory": "COFFEE"}}
+        )
+        pm = PatternMatcher(mappings, "test")
+        result = pm.match("TOTALLY UNKNOWN MERCHANT", "unknown", fuzzy_threshold=0.99)
+        assert result is None
+
+    def test_match_fuzzy_fallback(self):
+        """PatternMatcher.match falls back to fuzzy matching for merchant name."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {
+                "starbucks": {
+                    "name": "Starbucks",
+                    "category": "FOOD",
+                    "subcategory": "COFFEE",
+                }
+            }
+        )
+        pm = PatternMatcher(mappings, "test")
+        # "starbuck" is very close to "starbucks" -> fuzzy match should trigger at 0.7
+        result = pm.match("POS DEBIT", "starbuck", fuzzy_threshold=0.7)
+        assert result is not None
+        assert result["confidence"] <= 0.80
+
+    def test_match_word_based_matching(self):
+        """PatternMatcher.match uses word-based matching when exact fails."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = self._make_mappings(
+            {
+                "coffee shop": {
+                    "name": "Coffee Shop",
+                    "category": "FOOD",
+                    "subcategory": "COFFEE",
+                }
+            }
+        )
+        pm = PatternMatcher(mappings, "test")
+        # "coffee shop downtown" shares both words with pattern "coffee shop"
+        result = pm.match("coffee shop downtown", "coffee shop", fuzzy_threshold=0.9)
+        assert result is not None
+
+    def test_fuzzy_similarity_static_method(self):
+        """PatternMatcher._fuzzy_similarity correctly computes ratio."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        assert PatternMatcher._fuzzy_similarity("abc", "abc") == 1.0
+        assert PatternMatcher._fuzzy_similarity("abc", "xyz") == 0.0
+
+    def test_build_index_skips_non_dict_values(self):
+        """PatternMatcher skips non-dict pattern values without error."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        # Include a non-dict value in patterns
+        mappings = {
+            "CAT": {
+                "SUBCAT": {
+                    "valid_pattern": {"name": "Valid", "category": "CAT", "subcategory": "SUBCAT"},
+                    "bad_pattern": "not_a_dict",
+                }
+            }
+        }
+        pm = PatternMatcher(mappings, "test")
+        assert "valid_pattern" in pm.exact_patterns
+        assert "bad_pattern" not in pm.exact_patterns
+
+    def test_build_index_skips_non_dict_subcategory(self):
+        """PatternMatcher skips non-dict subcategory data without error."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = {"CAT": {"SUBCAT": "not_a_dict"}}
+        # Should not raise
+        pm = PatternMatcher(mappings, "test")
+        assert len(pm.exact_patterns) == 0
+
+    def test_build_index_skips_non_dict_category(self):
+        """PatternMatcher skips non-dict category data without error."""
+        from money_mapper.transaction_enricher import PatternMatcher
+
+        mappings = {"CAT": "not_a_dict"}
+        pm = PatternMatcher(mappings, "test")
+        assert len(pm.exact_patterns) == 0
+
+
+class TestGetPatternMatchers:
+    """Tests for the get_pattern_matchers caching function."""
+
+    def test_get_pattern_matchers_returns_tuple(self):
+        """get_pattern_matchers returns a tuple of two items."""
+        import money_mapper.transaction_enricher as te
+        from money_mapper.transaction_enricher import get_pattern_matchers
+
+        # Reset module-level cache
+        te._private_matcher = None
+        te._public_matcher = None
+
+        private = {"CAT": {"SUB": {"pattern": {"name": "P", "category": "C", "subcategory": "S"}}}}
+        public = {"CAT": {"SUB": {"pub_pat": {"name": "Pub", "category": "C", "subcategory": "S"}}}}
+
+        result = get_pattern_matchers(private, public)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+
+        # Clean up
+        te._private_matcher = None
+        te._public_matcher = None
+
+    def test_get_pattern_matchers_empty_mappings(self):
+        """get_pattern_matchers with empty dicts returns None matchers."""
+        import money_mapper.transaction_enricher as te
+        from money_mapper.transaction_enricher import get_pattern_matchers
+
+        te._private_matcher = None
+        te._public_matcher = None
+
+        private_matcher, public_matcher = get_pattern_matchers({}, {})
+        assert private_matcher is None
+        assert public_matcher is None
+
+        te._private_matcher = None
+        te._public_matcher = None
+
+    def test_get_pattern_matchers_caches_result(self):
+        """get_pattern_matchers caches matchers after first creation."""
+        import money_mapper.transaction_enricher as te
+        from money_mapper.transaction_enricher import PatternMatcher, get_pattern_matchers
+
+        te._private_matcher = None
+        te._public_matcher = None
+
+        private = {"CAT": {"SUB": {"pattern": {"name": "P", "category": "C", "subcategory": "S"}}}}
+        private_matcher1, _ = get_pattern_matchers(private, {})
+        private_matcher2, _ = get_pattern_matchers(private, {})
+
+        # Same object returned both times (cached)
+        assert private_matcher1 is private_matcher2
+        assert isinstance(private_matcher1, PatternMatcher)
+
+        te._private_matcher = None
+        te._public_matcher = None
+
+
+class TestEnrichTransactionWorker:
+    """Tests for the multiprocessing worker function."""
+
+    def test_worker_enriches_transaction(self):
+        """_enrich_transaction_worker returns enriched transaction dict."""
+        from money_mapper.transaction_enricher import _enrich_transaction_worker
+
+        transaction = {"description": "STARBUCKS COFFEE", "amount": -5.50, "date": "2024-01-15"}
+        args = (transaction, {}, {}, {}, 0.7, "config", None, None, None)
+
+        result = _enrich_transaction_worker(args)
+
+        assert isinstance(result, dict)
+        assert "category" in result
+        assert "merchant_name" in result
+
+    def test_worker_passes_all_args(self):
+        """_enrich_transaction_worker passes all arguments to enrich_transaction."""
+        from money_mapper.transaction_enricher import _enrich_transaction_worker
+
+        private_mappings = {
+            "FOOD": {
+                "COFFEE": {
+                    "myshop": {
+                        "name": "My Shop",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "COFFEE",
+                    }
+                }
+            }
+        }
+        transaction = {"description": "myshop downtown", "amount": -4.00, "date": "2024-01-15"}
+        args = (transaction, private_mappings, {}, {}, 0.7, "config", None, None, None)
+
+        result = _enrich_transaction_worker(args)
+
+        assert result["categorization_method"] == "private_mapping"
+
+
+class TestLoadEnrichmentConfigDetailed:
+    """More detailed tests for load_enrichment_config."""
+
+    def test_load_enrichment_config_missing_plaid_exits(self):
+        """load_enrichment_config calls sys.exit when plaid_categories file missing."""
+        from money_mapper.transaction_enricher import load_enrichment_config
+
+        with patch("money_mapper.transaction_enricher.get_config_manager") as mock_cm:
+            mock_instance = MagicMock()
+            mock_instance.get_enrichment_files.return_value = {
+                "plaid_categories": "/nonexistent/plaid.toml",
+                "private_mappings": "/nonexistent/private.toml",
+                "public_mappings": "/nonexistent/public.toml",
+            }
+            mock_cm.return_value = mock_instance
+
+            with pytest.raises(SystemExit):
+                load_enrichment_config()
+
+    def test_load_enrichment_config_missing_private_mappings_warns(self, tmp_path, capsys):
+        """load_enrichment_config warns when private_mappings not found but continues."""
+        from money_mapper.transaction_enricher import load_enrichment_config
+
+        # Create a minimal plaid categories file
+        plaid_file = tmp_path / "plaid_categories.toml"
+        plaid_file.write_text('[FOOD_AND_DRINK]\nkeywords = ["food"]\n')
+
+        with patch("money_mapper.transaction_enricher.get_config_manager") as mock_cm:
+            with patch("money_mapper.transaction_enricher.load_config", return_value={"FOOD": {}}):
+                mock_instance = MagicMock()
+                mock_instance.get_enrichment_files.return_value = {
+                    "plaid_categories": str(plaid_file),
+                    "private_mappings": str(tmp_path / "nonexistent_private.toml"),
+                    "public_mappings": str(tmp_path / "nonexistent_public.toml"),
+                }
+                mock_cm.return_value = mock_instance
+
+                config = load_enrichment_config()
+                assert config["private_mappings"] == {}
+                assert config["public_mappings"] == {}
+
+    def test_load_enrichment_config_with_all_files(self, tmp_path):
+        """load_enrichment_config loads all three files when present."""
+        from money_mapper.transaction_enricher import load_enrichment_config
+
+        plaid_file = tmp_path / "plaid_categories.toml"
+        plaid_file.write_text('[FOOD_AND_DRINK]\nkeywords = ["food"]\n')
+        private_file = tmp_path / "private_mappings.toml"
+        private_file.write_text("[MY_CAT]\n")
+        public_file = tmp_path / "public_mappings.toml"
+        public_file.write_text("[PUB_CAT]\n")
+
+        plaid_data = {"FOOD_AND_DRINK": {"keywords": ["food"]}}
+        private_data = {"MY_CAT": {}}
+        public_data = {"PUB_CAT": {}}
+
+        def mock_load(filepath):
+            if "plaid" in filepath:
+                return plaid_data
+            elif "private" in filepath:
+                return private_data
+            elif "public" in filepath:
+                return public_data
+            return {}
+
+        with patch("money_mapper.transaction_enricher.get_config_manager") as mock_cm:
+            with patch("money_mapper.transaction_enricher.load_config", side_effect=mock_load):
+                mock_instance = MagicMock()
+                mock_instance.get_enrichment_files.return_value = {
+                    "plaid_categories": str(plaid_file),
+                    "private_mappings": str(private_file),
+                    "public_mappings": str(public_file),
+                }
+                mock_cm.return_value = mock_instance
+
+                config = load_enrichment_config()
+
+                assert config["plaid_categories"] == plaid_data
+                assert config["private_mappings"] == private_data
+                assert config["public_mappings"] == public_data
+
+    def test_load_enrichment_config_exception_exits(self):
+        """load_enrichment_config calls sys.exit on unexpected exception."""
+        from money_mapper.transaction_enricher import load_enrichment_config
+
+        with patch(
+            "money_mapper.transaction_enricher.get_config_manager",
+            side_effect=RuntimeError("Unexpected error"),
+        ):
+            with pytest.raises(SystemExit):
+                load_enrichment_config()
+
+
+class TestApplyCustomMappingsDetailed:
+    """More detailed tests for apply_custom_mappings."""
+
+    def test_apply_custom_mappings_empty_returns_none(self):
+        """apply_custom_mappings returns None for empty mappings."""
+        from money_mapper.transaction_enricher import apply_custom_mappings
+
+        result = apply_custom_mappings("STARBUCKS", "starbucks", {}, "private_mapping", 0.7)
+        assert result is None
+
+    def test_apply_custom_mappings_exact_match(self):
+        """apply_custom_mappings returns result on exact match."""
+        from money_mapper.transaction_enricher import apply_custom_mappings
+
+        mappings = {
+            "FOOD": {
+                "COFFEE": {
+                    "starbucks": {
+                        "name": "Starbucks",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "FOOD_AND_DRINK_COFFEE",
+                    }
+                }
+            }
+        }
+        result = apply_custom_mappings("STARBUCKS COFFEE", "starbucks", mappings, "private_mapping")
+        assert result is not None
+        assert result["category"] == "FOOD_AND_DRINK"
+        assert result["subcategory"] == "FOOD_AND_DRINK_COFFEE"
+        assert result["categorization_method"] == "private_mapping"
+
+    def test_apply_custom_mappings_wildcard_match(self):
+        """apply_custom_mappings returns result on wildcard pattern match."""
+        from money_mapper.transaction_enricher import apply_custom_mappings
+
+        mappings = {
+            "SHOPPING": {
+                "ONLINE": {
+                    "amazon*": {
+                        "name": "Amazon",
+                        "category": "SHOPPING",
+                        "subcategory": "ONLINE_SHOPPING",
+                    }
+                }
+            }
+        }
+        result = apply_custom_mappings("amazon.com purchase", "amazon", mappings, "public_mapping")
+        assert result is not None
+        assert result["category"] == "SHOPPING"
+        assert result["categorization_method"] == "public_mapping"
+
+    def test_apply_custom_mappings_no_match_returns_none(self):
+        """apply_custom_mappings returns None when no pattern matches."""
+        from money_mapper.transaction_enricher import apply_custom_mappings
+
+        mappings = {
+            "FOOD": {
+                "COFFEE": {
+                    "starbucks": {
+                        "name": "Starbucks",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "COFFEE",
+                    }
+                }
+            }
+        }
+        result = apply_custom_mappings(
+            "UNKNOWN MERCHANT XYZ", "unknown", mappings, "private_mapping", 0.99
+        )
+        assert result is None
+
+
+class TestApplyPlaidKeywordMatchingDetailed:
+    """More detailed tests for apply_plaid_keyword_matching."""
+
+    def test_matching_returns_best_scoring_category(self):
+        """apply_plaid_keyword_matching returns category with most keyword hits."""
+        from money_mapper.transaction_enricher import apply_plaid_keyword_matching
+
+        plaid_categories = {
+            "FOOD_AND_DRINK.COFFEE": {"keywords": ["coffee", "cafe", "espresso", "latte"]},
+            "FOOD_AND_DRINK.RESTAURANTS": {"keywords": ["pizza", "restaurant", "dine"]},
+        }
+
+        # "coffee cafe" matches 2 out of 4 coffee keywords vs 0 restaurant keywords
+        result = apply_plaid_keyword_matching("COFFEE CAFE SHOP", "coffee cafe", plaid_categories)
+        assert result is not None
+        assert "COFFEE" in result["subcategory"]
+        assert result["categorization_method"] == "plaid_keyword"
+
+    def test_matching_confidence_capped_at_0_7(self):
+        """apply_plaid_keyword_matching confidence is capped at 0.70."""
+        from money_mapper.transaction_enricher import apply_plaid_keyword_matching
+
+        # All keywords match -> score = 1.0, but confidence capped at 0.70
+        plaid_categories = {
+            "FOOD_AND_DRINK.COFFEE": {"keywords": ["coffee"]},
+        }
+        result = apply_plaid_keyword_matching("coffee purchase", "coffee", plaid_categories)
+        assert result is not None
+        assert result["confidence"] <= 0.70
+
+    def test_matching_skips_categories_without_keywords(self):
+        """apply_plaid_keyword_matching skips categories with no keywords key."""
+        from money_mapper.transaction_enricher import apply_plaid_keyword_matching
+
+        plaid_categories = {
+            "NO_KEYWORDS_CAT": {},  # No keywords key
+            "HAS_KEYWORDS": {"keywords": ["pizza"]},
+        }
+        result = apply_plaid_keyword_matching("pizza order", "pizza", plaid_categories)
+        assert result is not None
+        assert "HAS_KEYWORDS" in result["subcategory"]
+
+    def test_matching_skips_non_dict_categories(self):
+        """apply_plaid_keyword_matching skips non-dict category data."""
+        from money_mapper.transaction_enricher import apply_plaid_keyword_matching
+
+        plaid_categories = {
+            "STRING_VALUE": "not_a_dict",
+            "VALID": {"keywords": ["coffee"]},
+        }
+        result = apply_plaid_keyword_matching("coffee drink", "coffee", plaid_categories)
+        assert result is not None
+
+    def test_matching_category_key_split_on_dot(self):
+        """apply_plaid_keyword_matching correctly splits category key on dot."""
+        from money_mapper.transaction_enricher import apply_plaid_keyword_matching
+
+        plaid_categories = {
+            "FOOD_AND_DRINK.COFFEE_SHOPS": {"keywords": ["latte"]},
+        }
+        result = apply_plaid_keyword_matching("buy latte", "latte", plaid_categories)
+        assert result is not None
+        assert result["category"] == "FOOD_AND_DRINK"
+        assert result["subcategory"] == "FOOD_AND_DRINK.COFFEE_SHOPS"
+
+
+class TestIsValidPlaidCategory:
+    """Tests for is_valid_plaid_category."""
+
+    def test_exact_subcategory_key_match(self):
+        """is_valid_plaid_category returns True when subcategory is exact key."""
+        from money_mapper.transaction_enricher import is_valid_plaid_category
+
+        plaid_categories = {"FOOD_AND_DRINK.COFFEE": {"keywords": []}}
+        assert is_valid_plaid_category("FOOD_AND_DRINK", "FOOD_AND_DRINK.COFFEE", plaid_categories)
+
+    def test_case_insensitive_key_match(self):
+        """is_valid_plaid_category matches keys case-insensitively."""
+        from money_mapper.transaction_enricher import is_valid_plaid_category
+
+        plaid_categories = {"FOOD_AND_DRINK.COFFEE": {"keywords": []}}
+        assert is_valid_plaid_category("food_and_drink", "food_and_drink.coffee", plaid_categories)
+
+    def test_category_prefix_match(self):
+        """is_valid_plaid_category returns True when category prefix matches."""
+        from money_mapper.transaction_enricher import is_valid_plaid_category
+
+        plaid_categories = {"FOOD_AND_DRINK.RESTAURANTS": {"keywords": []}}
+        # category matches prefix before the dot
+        assert is_valid_plaid_category("FOOD_AND_DRINK", "SOME_SUBCATEGORY", plaid_categories)
+
+    def test_invalid_category_returns_false(self):
+        """is_valid_plaid_category returns False for completely unknown category."""
+        from money_mapper.transaction_enricher import is_valid_plaid_category
+
+        plaid_categories = {"FOOD_AND_DRINK.COFFEE": {"keywords": []}}
+        assert not is_valid_plaid_category("INVALID", "INVALID.SUBCATEGORY", plaid_categories)
+
+    def test_empty_plaid_categories(self):
+        """is_valid_plaid_category returns False for empty plaid_categories."""
+        from money_mapper.transaction_enricher import is_valid_plaid_category
+
+        assert not is_valid_plaid_category("FOOD_AND_DRINK", "FOOD_AND_DRINK.COFFEE", {})
+
+
+class TestTryMLPrediction:
+    """Tests for try_ml_prediction function."""
+
+    def test_returns_none_when_ml_model_is_none(self):
+        """try_ml_prediction returns None when ml_model is None."""
+        from money_mapper.transaction_enricher import try_ml_prediction
+
+        result = try_ml_prediction({"merchant_name": "TEST"}, {}, ml_model=None)
+        assert result is None
+
+    def test_returns_none_for_unknown_category(self):
+        """try_ml_prediction returns None when model predicts UNKNOWN."""
+        import money_mapper.ml_categorizer as ml_cat
+        from money_mapper.transaction_enricher import try_ml_prediction
+
+        orig = getattr(ml_cat, "predict_category", None)
+        ml_cat.predict_category = lambda model, txn: ("UNKNOWN", "UNKNOWN")
+
+        try:
+            result = try_ml_prediction({"merchant_name": "TEST"}, {}, ml_model=object())
+            assert result is None
+        finally:
+            if orig:
+                ml_cat.predict_category = orig
+
+    def test_returns_none_for_invalid_category(self):
+        """try_ml_prediction returns None when predicted category not in plaid taxonomy."""
+        import money_mapper.ml_categorizer as ml_cat
+        from money_mapper.transaction_enricher import try_ml_prediction
+
+        orig = getattr(ml_cat, "predict_category", None)
+        ml_cat.predict_category = lambda model, txn: ("INVALID_CAT", "INVALID_SUBCAT")
+
+        try:
+            plaid_categories = {"FOOD_AND_DRINK.COFFEE": {"keywords": []}}
+            result = try_ml_prediction(
+                {"merchant_name": "TEST"}, plaid_categories, ml_model=object()
+            )
+            assert result is None
+        finally:
+            if orig:
+                ml_cat.predict_category = orig
+
+    def test_returns_result_for_valid_prediction(self):
+        """try_ml_prediction returns categorization result for valid ML prediction."""
+        import money_mapper.ml_categorizer as ml_cat
+        from money_mapper.transaction_enricher import try_ml_prediction
+
+        orig = getattr(ml_cat, "predict_category", None)
+        ml_cat.predict_category = lambda model, txn: ("FOOD_AND_DRINK", "FOOD_AND_DRINK.COFFEE")
+
+        try:
+            plaid_categories = {
+                "FOOD_AND_DRINK": {"keywords": []},
+                "FOOD_AND_DRINK.COFFEE": {"keywords": []},
+            }
+            result = try_ml_prediction(
+                {"merchant_name": "Starbucks"}, plaid_categories, ml_model=object()
+            )
+            assert result is not None
+            assert result["category"] == "FOOD_AND_DRINK"
+            assert result["subcategory"] == "FOOD_AND_DRINK.COFFEE"
+            assert result["categorization_method"] == "ml_prediction"
+            assert result["confidence"] == 0.65
+        finally:
+            if orig:
+                ml_cat.predict_category = orig
+
+    def test_debug_mode_logs_prediction(self, capsys):
+        """try_ml_prediction prints debug info when debug=True."""
+        import money_mapper.ml_categorizer as ml_cat
+        from money_mapper.transaction_enricher import try_ml_prediction
+
+        orig = getattr(ml_cat, "predict_category", None)
+        ml_cat.predict_category = lambda model, txn: ("FOOD_AND_DRINK", "FOOD_AND_DRINK.COFFEE")
+
+        try:
+            plaid_categories = {
+                "FOOD_AND_DRINK": {"keywords": []},
+                "FOOD_AND_DRINK.COFFEE": {"keywords": []},
+            }
+            try_ml_prediction(
+                {"merchant_name": "Starbucks"},
+                plaid_categories,
+                ml_model=object(),
+                debug=True,
+            )
+            captured = capsys.readouterr()
+            assert "ML prediction" in captured.out
+        finally:
+            if orig:
+                ml_cat.predict_category = orig
+
+
+class TestTrySimilarityPrediction:
+    """Tests for try_similarity_prediction function."""
+
+    def test_returns_none_when_model_is_none(self):
+        """try_similarity_prediction returns None when similarity_model is None."""
+        from money_mapper.transaction_enricher import try_similarity_prediction
+
+        result = try_similarity_prediction(
+            "merchant",
+            {},
+            similarity_model=None,
+            vectors_file="vectors.npy",
+        )
+        assert result is None
+
+    def test_returns_none_when_vectors_file_is_none(self):
+        """try_similarity_prediction returns None when vectors_file is None."""
+        from money_mapper.transaction_enricher import try_similarity_prediction
+
+        result = try_similarity_prediction(
+            "merchant",
+            {},
+            similarity_model=MagicMock(),
+            vectors_file=None,
+        )
+        assert result is None
+
+    def test_returns_none_when_embeddings_empty(self):
+        """try_similarity_prediction returns None when embeddings are empty."""
+        import numpy as np
+
+        from money_mapper.transaction_enricher import try_similarity_prediction
+
+        with patch(
+            "money_mapper.similarity_matcher.load_merchant_embeddings",
+            return_value=({}, np.array([])),
+        ):
+            result = try_similarity_prediction(
+                "merchant",
+                {},
+                similarity_model=MagicMock(),
+                vectors_file="vectors.npy",
+            )
+            assert result is None
+
+    def test_returns_result_when_match_found(self):
+        """try_similarity_prediction returns result when similar merchant is found."""
+        import numpy as np
+
+        from money_mapper.transaction_enricher import try_similarity_prediction
+
+        mock_match = {
+            "name": "Starbucks",
+            "category": "FOOD_AND_DRINK",
+            "subcategory": "FOOD_AND_DRINK_COFFEE",
+            "similarity": 0.92,
+        }
+        with patch(
+            "money_mapper.similarity_matcher.load_merchant_embeddings",
+            return_value=({"starbucks": mock_match}, np.array([[0.1, 0.2]])),
+        ):
+            with patch(
+                "money_mapper.similarity_matcher.find_similar_merchant",
+                return_value=mock_match,
+            ):
+                result = try_similarity_prediction(
+                    "starbucks",
+                    {"FOOD_AND_DRINK": {}},
+                    similarity_model=MagicMock(),
+                    vectors_file="vectors.npy",
+                )
+        assert result is not None
+        assert result["category"] == "FOOD_AND_DRINK"
+        assert result["categorization_method"] == "similarity_matching"
+        assert result["confidence"] == 0.85
+
+    def test_returns_none_when_no_match_found(self):
+        """try_similarity_prediction returns None when no similar merchant found."""
+        import numpy as np
+
+        from money_mapper.transaction_enricher import try_similarity_prediction
+
+        with patch(
+            "money_mapper.similarity_matcher.load_merchant_embeddings",
+            return_value=({"starbucks": {}}, np.array([[0.1, 0.2]])),
+        ):
+            with patch(
+                "money_mapper.similarity_matcher.find_similar_merchant",
+                return_value=None,
+            ):
+                result = try_similarity_prediction(
+                    "totally_unknown",
+                    {},
+                    similarity_model=MagicMock(),
+                    vectors_file="vectors.npy",
+                )
+        assert result is None
+
+
+class TestGenerateEnrichmentReport:
+    """Tests for generate_enrichment_report function."""
+
+    def test_empty_transactions_returns_no_transactions_message(self):
+        """generate_enrichment_report handles empty list gracefully."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        result = generate_enrichment_report([])
+        assert result == "No transactions to analyze."
+
+    def test_report_contains_header(self):
+        """generate_enrichment_report includes expected header."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        transactions = [
+            {
+                "description": "STARBUCKS",
+                "amount": -5.50,
+                "category": "FOOD_AND_DRINK",
+                "confidence": 0.95,
+                "categorization_method": "private_mapping",
+            }
+        ]
+        report = generate_enrichment_report(transactions)
+        assert "Transaction Enrichment Report" in report
+        assert "Total Transactions: 1" in report
+
+    def test_report_categorization_rate_all_categorized(self):
+        """generate_enrichment_report shows 100% when all transactions categorized."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        transactions = [
+            {
+                "category": "FOOD_AND_DRINK",
+                "amount": 5.0,
+                "confidence": 0.9,
+                "categorization_method": "exact_match",
+            },
+            {
+                "category": "SHOPPING",
+                "amount": 10.0,
+                "confidence": 0.8,
+                "categorization_method": "exact_match",
+            },
+        ]
+        report = generate_enrichment_report(transactions)
+        assert "100.0%" in report
+
+    def test_report_categorization_rate_with_uncategorized(self):
+        """generate_enrichment_report shows partial rate with some uncategorized."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        transactions = [
+            {
+                "category": "FOOD_AND_DRINK",
+                "amount": 5.0,
+                "confidence": 0.9,
+                "categorization_method": "exact_match",
+            },
+            {
+                "category": "UNCATEGORIZED",
+                "amount": 10.0,
+                "confidence": 0.1,
+                "categorization_method": "none",
+            },
+        ]
+        report = generate_enrichment_report(transactions)
+        assert "50.0%" in report
+
+    def test_report_method_performance_section(self):
+        """generate_enrichment_report includes method performance stats."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        transactions = [
+            {
+                "category": "FOOD_AND_DRINK",
+                "amount": 5.0,
+                "confidence": 0.95,
+                "categorization_method": "private_mapping",
+            }
+        ]
+        report = generate_enrichment_report(transactions)
+        assert "Method Performance" in report
+        assert "private_mapping" in report
+
+    def test_report_top_categories_section(self):
+        """generate_enrichment_report includes top categories with amounts."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        transactions = [
+            {
+                "category": "FOOD_AND_DRINK",
+                "amount": 25.0,
+                "confidence": 0.9,
+                "categorization_method": "exact_match",
+            }
+        ]
+        report = generate_enrichment_report(transactions)
+        assert "FOOD_AND_DRINK" in report
+        assert "$25.00" in report
+
+    def test_report_saves_to_file(self, tmp_path):
+        """generate_enrichment_report saves report text to output_file when specified."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        transactions = [
+            {
+                "category": "FOOD_AND_DRINK",
+                "amount": 5.0,
+                "confidence": 0.9,
+                "categorization_method": "exact_match",
+            }
+        ]
+        output_file = str(tmp_path / "report.txt")
+        report = generate_enrichment_report(transactions, output_file=output_file)
+
+        # File should have been written
+        with open(output_file, encoding="utf-8") as f:
+            content = f.read()
+        assert content == report
+        assert "Transaction Enrichment Report" in content
+
+    def test_report_handles_none_confidence(self):
+        """generate_enrichment_report handles transactions with no confidence field."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        transactions = [
+            {
+                "category": "FOOD_AND_DRINK",
+                "amount": 5.0,
+                # No 'confidence' key
+                "categorization_method": "exact_match",
+            }
+        ]
+        # Should not raise
+        report = generate_enrichment_report(transactions)
+        assert isinstance(report, str)
+
+    def test_report_file_write_error_prints_message(self, capsys):
+        """generate_enrichment_report prints error message when file cannot be saved."""
+        from money_mapper.transaction_enricher import generate_enrichment_report
+
+        transactions = [
+            {
+                "category": "FOOD_AND_DRINK",
+                "amount": 5.0,
+                "confidence": 0.9,
+                "categorization_method": "exact_match",
+            }
+        ]
+        with patch("builtins.open", side_effect=OSError("Permission denied")):
+            report = generate_enrichment_report(transactions, output_file="/invalid/path.txt")
+
+        captured = capsys.readouterr()
+        assert "Error saving report" in captured.out
+        assert isinstance(report, str)
+
+
+class TestAnalyzeCategorizationAccuracy:
+    """Tests for analyze_categorization_accuracy function."""
+
+    def test_returns_early_for_empty_file(self, capsys):
+        """analyze_categorization_accuracy exits early when no transactions found."""
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
+
+        with patch(
+            "money_mapper.transaction_enricher.load_transactions_from_json", return_value=[]
+        ):
+            analyze_categorization_accuracy("dummy_file.json", skip_interactive=True)
+
+        captured = capsys.readouterr()
+        assert "No transactions found" in captured.out
+
+    def test_prints_basic_stats(self, capsys):
+        """analyze_categorization_accuracy prints total, categorized, uncategorized counts."""
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
+
+        transactions = [
+            {
+                "category": "FOOD_AND_DRINK",
+                "confidence": 0.95,
+                "categorization_method": "private_mapping",
+            },
+            {
+                "category": "UNCATEGORIZED",
+                "confidence": 0.1,
+                "categorization_method": "none",
+            },
+            {
+                "category": "SHOPPING",
+                "confidence": 0.80,
+                "categorization_method": "public_mapping",
+            },
+        ]
+        with patch(
+            "money_mapper.transaction_enricher.load_transactions_from_json",
+            return_value=transactions,
+        ):
+            analyze_categorization_accuracy("dummy.json", skip_interactive=True)
+
+        captured = capsys.readouterr()
+        assert "Total transactions: 3" in captured.out
+        assert "Categorized: 2" in captured.out
+        assert "Uncategorized: 1" in captured.out
+
+    def test_prints_confidence_distribution(self, capsys):
+        """analyze_categorization_accuracy prints confidence distribution."""
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
+
+        transactions = [
+            {"category": "FOOD", "confidence": 0.95, "categorization_method": "exact"},
+            {"category": "FOOD", "confidence": 0.60, "categorization_method": "fuzzy"},
+            {"category": "UNCATEGORIZED", "confidence": 0.10, "categorization_method": "none"},
+        ]
+        with patch(
+            "money_mapper.transaction_enricher.load_transactions_from_json",
+            return_value=transactions,
+        ):
+            analyze_categorization_accuracy("dummy.json", skip_interactive=True)
+
+        captured = capsys.readouterr()
+        assert "Confidence Distribution" in captured.out
+
+    def test_verbose_mode_prints_categories(self, capsys):
+        """analyze_categorization_accuracy verbose mode shows category breakdown."""
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
+
+        transactions = [
+            {"category": "FOOD_AND_DRINK", "confidence": 0.9, "categorization_method": "exact"},
+            {"category": "SHOPPING", "confidence": 0.8, "categorization_method": "exact"},
+        ]
+        with patch(
+            "money_mapper.transaction_enricher.load_transactions_from_json",
+            return_value=transactions,
+        ):
+            analyze_categorization_accuracy("dummy.json", verbose=True, skip_interactive=True)
+
+        captured = capsys.readouterr()
+        assert "Top Categories" in captured.out
+
+    def test_debug_mode_prints_method_effectiveness(self, capsys):
+        """analyze_categorization_accuracy debug mode shows method effectiveness."""
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
+
+        transactions = [
+            {"category": "FOOD", "confidence": 0.95, "categorization_method": "private_mapping"},
+        ]
+        with patch(
+            "money_mapper.transaction_enricher.load_transactions_from_json",
+            return_value=transactions,
+        ):
+            analyze_categorization_accuracy("dummy.json", debug=True, skip_interactive=True)
+
+        captured = capsys.readouterr()
+        assert "Method Effectiveness" in captured.out
+        assert "Merchant Name Extraction" in captured.out
+
+    def test_skip_interactive_skips_wizard(self):
+        """analyze_categorization_accuracy with skip_interactive does not invoke wizard."""
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
+
+        transactions = [
+            {"category": "UNCATEGORIZED", "confidence": 0.1, "categorization_method": "none"},
+        ]
+        with patch(
+            "money_mapper.transaction_enricher.load_transactions_from_json",
+            return_value=transactions,
+        ):
+            # Should complete without prompting
+            analyze_categorization_accuracy("dummy.json", skip_interactive=True)
+
+    def test_categorization_method_distribution(self, capsys):
+        """analyze_categorization_accuracy prints method distribution."""
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
+
+        transactions = [
+            {"category": "FOOD", "confidence": 0.9, "categorization_method": "private_mapping"},
+            {"category": "FOOD", "confidence": 0.8, "categorization_method": "public_mapping"},
+            {"category": "FOOD", "confidence": 0.7, "categorization_method": "private_mapping"},
+        ]
+        with patch(
+            "money_mapper.transaction_enricher.load_transactions_from_json",
+            return_value=transactions,
+        ):
+            analyze_categorization_accuracy("dummy.json", skip_interactive=True)
+
+        captured = capsys.readouterr()
+        assert "Categorization Methods" in captured.out
+        assert "private_mapping" in captured.out
+
+
+class TestEnrichTransactionPrivacyRedaction:
+    """Tests for privacy redaction in enrich_transaction."""
+
+    def test_privacy_redaction_applied_to_description(self):
+        """enrich_transaction applies privacy redaction to the output description."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        with patch("money_mapper.transaction_enricher.get_config_manager") as mock_cm:
+            mock_instance = MagicMock()
+            mock_instance.get_privacy_settings.return_value = {
+                "redact_account_numbers": True,
+                "redact_names": False,
+            }
+            mock_cm.return_value = mock_instance
+
+            with patch(
+                "money_mapper.transaction_enricher.sanitize_description",
+                return_value="[REDACTED]",
+            ) as mock_sanitize:
+                transaction = {"description": "JOHN DOE PAYMENT", "amount": -100.0}
+                enriched = enrich_transaction(transaction, {}, {}, {})
+
+            mock_sanitize.assert_called_once()
+            assert enriched["description"] == "[REDACTED]"
+
+    def test_privacy_redaction_exception_keeps_original(self):
+        """enrich_transaction keeps original description if privacy redaction fails."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        with patch(
+            "money_mapper.transaction_enricher.get_config_manager",
+            side_effect=Exception("Config error"),
+        ):
+            transaction = {"description": "MERCHANT PAYMENT", "amount": -50.0}
+            enriched = enrich_transaction(transaction, {}, {}, {})
+
+        # Original description preserved since redaction failed
+        assert enriched["description"] == "MERCHANT PAYMENT"
+
+    def test_privacy_redaction_debug_logs_warning(self, capsys):
+        """enrich_transaction prints debug warning when redaction fails."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        with patch(
+            "money_mapper.transaction_enricher.get_config_manager",
+            side_effect=Exception("Config error"),
+        ):
+            transaction = {"description": "MERCHANT PAYMENT", "amount": -50.0}
+            enrich_transaction(transaction, {}, {}, {}, debug=True)
+
+        captured = capsys.readouterr()
+        assert "Warning: Could not apply privacy redaction" in captured.out
+
+
+class TestFindMerchantMappingDebugMode:
+    """Tests for find_merchant_mapping debug output."""
+
+    def test_debug_output_for_private_mapping(self, capsys):
+        """find_merchant_mapping prints debug info when private mapping found."""
+        from money_mapper.transaction_enricher import find_merchant_mapping
+
+        private_mappings = {
+            "FOOD": {
+                "COFFEE": {
+                    "myshop": {
+                        "name": "My Shop",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "COFFEE",
+                    }
+                }
+            }
+        }
+        find_merchant_mapping("myshop downtown", private_mappings, {}, {}, 0.7, debug=True)
+        captured = capsys.readouterr()
+        assert "Private mapping found" in captured.out
+
+    def test_debug_output_for_public_mapping(self, capsys):
+        """find_merchant_mapping prints debug info when public mapping found."""
+        from money_mapper.transaction_enricher import find_merchant_mapping
+
+        public_mappings = {
+            "FOOD": {
+                "COFFEE": {
+                    "starbucks": {
+                        "name": "Starbucks",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "COFFEE",
+                    }
+                }
+            }
+        }
+        find_merchant_mapping("starbucks coffee", {}, public_mappings, {}, 0.7, debug=True)
+        captured = capsys.readouterr()
+        assert "Public mapping found" in captured.out
+
+    def test_debug_output_for_plaid_match(self, capsys):
+        """find_merchant_mapping prints debug info when plaid keyword match found."""
+        from money_mapper.transaction_enricher import find_merchant_mapping
+
+        plaid_categories = {"FOOD_AND_DRINK.RESTAURANTS": {"keywords": ["pizza"]}}
+        find_merchant_mapping("pizza hut order", {}, {}, plaid_categories, 0.7, debug=True)
+        captured = capsys.readouterr()
+        assert "Plaid keyword match" in captured.out
+
+    def test_debug_output_for_no_match(self, capsys):
+        """find_merchant_mapping prints debug info when no match found."""
+        from money_mapper.transaction_enricher import find_merchant_mapping
+
+        find_merchant_mapping("TOTALLY UNKNOWN MERCHANT", {}, {}, {}, 0.7, debug=True)
+        captured = capsys.readouterr()
+        assert "No category found" in captured.out

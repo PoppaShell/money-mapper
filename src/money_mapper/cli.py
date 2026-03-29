@@ -394,10 +394,9 @@ def manage_mappings_interactive():
         print("\n\nOperation cancelled by user")
     except Exception as e:
         print(f"\nError managing mappings: {e}")
-        if debug_mode:
-            import traceback
+        import traceback
 
-            traceback.print_exc()
+        traceback.print_exc()
 
 
 def run_full_pipeline_interactive(debug: bool = False):
