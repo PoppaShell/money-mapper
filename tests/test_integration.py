@@ -374,6 +374,18 @@ class TestOtherCommands:
 
         assert "Traceback" not in result.stderr
 
+    def test_rebuild_model_creates_file(self, tmp_path):
+        """rebuild-model --public should find merchants and create model."""
+        setup_test_env(tmp_path)
+        result = run_cli("rebuild-model", "--public", "--debug", cwd=str(tmp_path))
+        assert "No merchants found" not in result.stdout, f"Bug: {result.stdout}"
+        assert result.returncode == 0, f"rebuild failed: {result.stdout}\n{result.stderr}"
+
+    def test_no_runtime_warning_on_cli(self):
+        """CLI commands should not emit RuntimeWarning about sys.modules."""
+        result = run_cli("check-deps")
+        assert "RuntimeWarning" not in result.stderr, f"Warning found: {result.stderr}"
+
 
 class TestFullPipeline:
     """Integration tests for the full pipeline command."""

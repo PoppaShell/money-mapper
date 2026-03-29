@@ -219,7 +219,7 @@ class TestCLIImports:
     def test_cli_entry_point_exists(self):
         """Test that CLI entry point is accessible."""
         try:
-            from money_mapper import main
+            from money_mapper.cli import main
 
             assert main is not None
             assert callable(main)
