@@ -215,6 +215,31 @@ class MLModel:
         self.y_train = y
         self.categories = list(set(y))
 
+    def load(self, model_path: str) -> None:
+        """
+        Load a saved model from a pickle file.
+
+        Supports both full MLModel instances and dict-format files produced
+        by rebuild_public_model() / rebuild_private_model().
+
+        Args:
+            model_path: Path to the model pickle file
+        """
+        import pickle  # nosec: trusted local model files only
+
+        with open(model_path, "rb") as f:
+            model_data = pickle.load(f)  # nosec: loading trusted model file
+
+        if isinstance(model_data, MLModel):
+            # Full MLModel instance saved directly
+            self.__dict__.update(model_data.__dict__)
+        elif isinstance(model_data, dict):
+            # Dict format from rebuild_public_model / rebuild_private_model
+            # These files contain merchant lists, not a trained model.
+            # Mark as empty so predict() returns UNKNOWN gracefully.
+            self.categories = []
+            self.feature_names = None
+
     def predict(self, X: list[dict[str, Any]]) -> list[tuple[str, str]]:
         """
         Predict categories for transactions.

@@ -1,5 +1,7 @@
 """Tests for money_mapper.transaction_enricher module."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from money_mapper.transaction_enricher import (
@@ -1022,3 +1024,86 @@ class TestMLIntegration:
         finally:
             if original_predict:
                 ml_cat.predict_category = original_predict
+
+
+class TestMLIntegrationWiring:
+    """Test ML categorizer wiring in enrichment pipeline."""
+
+    def test_enrich_transaction_uses_ml_when_provided(self):
+        """ML model should be consulted when no mapping match found."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        transaction = {
+            "date": "2024-01-15",
+            "description": "UNKNOWN MERCHANT XYZ",
+            "amount": -25.00,
+        }
+        ml_model = MagicMock()
+        ml_model.predict.return_value = [("FOOD_AND_DRINK", "FOOD_AND_DRINK_RESTAURANTS")]
+
+        enrich_transaction(
+            transaction=transaction,
+            private_mappings={},
+            public_mappings={},
+            plaid_categories={},
+            fuzzy_threshold=0.7,
+            ml_model=ml_model,
+        )
+
+        ml_model.predict.assert_called_once()
+
+    def test_enrich_transaction_skips_ml_when_mapping_found(self):
+        """ML should not be called when an exact mapping match exists."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        transaction = {
+            "date": "2024-01-15",
+            "description": "STARBUCKS #1234",
+            "amount": -5.00,
+        }
+        ml_model = MagicMock()
+        public_mappings = {
+            "FOOD_AND_DRINK": {
+                "FOOD_AND_DRINK_COFFEE": {
+                    "starbucks*": {
+                        "name": "Starbucks",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "FOOD_AND_DRINK_COFFEE",
+                        "scope": "public",
+                    }
+                }
+            }
+        }
+
+        enrich_transaction(
+            transaction=transaction,
+            private_mappings={},
+            public_mappings=public_mappings,
+            plaid_categories={},
+            fuzzy_threshold=0.7,
+            ml_model=ml_model,
+        )
+
+        ml_model.predict.assert_not_called()
+
+    def test_enrich_transaction_graceful_when_ml_none(self):
+        """Enrichment should work fine when ml_model is None (default)."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        transaction = {
+            "date": "2024-01-15",
+            "description": "UNKNOWN STORE",
+            "amount": -10.00,
+        }
+
+        result = enrich_transaction(
+            transaction=transaction,
+            private_mappings={},
+            public_mappings={},
+            plaid_categories={},
+            fuzzy_threshold=0.7,
+            ml_model=None,
+        )
+
+        assert result is not None
+        assert "date" in result

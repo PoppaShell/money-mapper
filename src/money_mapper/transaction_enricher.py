@@ -190,7 +190,8 @@ def _enrich_transaction_worker(args: tuple) -> dict:
     Must be at module level for pickling by multiprocessing.Pool.
 
     Args:
-        args: Tuple of (transaction, private_mappings, public_mappings, plaid_categories, fuzzy_threshold, config_dir)
+        args: Tuple of (transaction, private_mappings, public_mappings,
+              plaid_categories, fuzzy_threshold, config_dir, ml_model)
 
     Returns:
         Enriched transaction dictionary
@@ -202,6 +203,7 @@ def _enrich_transaction_worker(args: tuple) -> dict:
         plaid_categories,
         fuzzy_threshold,
         config_dir,
+        ml_model,
     ) = args
     return enrich_transaction(
         transaction,
@@ -210,6 +212,7 @@ def _enrich_transaction_worker(args: tuple) -> dict:
         plaid_categories,
         fuzzy_threshold,
         debug=False,
+        ml_model=ml_model,
     )
 
 
@@ -302,6 +305,22 @@ def process_transaction_enrichment(
     config_manager = get_config_manager()
     fuzzy_threshold = config_manager.get_fuzzy_threshold("enrichment")
 
+    # Load ML model if available
+    ml_model = None
+    model_path = os.path.join("models", "public_classifier.pkl")
+    if os.path.exists(model_path):
+        try:
+            from money_mapper.ml_categorizer import MLModel
+
+            ml_model = MLModel()
+            ml_model.load(model_path)
+            if debug:
+                print(f"Loaded ML model from {model_path}")
+        except Exception:
+            if debug:
+                print("Failed to load ML model, continuing without ML")
+            ml_model = None
+
     # Attempt multiprocessing (with fallback to sequential)
     enriched_transactions = []
 
@@ -326,6 +345,7 @@ def process_transaction_enrichment(
                         config["plaid_categories"],
                         fuzzy_threshold,
                         "config",
+                        ml_model,
                     )
                     for transaction in transactions
                 ]
@@ -379,6 +399,7 @@ def process_transaction_enrichment(
                 config["plaid_categories"],
                 fuzzy_threshold,
                 debug,
+                ml_model=ml_model,
             )
             enriched_transactions.append(enriched)
 
