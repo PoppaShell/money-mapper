@@ -381,10 +381,16 @@ def rebuild_public_model(output_dir: str = "models", debug: bool = False) -> dic
 
     try:
         # Load public mappings
-        config_file = Path("config/public_settings.toml")
+        from money_mapper.config_manager import get_config_manager
+
+        try:
+            config_mgr = get_config_manager()
+            config_file = Path(config_mgr.get_file_path("public_mappings"))
+        except Exception:
+            config_file = Path("config/public_mappings.toml")
         if not config_file.exists():
             if debug:
-                print("Warning: public_settings.toml not found")
+                print("Warning: public_mappings.toml not found")
             return None
 
         config = load_config(str(config_file))
