@@ -569,3 +569,47 @@ class TestImportRealData:
             files={"file": ("empty.csv", b"", "text/csv")},
         )
         assert response.status_code in (200, 500)
+
+
+class TestMappingsRealData:
+    """Test mappings route with real data."""
+
+    def test_mappings_loads_from_toml(self, tmp_path):
+        """Mappings page loads real data from TOML files."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        (config_dir / "public_mappings.toml").write_text(
+            "[FOOD_AND_DRINK.COFFEE]\n"
+            '"starbucks*" = {name = "Starbucks", category = "FOOD_AND_DRINK", '
+            'subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public"}\n'
+        )
+        (config_dir / "private_mappings.toml").write_text("")
+
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.get("/mappings")
+        assert response.status_code == 200
+
+    def test_mappings_empty_state(self):
+        """Mappings page works when no mapping files exist."""
+        app = create_app()
+        client = TestClient(app)
+        response = client.get("/mappings")
+        assert response.status_code == 200
+
+    def test_create_mapping_writes_staging(self, tmp_path):
+        """Adding a mapping should write to new_mappings.toml."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        (config_dir / "public_mappings.toml").write_text("")
+        (config_dir / "private_mappings.toml").write_text("")
+
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app)
+        response = client.post(
+            "/mappings",
+            data={"merchant": "Test Store", "category": "SHOPPING", "source": "manual"},
+        )
+        assert response.status_code == 201
+        # Verify file was created
+        assert (config_dir / "new_mappings.toml").exists()

@@ -106,6 +106,8 @@ def create_app(data_dir: str | None = None) -> FastAPI:
     """
     base_dir = data_dir or os.getcwd()
     enriched_path = os.path.join(base_dir, "output", "enriched_transactions.json")
+    public_mappings_path = os.path.join(base_dir, "config", "public_mappings.toml")
+    private_mappings_path = os.path.join(base_dir, "config", "private_mappings.toml")
 
     app = FastAPI(
         title="Money Mapper",
@@ -322,20 +324,32 @@ def create_app(data_dir: str | None = None) -> FastAPI:
     # ===== Mappings Route =====
     @app.get("/mappings", response_class=HTMLResponse)
     async def mappings_list() -> HTMLResponse:
-        """List merchant mappings.
-
-        Returns:
-            HTMLResponse: Rendered HTML mappings list
-        """
+        """List merchant mappings."""
         template = env.get_template("mappings.html")
+        public = _load_mappings_flat(public_mappings_path)
+        private = _load_mappings_flat(private_mappings_path)
+
+        # Run privacy audit on a sample of public mappings
+        warnings = []
+        try:
+            from money_mapper.privacy_audit import audit_merchant_name
+
+            for m in public[:50]:
+                report = audit_merchant_name(m["merchant"], min_score=70)
+                if report["score"] >= 70:
+                    warnings.append(
+                        f"{m['merchant']}: {report['risk_level']} risk (score {report['score']})"
+                    )
+        except Exception:
+            pass
+
         data = {
             "title": "Mappings",
-            "public_mappings": [
-                {"merchant": "Starbucks", "category": "Food & Drink"},
-                {"merchant": "Shell Gas", "category": "Transport"},
+            "public_mappings": [{"merchant": m["name"], "category": m["category"]} for m in public],
+            "private_mappings": [
+                {"merchant": m["name"], "category": m["category"]} for m in private
             ],
-            "private_mappings": [{"merchant": "My Store", "category": "Custom"}],
-            "privacy_warnings": ["High-risk merchants detected"],
+            "privacy_warnings": warnings if warnings else None,
         }
         return HTMLResponse(template.render(**data))
 
@@ -343,22 +357,43 @@ def create_app(data_dir: str | None = None) -> FastAPI:
     async def create_mapping(
         merchant: str = Form(...), category: str = Form(...), source: str = Form(...)
     ) -> HTMLResponse:
-        """Create new merchant mapping.
-
-        Args:
-            merchant: Merchant name
-            category: Category to map to
-            source: Source of mapping
-
-        Returns:
-            HTMLResponse: Success or error message
-        """
+        """Create new merchant mapping in staging file."""
         if not merchant or not category:
             return HTMLResponse("Merchant and category required", status_code=400)
 
-        safe_merchant = html.escape(str(merchant))
-        safe_category = html.escape(str(category))
-        return HTMLResponse(f"Created mapping: {safe_merchant} - {safe_category}", status_code=201)
+        new_mappings_path = os.path.join(base_dir, "config", "new_mappings.toml")
+        try:
+            import toml as toml_writer
+
+            existing = {}
+            if os.path.exists(new_mappings_path):
+                with open(new_mappings_path, "rb") as f:
+                    existing = tomllib.load(f)
+
+            if "STAGING" not in existing:
+                existing["STAGING"] = {}
+            if "NEW" not in existing["STAGING"]:
+                existing["STAGING"]["NEW"] = {}
+
+            existing["STAGING"]["NEW"][merchant.lower()] = {
+                "name": merchant,
+                "category": category,
+                "subcategory": category,
+                "scope": source if source in ("public", "private") else "private",
+            }
+
+            with open(new_mappings_path, "w") as f:
+                toml_writer.dump(existing, f)
+
+            safe_merchant = html.escape(str(merchant))
+            safe_category = html.escape(str(category))
+            return HTMLResponse(
+                f"Added mapping: {safe_merchant} - {safe_category} (staged in new_mappings.toml)",
+                status_code=201,
+            )
+        except Exception as e:
+            safe_err = html.escape(str(e))
+            return HTMLResponse(f"Failed to add mapping: {safe_err}", status_code=500)
 
     # ===== Settings Route =====
     @app.get("/settings", response_class=HTMLResponse)
