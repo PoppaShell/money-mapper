@@ -18,6 +18,7 @@ from money_mapper.transaction_enricher import (
 )
 from money_mapper.utils import (
     ensure_directories_exist,
+    load_config,
     load_transactions_from_json,
     prompt_yes_no,
     validate_toml_files,
@@ -610,6 +611,23 @@ Examples:
     )
     rebuild_parser.add_argument("--debug", action="store_true", help="Enable debug output")
 
+    # Privacy audit
+    privacy_parser = subparsers.add_parser(
+        "privacy-audit", help="Scan mappings for potential PII leaks"
+    )
+    privacy_parser.add_argument(
+        "--file",
+        default="config/public_mappings.toml",
+        help="Mapping file to scan (default: config/public_mappings.toml)",
+    )
+    privacy_parser.add_argument(
+        "--threshold",
+        choices=["low", "medium", "high"],
+        default="medium",
+        help="Risk threshold to report (default: medium)",
+    )
+    privacy_parser.add_argument("--debug", action="store_true", help="Enable debug output")
+
     args = parser.parse_args()
 
     # Print banner first
@@ -971,6 +989,43 @@ Examples:
                     print("  Failed to rebuild private model")
             else:
                 print("  No enriched transactions found. Run 'money-mapper pipeline' first.")
+
+    elif args.command == "privacy-audit":
+        from money_mapper.privacy_audit import audit_merchant_name
+
+        threshold_map = {"low": 0, "medium": 30, "high": 70}
+        min_score = threshold_map.get(args.threshold, 30)
+
+        mapping_file = args.file
+        if not os.path.exists(mapping_file):
+            print(f"File not found: {mapping_file}")
+            sys.exit(1)
+
+        print(f"Scanning {mapping_file} for PII risks (threshold: {args.threshold})...")
+        mappings = load_config(mapping_file)
+
+        findings = []
+        merchant_count = 0
+        for section in mappings.values():
+            if isinstance(section, dict):
+                for subsection in section.values():
+                    if isinstance(subsection, dict):
+                        for merchant_key in subsection:
+                            merchant_count += 1
+                            report = audit_merchant_name(merchant_key, min_score=min_score)
+                            if report["score"] >= min_score:
+                                findings.append(report)
+
+        print(f"Scanned {merchant_count} merchants, found {len(findings)} findings")
+        for f in findings:
+            print(f"  [{f['risk_level'].upper()}] {f['merchant_name']} (score: {f['score']})")
+            for finding in f.get("findings", []):
+                print(f"    - {finding.get('reason', '')}")
+
+        if findings:
+            sys.exit(1)
+        else:
+            print("No PII risks detected.")
 
     else:
         # Interactive mode

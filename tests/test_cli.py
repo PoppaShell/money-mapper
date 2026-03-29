@@ -714,3 +714,108 @@ class TestRebuildModelCommand:
                                     pass
         captured = capsys.readouterr()
         assert "No enriched transactions found" in captured.out
+
+
+class TestPrivacyAuditCommand:
+    """Test privacy-audit CLI command."""
+
+    @patch("money_mapper.privacy_audit.audit_merchant_name")
+    def test_privacy_audit_scans_file(self, mock_audit):
+        """Test privacy-audit scans merchants from mapping file."""
+        mock_audit.return_value = {
+            "merchant_name": "starbucks",
+            "score": 5,
+            "risk_level": "low",
+            "findings": [],
+        }
+
+        with patch(
+            "sys.argv",
+            [
+                "money-mapper",
+                "privacy-audit",
+                "--file",
+                "config/public_mappings.toml",
+                "--threshold",
+                "high",
+            ],
+        ):
+            with patch("os.path.exists", return_value=True):
+                with patch(
+                    "money_mapper.cli.load_config",
+                    return_value={
+                        "FOOD": {
+                            "COFFEE": {
+                                "starbucks": {
+                                    "name": "Starbucks",
+                                    "category": "FOOD",
+                                    "subcategory": "COFFEE",
+                                    "scope": "public",
+                                }
+                            }
+                        }
+                    },
+                ):
+                    with patch("money_mapper.cli.get_config_manager"):
+                        with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                            with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                                with patch(
+                                    "money_mapper.setup_wizard.check_first_run", return_value=False
+                                ):
+                                    try:
+                                        from money_mapper.cli import main
+
+                                        main()
+                                    except SystemExit:
+                                        pass
+
+        mock_audit.assert_called()
+
+    @patch("money_mapper.privacy_audit.audit_merchant_name")
+    def test_privacy_audit_exits_1_on_findings(self, mock_audit):
+        """Test privacy-audit exits 1 when findings exceed threshold."""
+        mock_audit.return_value = {
+            "merchant_name": "dr smith medical",
+            "score": 85,
+            "risk_level": "high",
+            "findings": [{"type": "keywords", "reason": "Medical keyword detected"}],
+        }
+
+        with patch(
+            "sys.argv",
+            [
+                "money-mapper",
+                "privacy-audit",
+                "--file",
+                "config/public_mappings.toml",
+                "--threshold",
+                "medium",
+            ],
+        ):
+            with patch("os.path.exists", return_value=True):
+                with patch(
+                    "money_mapper.cli.load_config",
+                    return_value={
+                        "MEDICAL": {
+                            "SERVICES": {
+                                "dr smith medical": {
+                                    "name": "Dr Smith",
+                                    "category": "MEDICAL",
+                                    "subcategory": "SERVICES",
+                                    "scope": "private",
+                                }
+                            }
+                        }
+                    },
+                ):
+                    with patch("money_mapper.cli.get_config_manager"):
+                        with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                            with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                                with patch(
+                                    "money_mapper.setup_wizard.check_first_run", return_value=False
+                                ):
+                                    with pytest.raises(SystemExit) as exc_info:
+                                        from money_mapper.cli import main
+
+                                        main()
+                                    assert exc_info.value.code == 1
