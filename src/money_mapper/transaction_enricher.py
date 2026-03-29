@@ -191,7 +191,8 @@ def _enrich_transaction_worker(args: tuple) -> dict:
 
     Args:
         args: Tuple of (transaction, private_mappings, public_mappings,
-              plaid_categories, fuzzy_threshold, config_dir, ml_model)
+              plaid_categories, fuzzy_threshold, config_dir, ml_model,
+              similarity_model, vectors_file)
 
     Returns:
         Enriched transaction dictionary
@@ -204,6 +205,8 @@ def _enrich_transaction_worker(args: tuple) -> dict:
         fuzzy_threshold,
         config_dir,
         ml_model,
+        similarity_model,
+        vectors_file,
     ) = args
     return enrich_transaction(
         transaction,
@@ -213,6 +216,8 @@ def _enrich_transaction_worker(args: tuple) -> dict:
         fuzzy_threshold,
         debug=False,
         ml_model=ml_model,
+        similarity_model=similarity_model,
+        vectors_file=vectors_file,
     )
 
 
@@ -321,6 +326,22 @@ def process_transaction_enrichment(
                 print("Failed to load ML model, continuing without ML")
             ml_model = None
 
+    # Load similarity model if available
+    similarity_model = None
+    _vectors_candidate = os.path.join("models", "public_vectors.npy")
+    vectors_file: str | None = None
+    if os.path.exists(_vectors_candidate):
+        try:
+            from sentence_transformers import SentenceTransformer
+
+            similarity_model = SentenceTransformer("all-MiniLM-L6-v2")
+            vectors_file = _vectors_candidate
+            if debug:
+                print(f"Loaded similarity model with vectors from {vectors_file}")
+        except ImportError:
+            if debug:
+                print("sentence-transformers not installed, skipping similarity matching")
+
     # Attempt multiprocessing (with fallback to sequential)
     enriched_transactions = []
 
@@ -346,6 +367,8 @@ def process_transaction_enrichment(
                         fuzzy_threshold,
                         "config",
                         ml_model,
+                        similarity_model,
+                        vectors_file,
                     )
                     for transaction in transactions
                 ]
@@ -400,6 +423,8 @@ def process_transaction_enrichment(
                 fuzzy_threshold,
                 debug,
                 ml_model=ml_model,
+                similarity_model=similarity_model,
+                vectors_file=vectors_file,
             )
             enriched_transactions.append(enriched)
 

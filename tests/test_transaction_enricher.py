@@ -1,11 +1,12 @@
 """Tests for money_mapper.transaction_enricher module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from money_mapper.transaction_enricher import (
     create_mapping_result,
+    enrich_transaction,
     extract_merchant_name,
     find_merchant_mapping,
     fuzzy_match_similarity,
@@ -1107,3 +1108,62 @@ class TestMLIntegrationWiring:
 
         assert result is not None
         assert "date" in result
+
+
+class TestSimilarityIntegration:
+    """Test similarity matcher integration in enrichment."""
+
+    def test_enrich_uses_similarity_when_provided(self):
+        """Similarity model consulted when ML does not match."""
+        transaction = {
+            "date": "2024-01-15",
+            "description": "UNKNOWN MERCHANT",
+            "amount": -15.00,
+        }
+        similarity_model = MagicMock()
+        mock_match = {
+            "name": "Known Store",
+            "category": "GENERAL_MERCHANDISE",
+            "subcategory": "GENERAL_MERCHANDISE_OTHER",
+            "similarity": 0.92,
+        }
+
+        import numpy as np
+
+        with patch(
+            "money_mapper.similarity_matcher.find_similar_merchant",
+            return_value=mock_match,
+        ):
+            with patch(
+                "money_mapper.similarity_matcher.load_merchant_embeddings",
+                return_value=({"m1": mock_match}, np.array([[0.1, 0.2]])),
+            ):
+                result = enrich_transaction(
+                    transaction=transaction,
+                    private_mappings={},
+                    public_mappings={},
+                    plaid_categories={},
+                    fuzzy_threshold=0.7,
+                    similarity_model=similarity_model,
+                    vectors_file="models/public_vectors.npy",
+                )
+
+        assert result is not None
+
+    def test_enrich_graceful_when_similarity_none(self):
+        """Enrichment works when similarity_model is None."""
+        transaction = {
+            "date": "2024-01-15",
+            "description": "STORE",
+            "amount": -10.00,
+        }
+        result = enrich_transaction(
+            transaction=transaction,
+            private_mappings={},
+            public_mappings={},
+            plaid_categories={},
+            fuzzy_threshold=0.7,
+            similarity_model=None,
+            vectors_file=None,
+        )
+        assert result is not None
