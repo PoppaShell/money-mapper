@@ -1,9 +1,12 @@
 """Tests for money_mapper.transaction_enricher module."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from money_mapper.transaction_enricher import (
     create_mapping_result,
+    enrich_transaction,
     extract_merchant_name,
     find_merchant_mapping,
     fuzzy_match_similarity,
@@ -1022,3 +1025,145 @@ class TestMLIntegration:
         finally:
             if original_predict:
                 ml_cat.predict_category = original_predict
+
+
+class TestMLIntegrationWiring:
+    """Test ML categorizer wiring in enrichment pipeline."""
+
+    def test_enrich_transaction_uses_ml_when_provided(self):
+        """ML model should be consulted when no mapping match found."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        transaction = {
+            "date": "2024-01-15",
+            "description": "UNKNOWN MERCHANT XYZ",
+            "amount": -25.00,
+        }
+        ml_model = MagicMock()
+        ml_model.predict.return_value = [("FOOD_AND_DRINK", "FOOD_AND_DRINK_RESTAURANTS")]
+
+        enrich_transaction(
+            transaction=transaction,
+            private_mappings={},
+            public_mappings={},
+            plaid_categories={},
+            fuzzy_threshold=0.7,
+            ml_model=ml_model,
+        )
+
+        ml_model.predict.assert_called_once()
+
+    def test_enrich_transaction_skips_ml_when_mapping_found(self):
+        """ML should not be called when an exact mapping match exists."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        transaction = {
+            "date": "2024-01-15",
+            "description": "STARBUCKS #1234",
+            "amount": -5.00,
+        }
+        ml_model = MagicMock()
+        public_mappings = {
+            "FOOD_AND_DRINK": {
+                "FOOD_AND_DRINK_COFFEE": {
+                    "starbucks*": {
+                        "name": "Starbucks",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "FOOD_AND_DRINK_COFFEE",
+                        "scope": "public",
+                    }
+                }
+            }
+        }
+
+        enrich_transaction(
+            transaction=transaction,
+            private_mappings={},
+            public_mappings=public_mappings,
+            plaid_categories={},
+            fuzzy_threshold=0.7,
+            ml_model=ml_model,
+        )
+
+        ml_model.predict.assert_not_called()
+
+    def test_enrich_transaction_graceful_when_ml_none(self):
+        """Enrichment should work fine when ml_model is None (default)."""
+        from money_mapper.transaction_enricher import enrich_transaction
+
+        transaction = {
+            "date": "2024-01-15",
+            "description": "UNKNOWN STORE",
+            "amount": -10.00,
+        }
+
+        result = enrich_transaction(
+            transaction=transaction,
+            private_mappings={},
+            public_mappings={},
+            plaid_categories={},
+            fuzzy_threshold=0.7,
+            ml_model=None,
+        )
+
+        assert result is not None
+        assert "date" in result
+
+
+class TestSimilarityIntegration:
+    """Test similarity matcher integration in enrichment."""
+
+    def test_enrich_uses_similarity_when_provided(self):
+        """Similarity model consulted when ML does not match."""
+        transaction = {
+            "date": "2024-01-15",
+            "description": "UNKNOWN MERCHANT",
+            "amount": -15.00,
+        }
+        similarity_model = MagicMock()
+        mock_match = {
+            "name": "Known Store",
+            "category": "GENERAL_MERCHANDISE",
+            "subcategory": "GENERAL_MERCHANDISE_OTHER",
+            "similarity": 0.92,
+        }
+
+        import numpy as np
+
+        with patch(
+            "money_mapper.similarity_matcher.find_similar_merchant",
+            return_value=mock_match,
+        ):
+            with patch(
+                "money_mapper.similarity_matcher.load_merchant_embeddings",
+                return_value=({"m1": mock_match}, np.array([[0.1, 0.2]])),
+            ):
+                result = enrich_transaction(
+                    transaction=transaction,
+                    private_mappings={},
+                    public_mappings={},
+                    plaid_categories={},
+                    fuzzy_threshold=0.7,
+                    similarity_model=similarity_model,
+                    vectors_file="models/public_vectors.npy",
+                )
+
+        assert result is not None
+
+    def test_enrich_graceful_when_similarity_none(self):
+        """Enrichment works when similarity_model is None."""
+        transaction = {
+            "date": "2024-01-15",
+            "description": "STORE",
+            "amount": -10.00,
+        }
+        result = enrich_transaction(
+            transaction=transaction,
+            private_mappings={},
+            public_mappings={},
+            plaid_categories={},
+            fuzzy_threshold=0.7,
+            similarity_model=None,
+            vectors_file=None,
+        )
+        assert result is not None

@@ -2,12 +2,14 @@
 
 import json
 import os
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from money_mapper.cli import (
     confirm_action,
     print_banner,
+    run_full_pipeline_interactive,
     validate_directory,
     validate_json_file,
     validate_output_path,
@@ -585,3 +587,292 @@ class TestCLIEdgeCases:
         output_file = unicode_dir / "résultats.json"
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert isinstance(result, bool)
+
+
+class TestRunFullPipelineInteractive:
+    """Test the full pipeline interactive function."""
+
+    @patch("money_mapper.cli.CSVImporter")
+    @patch("money_mapper.cli.process_transaction_enrichment")
+    @patch("money_mapper.cli.get_config_manager")
+    @patch("builtins.input", side_effect=["statements", "y", "n"])
+    def test_pipeline_interactive_uses_csv_importer(
+        self, mock_input, mock_config, mock_enrich, mock_csv
+    ):
+        """Interactive pipeline should use CSVImporter, not deleted PDF parser."""
+        mock_cm = MagicMock()
+        mock_cm.get_setting.return_value = "output"
+        mock_cm.get_directory_path.return_value = "statements"
+        mock_cm.get_default_file_path.return_value = "output/transactions.json"
+        mock_config.return_value = mock_cm
+
+        mock_importer = MagicMock()
+        mock_importer.import_directory.return_value = [
+            {"date": "2024-01-15", "merchant": "STORE", "amount": -10.00}
+        ]
+        mock_csv.return_value = mock_importer
+
+        with patch("money_mapper.utils.save_transactions_to_json"):
+            with patch("money_mapper.cli.validate_directory", return_value=True):
+                with patch("money_mapper.cli.validate_output_path", return_value=True):
+                    run_full_pipeline_interactive(debug=False)
+
+        mock_csv.assert_called_once()
+        mock_importer.import_directory.assert_called_once()
+
+
+class TestRebuildModelCommand:
+    """Test rebuild-model CLI command."""
+
+    @patch("money_mapper.ml_categorizer.rebuild_public_model")
+    def test_rebuild_model_public(self, mock_rebuild):
+        """Test --public flag calls rebuild_public_model."""
+        from money_mapper.cli import main
+
+        mock_rebuild.return_value = {"vocab_size": 100, "model_type": "public"}
+        with patch("sys.argv", ["money-mapper", "rebuild-model", "--public"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            try:
+                                main()
+                            except SystemExit:
+                                pass
+        mock_rebuild.assert_called_once()
+
+    @patch("money_mapper.ml_categorizer.rebuild_private_model")
+    @patch("os.path.exists", return_value=True)
+    def test_rebuild_model_private(self, mock_exists, mock_rebuild):
+        """Test --private flag calls rebuild_private_model."""
+        from money_mapper.cli import main
+
+        mock_rebuild.return_value = {"vocab_size": 50, "model_type": "private"}
+        with patch("sys.argv", ["money-mapper", "rebuild-model", "--private"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            try:
+                                main()
+                            except SystemExit:
+                                pass
+        mock_rebuild.assert_called_once()
+
+    @patch("money_mapper.ml_categorizer.rebuild_private_model")
+    @patch("money_mapper.ml_categorizer.rebuild_public_model")
+    def test_rebuild_model_both_default(self, mock_public, mock_private):
+        """Test that no flag defaults to rebuilding both models."""
+        from money_mapper.cli import main
+
+        mock_public.return_value = {"vocab_size": 100, "model_type": "public"}
+        mock_private.return_value = {"vocab_size": 50, "model_type": "private"}
+        with patch("sys.argv", ["money-mapper", "rebuild-model"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            with patch("os.path.exists", return_value=True):
+                                try:
+                                    main()
+                                except SystemExit:
+                                    pass
+        mock_public.assert_called_once()
+        mock_private.assert_called_once()
+
+    @patch("money_mapper.ml_categorizer.rebuild_public_model")
+    def test_rebuild_model_public_failure(self, mock_rebuild, capsys):
+        """Test --public flag prints failure message when rebuild returns None."""
+        from money_mapper.cli import main
+
+        mock_rebuild.return_value = None
+        with patch("sys.argv", ["money-mapper", "rebuild-model", "--public"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            try:
+                                main()
+                            except SystemExit:
+                                pass
+        captured = capsys.readouterr()
+        assert "Failed to rebuild public model" in captured.out
+
+    def test_rebuild_model_private_no_enriched_file(self, capsys):
+        """Test --private flag prints message when enriched file is missing."""
+        from money_mapper.cli import main
+
+        with patch("sys.argv", ["money-mapper", "rebuild-model", "--private"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            with patch("os.path.exists", return_value=False):
+                                try:
+                                    main()
+                                except SystemExit:
+                                    pass
+        captured = capsys.readouterr()
+        assert "No enriched transactions found" in captured.out
+
+
+class TestPrivacyAuditCommand:
+    """Test privacy-audit CLI command."""
+
+    @patch("money_mapper.privacy_audit.audit_merchant_name")
+    def test_privacy_audit_scans_file(self, mock_audit):
+        """Test privacy-audit scans merchants from mapping file."""
+        mock_audit.return_value = {
+            "merchant_name": "starbucks",
+            "score": 5,
+            "risk_level": "low",
+            "findings": [],
+        }
+
+        with patch(
+            "sys.argv",
+            [
+                "money-mapper",
+                "privacy-audit",
+                "--file",
+                "config/public_mappings.toml",
+                "--threshold",
+                "high",
+            ],
+        ):
+            with patch("os.path.exists", return_value=True):
+                with patch(
+                    "money_mapper.cli.load_config",
+                    return_value={
+                        "FOOD": {
+                            "COFFEE": {
+                                "starbucks": {
+                                    "name": "Starbucks",
+                                    "category": "FOOD",
+                                    "subcategory": "COFFEE",
+                                    "scope": "public",
+                                }
+                            }
+                        }
+                    },
+                ):
+                    with patch("money_mapper.cli.get_config_manager"):
+                        with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                            with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                                with patch(
+                                    "money_mapper.setup_wizard.check_first_run", return_value=False
+                                ):
+                                    try:
+                                        from money_mapper.cli import main
+
+                                        main()
+                                    except SystemExit:
+                                        pass
+
+        mock_audit.assert_called()
+
+    @patch("money_mapper.privacy_audit.audit_merchant_name")
+    def test_privacy_audit_exits_1_on_findings(self, mock_audit):
+        """Test privacy-audit exits 1 when findings exceed threshold."""
+        mock_audit.return_value = {
+            "merchant_name": "dr smith medical",
+            "score": 85,
+            "risk_level": "high",
+            "findings": [{"type": "keywords", "reason": "Medical keyword detected"}],
+        }
+
+        with patch(
+            "sys.argv",
+            [
+                "money-mapper",
+                "privacy-audit",
+                "--file",
+                "config/public_mappings.toml",
+                "--threshold",
+                "medium",
+            ],
+        ):
+            with patch("os.path.exists", return_value=True):
+                with patch(
+                    "money_mapper.cli.load_config",
+                    return_value={
+                        "MEDICAL": {
+                            "SERVICES": {
+                                "dr smith medical": {
+                                    "name": "Dr Smith",
+                                    "category": "MEDICAL",
+                                    "subcategory": "SERVICES",
+                                    "scope": "private",
+                                }
+                            }
+                        }
+                    },
+                ):
+                    with patch("money_mapper.cli.get_config_manager"):
+                        with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                            with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                                with patch(
+                                    "money_mapper.setup_wizard.check_first_run", return_value=False
+                                ):
+                                    with pytest.raises(SystemExit) as exc_info:
+                                        from money_mapper.cli import main
+
+                                        main()
+                                    assert exc_info.value.code == 1
+
+
+class TestContributeCommand:
+    """Test contribute CLI command."""
+
+    @patch("money_mapper.community_flow.submit_community_contribution")
+    def test_contribute_success(self, mock_submit):
+        """Test successful contribution creates PR."""
+        from money_mapper.cli import main
+
+        mock_submit.return_value = {
+            "success": True,
+            "pr_url": "https://github.com/PoppaShell/money-mapper/pull/999",
+            "validation": {"passed": True},
+        }
+        with patch(
+            "sys.argv",
+            [
+                "money-mapper",
+                "contribute",
+                "--merchant",
+                "Test Store",
+                "--category",
+                "FOOD_AND_DRINK",
+            ],
+        ):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            try:
+                                main()
+                            except SystemExit:
+                                pass
+        mock_submit.assert_called_once_with("Test Store", "FOOD_AND_DRINK", "cli")
+
+    @patch("money_mapper.community_flow.submit_community_contribution")
+    def test_contribute_failure_exits_1(self, mock_submit):
+        """Test failed contribution exits with code 1."""
+        from money_mapper.cli import main
+
+        mock_submit.return_value = {
+            "success": False,
+            "error": "Privacy audit failed",
+            "validation": {"passed": False, "score": 85, "issues": ["Medical keyword"]},
+        }
+        with patch(
+            "sys.argv",
+            ["money-mapper", "contribute", "--merchant", "Dr Smith", "--category", "MEDICAL"],
+        ):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            with pytest.raises(SystemExit) as exc_info:
+                                main()
+                            assert exc_info.value.code == 1

@@ -40,5 +40,13 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
+      - id: privacy-audit
+        name: privacy-audit
+        entry: python -m money_mapper.privacy_precommit --threshold high
+        language: system
+        pass_filenames: false
+        files: (public_mappings|private_mappings|new_mappings).*\.toml$
+        stages: [pre-commit]
+
       # actionlint runs in CI only (downloads native binary)
       # Local alternative: python -m actionlint_py .github/workflows/ci.yml

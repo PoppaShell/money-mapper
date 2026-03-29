@@ -18,6 +18,7 @@ from money_mapper.transaction_enricher import (
 )
 from money_mapper.utils import (
     ensure_directories_exist,
+    load_config,
     load_transactions_from_json,
     prompt_yes_no,
     validate_toml_files,
@@ -399,8 +400,12 @@ def manage_mappings_interactive():
             traceback.print_exc()
 
 
-def run_full_pipeline_interactive():
-    """Interactive mode for complete pipeline."""
+def run_full_pipeline_interactive(debug: bool = False):
+    """Interactive mode for complete pipeline.
+
+    Args:
+        debug: Enable debug output for detailed processing information.
+    """
     print("\n--- Complete Pipeline: Parse & Enrich ---")
 
     # Get config manager
@@ -441,15 +446,16 @@ def run_full_pipeline_interactive():
         return
 
     try:
-        # Step 1: Parse statements (debug mode disabled in interactive mode - use CLI flags for debug)
+        # Step 1: Import CSV transactions
         print(f"\nStep 1: Importing CSV transactions from '{directory}'...")
-        transactions = process_pdf_statements(directory, debug=False)
+        importer = CSVImporter(debug=debug)
+        transactions = importer.import_directory(directory)
 
         if not transactions:
-            print("No transactions found in PDF files")
+            print("No transactions found in CSV files")
             return
 
-        from utils import save_transactions_to_json
+        from money_mapper.utils import save_transactions_to_json
 
         save_transactions_to_json(transactions, parsed_file)
         print(f"Parsed {len(transactions)} transactions")
@@ -594,6 +600,43 @@ Examples:
     )
     web_parser.add_argument("--port", default="8000", help="Port to bind to (default: 8000)")
     web_parser.add_argument("--no-browser", action="store_true", help="Don't auto-open web browser")
+
+    # Rebuild ML model command
+    rebuild_parser = subparsers.add_parser("rebuild-model", help="Rebuild ML categorization models")
+    rebuild_parser.add_argument(
+        "--public", action="store_true", help="Rebuild public model from public_mappings.toml"
+    )
+    rebuild_parser.add_argument(
+        "--private", action="store_true", help="Rebuild private model from enriched transactions"
+    )
+    rebuild_parser.add_argument("--debug", action="store_true", help="Enable debug output")
+
+    # Privacy audit
+    privacy_parser = subparsers.add_parser(
+        "privacy-audit", help="Scan mappings for potential PII leaks"
+    )
+    privacy_parser.add_argument(
+        "--file",
+        default="config/public_mappings.toml",
+        help="Mapping file to scan (default: config/public_mappings.toml)",
+    )
+    privacy_parser.add_argument(
+        "--threshold",
+        choices=["low", "medium", "high"],
+        default="medium",
+        help="Risk threshold to report (default: medium)",
+    )
+    privacy_parser.add_argument("--debug", action="store_true", help="Enable debug output")
+
+    # Community contribution
+    contribute_parser = subparsers.add_parser(
+        "contribute", help="Contribute a merchant mapping via GitHub PR"
+    )
+    contribute_parser.add_argument("--merchant", required=True, help="Merchant name to contribute")
+    contribute_parser.add_argument(
+        "--category", required=True, help="Category to map the merchant to"
+    )
+    contribute_parser.add_argument("--debug", action="store_true", help="Enable debug output")
 
     args = parser.parse_args()
 
@@ -930,6 +973,86 @@ Examples:
         from money_mapper.web_command import web_command
 
         sys.exit(web_command(args))
+
+    elif args.command == "rebuild-model":
+        from money_mapper.ml_categorizer import rebuild_private_model, rebuild_public_model
+
+        do_public = args.public or (not args.public and not args.private)
+        do_private = args.private or (not args.public and not args.private)
+
+        if do_public:
+            print("Rebuilding public model...")
+            stats = rebuild_public_model(debug=getattr(args, "debug", False))
+            if stats:
+                print(f"  Public model rebuilt: {stats.get('vocab_size', 0)} merchants")
+            else:
+                print("  Failed to rebuild public model (check mappings)")
+
+        if do_private:
+            print("Rebuilding private model...")
+            enriched_file = os.path.join("output", "enriched_transactions.json")
+            if os.path.exists(enriched_file):
+                stats = rebuild_private_model(enriched_file, debug=getattr(args, "debug", False))
+                if stats:
+                    print(f"  Private model rebuilt: {stats.get('vocab_size', 0)} merchants")
+                else:
+                    print("  Failed to rebuild private model")
+            else:
+                print("  No enriched transactions found. Run 'money-mapper pipeline' first.")
+
+    elif args.command == "privacy-audit":
+        from money_mapper.privacy_audit import audit_merchant_name
+
+        threshold_map = {"low": 0, "medium": 30, "high": 70}
+        min_score = threshold_map.get(args.threshold, 30)
+
+        mapping_file = args.file
+        if not os.path.exists(mapping_file):
+            print(f"File not found: {mapping_file}")
+            sys.exit(1)
+
+        print(f"Scanning {mapping_file} for PII risks (threshold: {args.threshold})...")
+        mappings = load_config(mapping_file)
+
+        findings = []
+        merchant_count = 0
+        for section in mappings.values():
+            if isinstance(section, dict):
+                for subsection in section.values():
+                    if isinstance(subsection, dict):
+                        for merchant_key in subsection:
+                            merchant_count += 1
+                            report = audit_merchant_name(merchant_key, min_score=min_score)
+                            if report["score"] >= min_score:
+                                findings.append(report)
+
+        print(f"Scanned {merchant_count} merchants, found {len(findings)} findings")
+        for f in findings:
+            print(f"  [{f['risk_level'].upper()}] {f['merchant_name']} (score: {f['score']})")
+            for finding in f.get("findings", []):
+                print(f"    - {finding.get('reason', '')}")
+
+        if findings:
+            sys.exit(1)
+        else:
+            print("No PII risks detected.")
+
+    elif args.command == "contribute":
+        from money_mapper.community_flow import submit_community_contribution
+
+        print(f"Contributing mapping: {args.merchant} -> {args.category}")
+        result = submit_community_contribution(args.merchant, args.category, "cli")
+
+        if result.get("success"):
+            print(f"PR created: {result.get('pr_url', 'unknown')}")
+        else:
+            print(f"Contribution failed: {result.get('error', 'unknown error')}")
+            validation = result.get("validation", {})
+            if not validation.get("passed", True):
+                print(f"  Privacy score: {validation.get('score', 'N/A')}")
+                for issue in validation.get("issues", []):
+                    print(f"  - {issue}")
+            sys.exit(1)
 
     else:
         # Interactive mode
