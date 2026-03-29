@@ -383,7 +383,7 @@ def process_transaction_enrichment(
                         processed += 1
 
                         if not debug and (processed % 50 == 0 or processed == len(transactions)):
-                            from utils import show_progress
+                            from money_mapper.utils import show_progress
 
                             show_progress(processed, len(transactions))
 
@@ -408,7 +408,7 @@ def process_transaction_enrichment(
         for i, transaction in enumerate(transactions):
             # Show progress bar (suppressed in debug mode to avoid clutter)
             if not debug:
-                from utils import show_progress
+                from money_mapper.utils import show_progress
 
                 show_progress(i + 1, len(transactions))
 

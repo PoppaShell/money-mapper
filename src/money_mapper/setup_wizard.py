@@ -238,7 +238,7 @@ def save_privacy_settings(
     try:
         import toml  # type: ignore[import-untyped]  # We need toml for writing (tomllib is read-only)
     except ImportError:
-        from utils import handle_toml_import_error
+        from money_mapper.utils import handle_toml_import_error
 
         handle_toml_import_error()
         return False
