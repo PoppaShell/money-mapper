@@ -5,6 +5,7 @@ Tests all 5 pages: Dashboard, Transactions, Import, Mappings, Settings.
 Uses httpx.AsyncClient with FastAPI TestClient pattern.
 """
 
+import json
 import tempfile
 
 import pytest
@@ -311,3 +312,81 @@ class TestRouteIntegration:
         # At minimum, dashboard should load
         response = client.get("/dashboard")
         assert response.status_code == 200
+
+
+class TestDataHelpers:
+    """Test data loading helper functions."""
+
+    def test_load_enriched_transactions_returns_list(self, tmp_path):
+        """Should load transactions from JSON file."""
+        from money_mapper.api.server import _load_enriched_transactions
+
+        txn_file = tmp_path / "enriched_transactions.json"
+        txn_file.write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-01-15",
+                        "merchant_name": "STORE",
+                        "amount": -50.0,
+                        "category": "Shopping",
+                    }
+                ]
+            )
+        )
+        result = _load_enriched_transactions(str(txn_file))
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "STORE"
+
+    def test_load_enriched_transactions_missing_file(self, tmp_path):
+        """Should return empty list when file doesn't exist."""
+        from money_mapper.api.server import _load_enriched_transactions
+
+        result = _load_enriched_transactions(str(tmp_path / "nonexistent.json"))
+        assert result == []
+
+    def test_load_mappings_from_toml(self, tmp_path):
+        """Should load and flatten mappings from TOML file."""
+        from money_mapper.api.server import _load_mappings_flat
+
+        toml_file = tmp_path / "mappings.toml"
+        toml_file.write_text(
+            "[FOOD_AND_DRINK.COFFEE]\n"
+            '"starbucks*" = {name = "Starbucks", category = "FOOD_AND_DRINK", '
+            'subcategory = "FOOD_AND_DRINK_COFFEE", scope = "public"}\n'
+        )
+        result = _load_mappings_flat(str(toml_file))
+        assert len(result) >= 1
+        assert result[0]["merchant"] == "starbucks*"
+        assert result[0]["name"] == "Starbucks"
+
+    def test_load_mappings_missing_file(self, tmp_path):
+        """Should return empty list when file doesn't exist."""
+        from money_mapper.api.server import _load_mappings_flat
+
+        result = _load_mappings_flat(str(tmp_path / "nonexistent.toml"))
+        assert result == []
+
+    def test_compute_spending_by_category(self):
+        """Should aggregate amounts by category."""
+        from money_mapper.api.server import _compute_spending_by_category
+
+        transactions = [
+            {"category": "FOOD", "amount": -10.0},
+            {"category": "FOOD", "amount": -5.0},
+            {"category": "TRANSPORT", "amount": -20.0},
+        ]
+        result = _compute_spending_by_category(transactions)
+        assert "TRANSPORT" in result["categories"]
+        assert "FOOD" in result["categories"]
+        assert len(result["categories"]) == 2
+        # Transport is 20, Food is 15, so Transport should be first (sorted by amount desc)
+        assert result["categories"][0] == "TRANSPORT"
+
+    def test_compute_spending_empty(self):
+        """Should handle empty transaction list."""
+        from money_mapper.api.server import _compute_spending_by_category
+
+        result = _compute_spending_by_category([])
+        assert result["categories"] == []
+        assert result["amounts"] == []

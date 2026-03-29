@@ -9,12 +9,90 @@ Provides 5 main pages:
 """
 
 import html
+import json
+import os
+import tomllib
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, PackageLoader, select_autoescape
+
+
+def _load_enriched_transactions(file_path: str) -> list[dict]:
+    """Load enriched transactions from JSON file.
+
+    Args:
+        file_path: Path to the JSON file containing enriched transactions.
+
+    Returns:
+        List of transaction dicts, or empty list if file missing/invalid.
+    """
+    if not os.path.exists(file_path):
+        return []
+    try:
+        with open(file_path) as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def _load_mappings_flat(file_path: str) -> list[dict]:
+    """Load mappings from TOML and flatten to list of {merchant, category, subcategory, name}.
+
+    Args:
+        file_path: Path to the TOML mappings file.
+
+    Returns:
+        Flattened list of mapping dicts, or empty list if file missing/invalid.
+    """
+    if not os.path.exists(file_path):
+        return []
+    try:
+        with open(file_path, "rb") as f:
+            data = tomllib.load(f)
+        flat = []
+        for section in data.values():
+            if isinstance(section, dict):
+                for subsection in section.values():
+                    if isinstance(subsection, dict):
+                        for pattern, mapping in subsection.items():
+                            if isinstance(mapping, dict):
+                                flat.append(
+                                    {
+                                        "merchant": pattern,
+                                        "category": mapping.get("category", ""),
+                                        "subcategory": mapping.get("subcategory", ""),
+                                        "name": mapping.get("name", pattern),
+                                    }
+                                )
+        return flat
+    except (OSError, tomllib.TOMLDecodeError):
+        return []
+
+
+def _compute_spending_by_category(transactions: list[dict]) -> dict:
+    """Compute spending totals grouped by category.
+
+    Args:
+        transactions: List of transaction dicts with 'category' and 'amount' keys.
+
+    Returns:
+        Dict with 'categories' (list of category names) and 'amounts' (list of floats),
+        sorted by amount descending.
+    """
+    totals: dict[str, float] = {}
+    for txn in transactions:
+        cat = txn.get("category", "Uncategorized") or "Uncategorized"
+        amount = abs(float(txn.get("amount", 0)))
+        totals[cat] = totals.get(cat, 0) + amount
+    sorted_cats = sorted(totals.items(), key=lambda x: x[1], reverse=True)
+    return {
+        "categories": [c[0] for c in sorted_cats],
+        "amounts": [round(c[1], 2) for c in sorted_cats],
+    }
 
 
 def create_app() -> FastAPI:
