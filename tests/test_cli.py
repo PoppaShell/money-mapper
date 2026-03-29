@@ -619,3 +619,98 @@ class TestRunFullPipelineInteractive:
 
         mock_csv.assert_called_once()
         mock_importer.import_directory.assert_called_once()
+
+
+class TestRebuildModelCommand:
+    """Test rebuild-model CLI command."""
+
+    @patch("money_mapper.ml_categorizer.rebuild_public_model")
+    def test_rebuild_model_public(self, mock_rebuild):
+        """Test --public flag calls rebuild_public_model."""
+        from money_mapper.cli import main
+
+        mock_rebuild.return_value = {"vocab_size": 100, "model_type": "public"}
+        with patch("sys.argv", ["money-mapper", "rebuild-model", "--public"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            try:
+                                main()
+                            except SystemExit:
+                                pass
+        mock_rebuild.assert_called_once()
+
+    @patch("money_mapper.ml_categorizer.rebuild_private_model")
+    @patch("os.path.exists", return_value=True)
+    def test_rebuild_model_private(self, mock_exists, mock_rebuild):
+        """Test --private flag calls rebuild_private_model."""
+        from money_mapper.cli import main
+
+        mock_rebuild.return_value = {"vocab_size": 50, "model_type": "private"}
+        with patch("sys.argv", ["money-mapper", "rebuild-model", "--private"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            try:
+                                main()
+                            except SystemExit:
+                                pass
+        mock_rebuild.assert_called_once()
+
+    @patch("money_mapper.ml_categorizer.rebuild_private_model")
+    @patch("money_mapper.ml_categorizer.rebuild_public_model")
+    def test_rebuild_model_both_default(self, mock_public, mock_private):
+        """Test that no flag defaults to rebuilding both models."""
+        from money_mapper.cli import main
+
+        mock_public.return_value = {"vocab_size": 100, "model_type": "public"}
+        mock_private.return_value = {"vocab_size": 50, "model_type": "private"}
+        with patch("sys.argv", ["money-mapper", "rebuild-model"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            with patch("os.path.exists", return_value=True):
+                                try:
+                                    main()
+                                except SystemExit:
+                                    pass
+        mock_public.assert_called_once()
+        mock_private.assert_called_once()
+
+    @patch("money_mapper.ml_categorizer.rebuild_public_model")
+    def test_rebuild_model_public_failure(self, mock_rebuild, capsys):
+        """Test --public flag prints failure message when rebuild returns None."""
+        from money_mapper.cli import main
+
+        mock_rebuild.return_value = None
+        with patch("sys.argv", ["money-mapper", "rebuild-model", "--public"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            try:
+                                main()
+                            except SystemExit:
+                                pass
+        captured = capsys.readouterr()
+        assert "Failed to rebuild public model" in captured.out
+
+    def test_rebuild_model_private_no_enriched_file(self, capsys):
+        """Test --private flag prints message when enriched file is missing."""
+        from money_mapper.cli import main
+
+        with patch("sys.argv", ["money-mapper", "rebuild-model", "--private"]):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            with patch("os.path.exists", return_value=False):
+                                try:
+                                    main()
+                                except SystemExit:
+                                    pass
+        captured = capsys.readouterr()
+        assert "No enriched transactions found" in captured.out

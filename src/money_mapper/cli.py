@@ -600,6 +600,16 @@ Examples:
     web_parser.add_argument("--port", default="8000", help="Port to bind to (default: 8000)")
     web_parser.add_argument("--no-browser", action="store_true", help="Don't auto-open web browser")
 
+    # Rebuild ML model command
+    rebuild_parser = subparsers.add_parser("rebuild-model", help="Rebuild ML categorization models")
+    rebuild_parser.add_argument(
+        "--public", action="store_true", help="Rebuild public model from public_mappings.toml"
+    )
+    rebuild_parser.add_argument(
+        "--private", action="store_true", help="Rebuild private model from enriched transactions"
+    )
+    rebuild_parser.add_argument("--debug", action="store_true", help="Enable debug output")
+
     args = parser.parse_args()
 
     # Print banner first
@@ -935,6 +945,32 @@ Examples:
         from money_mapper.web_command import web_command
 
         sys.exit(web_command(args))
+
+    elif args.command == "rebuild-model":
+        from money_mapper.ml_categorizer import rebuild_private_model, rebuild_public_model
+
+        do_public = args.public or (not args.public and not args.private)
+        do_private = args.private or (not args.public and not args.private)
+
+        if do_public:
+            print("Rebuilding public model...")
+            stats = rebuild_public_model(debug=getattr(args, "debug", False))
+            if stats:
+                print(f"  Public model rebuilt: {stats.get('vocab_size', 0)} merchants")
+            else:
+                print("  Failed to rebuild public model (check mappings)")
+
+        if do_private:
+            print("Rebuilding private model...")
+            enriched_file = os.path.join("output", "enriched_transactions.json")
+            if os.path.exists(enriched_file):
+                stats = rebuild_private_model(enriched_file, debug=getattr(args, "debug", False))
+                if stats:
+                    print(f"  Private model rebuilt: {stats.get('vocab_size', 0)} merchants")
+                else:
+                    print("  Failed to rebuild private model")
+            else:
+                print("  No enriched transactions found. Run 'money-mapper pipeline' first.")
 
     else:
         # Interactive mode
