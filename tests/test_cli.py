@@ -1,16 +1,16 @@
 """Tests for money_mapper.cli module."""
 
-import os
 import json
+import os
+
 import pytest
-from pathlib import Path
 
 from money_mapper.cli import (
+    confirm_action,
+    print_banner,
     validate_directory,
     validate_json_file,
     validate_output_path,
-    confirm_action,
-    print_banner,
 )
 
 
@@ -31,7 +31,7 @@ class TestValidateDirectory:
         """Test validation when file path given instead of directory."""
         test_file = temp_output_dir / "test.txt"
         test_file.write_text("test")
-        
+
         # Should return False because it's a file, not directory
         result = validate_directory(str(test_file))
         assert result is False
@@ -40,7 +40,7 @@ class TestValidateDirectory:
         """Test that validation requires CSV files to exist."""
         empty_dir = temp_output_dir / "empty"
         empty_dir.mkdir(exist_ok=True)
-        
+
         # Directory exists but has no CSVs - should return False
         result = validate_directory(str(empty_dir))
         assert result is False
@@ -49,19 +49,22 @@ class TestValidateDirectory:
         """Test validation with CSV files present."""
         csv_dir = temp_output_dir / "csvs"
         csv_dir.mkdir(exist_ok=True)
-        
+
         # Create a test CSV file
         csv_file = csv_dir / "test.csv"
         csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
-        
+
         # Should return True when CSV exists
         result = validate_directory(str(csv_dir))
         assert result is True
 
-    @pytest.mark.parametrize("invalid_path", [
-        "/nonexistent/path",
-        "",
-    ])
+    @pytest.mark.parametrize(
+        "invalid_path",
+        [
+            "/nonexistent/path",
+            "",
+        ],
+    )
     def test_validate_directory_invalid_paths(self, invalid_path):
         """Test directory validation with invalid paths."""
         result = validate_directory(invalid_path)
@@ -75,7 +78,7 @@ class TestValidateJsonFile:
         """Test validation of valid JSON file."""
         json_file = temp_output_dir / "valid.json"
         json_file.write_text('{"key": "value"}')
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
@@ -88,7 +91,7 @@ class TestValidateJsonFile:
         """Test validation of invalid JSON file."""
         json_file = temp_output_dir / "invalid.json"
         json_file.write_text("{invalid json")
-        
+
         result = validate_json_file(str(json_file))
         assert result is False
 
@@ -96,7 +99,7 @@ class TestValidateJsonFile:
         """Test validation of empty JSON file."""
         json_file = temp_output_dir / "empty.json"
         json_file.write_text("")
-        
+
         result = validate_json_file(str(json_file))
         assert result is False
 
@@ -104,7 +107,7 @@ class TestValidateJsonFile:
         """Test validation of JSON array file."""
         json_file = temp_output_dir / "array.json"
         json_file.write_text('[{"id": 1}, {"id": 2}]')
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
@@ -112,7 +115,7 @@ class TestValidateJsonFile:
         """Test validation of non-JSON file."""
         txt_file = temp_output_dir / "notjson.txt"
         txt_file.write_text("plain text")
-        
+
         result = validate_json_file(str(txt_file))
         assert result is False
 
@@ -123,14 +126,14 @@ class TestValidateOutputPath:
     def test_validate_valid_output_path(self, temp_output_dir):
         """Test validation of valid output path."""
         output_file = temp_output_dir / "output.json"
-        
+
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert result is True
 
     def test_validate_output_in_existing_directory(self, temp_output_dir):
         """Test output path in existing directory."""
         output_file = temp_output_dir / "output.json"
-        
+
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert result is True
 
@@ -144,7 +147,7 @@ class TestValidateOutputPath:
         """Test validation when output file already exists."""
         output_file = temp_output_dir / "exists.json"
         output_file.write_text('{"data": "existing"}')
-        
+
         # Should handle existing file gracefully
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert isinstance(result, bool)
@@ -189,7 +192,7 @@ class TestPrintBanner:
         """Test that banner prints without error."""
         print_banner()
         captured = capsys.readouterr()
-        
+
         # Banner should print something
         assert len(captured.out) >= 0
 
@@ -205,6 +208,7 @@ class TestCLIImports:
         """Test that CLI module can be imported."""
         try:
             from money_mapper.cli import main
+
             assert main is not None
             assert callable(main)
         except ImportError:
@@ -214,6 +218,7 @@ class TestCLIImports:
         """Test that CLI entry point is accessible."""
         try:
             from money_mapper import main
+
             assert main is not None
             assert callable(main)
         except ImportError:
@@ -222,16 +227,16 @@ class TestCLIImports:
     def test_all_cli_functions_exist(self):
         """Test that all major CLI functions exist."""
         from money_mapper import cli
-        
+
         required_functions = [
-            'validate_directory',
-            'validate_json_file',
-            'validate_output_path',
-            'confirm_action',
-            'print_banner',
-            'main',
+            "validate_directory",
+            "validate_json_file",
+            "validate_output_path",
+            "confirm_action",
+            "print_banner",
+            "main",
         ]
-        
+
         for func_name in required_functions:
             assert hasattr(cli, func_name), f"Missing function: {func_name}"
             assert callable(getattr(cli, func_name)), f"Not callable: {func_name}"
@@ -245,10 +250,10 @@ class TestCLIIntegration:
         # Create a valid input file
         input_file = temp_output_dir / "input.json"
         input_file.write_text('[{"merchant": "TEST", "amount": 10.0}]')
-        
+
         # Validate input
         assert validate_json_file(str(input_file)) is True
-        
+
         # Validate output path
         output_file = temp_output_dir / "output.json"
         assert isinstance(validate_output_path(str(output_file), prompt_overwrite=False), bool)
@@ -258,17 +263,17 @@ class TestCLIIntegration:
         # Create test directory structure with CSV files
         statements_dir = temp_output_dir / "statements"
         statements_dir.mkdir(exist_ok=True)
-        
+
         # Add a CSV file to statements directory
         csv_file = statements_dir / "statement.csv"
         csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
-        
+
         output_dir = temp_output_dir / "output"
         output_dir.mkdir(exist_ok=True)
-        
+
         # Validate statements directory (has CSV)
         assert validate_directory(str(statements_dir)) is True
-        
+
         # Output dir doesn't need CSVs for validation (different validation rules)
         # Just verify path is valid
         assert os.path.isdir(str(output_dir)) is True
@@ -282,7 +287,7 @@ class TestValidateDirectoryExtended:
         # Create CSV in temp directory
         csv_file = temp_output_dir / "test.csv"
         csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
-        
+
         # Get relative path if possible
         try:
             rel_path = os.path.relpath(str(temp_output_dir))
@@ -296,12 +301,12 @@ class TestValidateDirectoryExtended:
         """Test validation with multiple CSV files."""
         csv_dir = temp_output_dir / "csvs"
         csv_dir.mkdir(exist_ok=True)
-        
+
         # Create multiple CSVs
         for i in range(5):
             csv_file = csv_dir / f"statement_{i}.csv"
             csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
-        
+
         result = validate_directory(str(csv_dir))
         assert result is True
 
@@ -309,12 +314,12 @@ class TestValidateDirectoryExtended:
         """Test validation with mixed file types."""
         mixed_dir = temp_output_dir / "mixed"
         mixed_dir.mkdir(exist_ok=True)
-        
+
         # Create mixed files
         (mixed_dir / "statement.csv").write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
         (mixed_dir / "data.json").write_text("{}")
         (mixed_dir / "note.txt").write_text("txt")
-        
+
         result = validate_directory(str(mixed_dir))
         assert result is True  # Should validate if CSV exists
 
@@ -322,12 +327,12 @@ class TestValidateDirectoryExtended:
         """Test that validation checks only top-level CSV files."""
         test_dir = temp_output_dir / "test"
         test_dir.mkdir(exist_ok=True)
-        
+
         # Create CSV in subdirectory
         sub_dir = test_dir / "sub"
         sub_dir.mkdir(exist_ok=True)
         (sub_dir / "statement.csv").write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
-        
+
         result = validate_directory(str(test_dir))
         # Depends on implementation - may be False if only top-level is checked
         assert isinstance(result, bool)
@@ -336,10 +341,10 @@ class TestValidateDirectoryExtended:
         """Test validation with CSV file."""
         csv_dir = temp_output_dir / "csvs"
         csv_dir.mkdir(exist_ok=True)
-        
+
         # Create regular CSV
         (csv_dir / "statement.csv").write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
-        
+
         result = validate_directory(str(csv_dir))
         assert result is True
 
@@ -350,17 +355,9 @@ class TestValidateJsonFileExtended:
     def test_validate_nested_json(self, temp_output_dir):
         """Test validation of deeply nested JSON."""
         json_file = temp_output_dir / "nested.json"
-        nested_data = {
-            "level1": {
-                "level2": {
-                    "level3": {
-                        "data": "value"
-                    }
-                }
-            }
-        }
+        nested_data = {"level1": {"level2": {"level3": {"data": "value"}}}}
         json_file.write_text(json.dumps(nested_data))
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
@@ -369,7 +366,7 @@ class TestValidateJsonFileExtended:
         json_file = temp_output_dir / "large.json"
         large_data = [{"id": i, "value": f"item_{i}"} for i in range(1000)]
         json_file.write_text(json.dumps(large_data))
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
@@ -378,7 +375,7 @@ class TestValidateJsonFileExtended:
         json_file = temp_output_dir / "unicode.json"
         unicode_data = {"text": "Cafe", "data": "test"}  # Use ASCII-safe strings
         json_file.write_text(json.dumps(unicode_data, ensure_ascii=False), encoding="utf-8")
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
@@ -386,15 +383,15 @@ class TestValidateJsonFileExtended:
         """Test validation of JSON with null values."""
         json_file = temp_output_dir / "nulls.json"
         json_file.write_text('{"key": null, "array": [1, null, 3]}')
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
     def test_validate_json_empty_object(self, temp_output_dir):
         """Test validation of empty JSON object."""
         json_file = temp_output_dir / "empty_obj.json"
-        json_file.write_text('{}')
-        
+        json_file.write_text("{}")
+
         result = validate_json_file(str(json_file))
         # Empty objects may not be considered valid transactions
         assert isinstance(result, bool)
@@ -402,8 +399,8 @@ class TestValidateJsonFileExtended:
     def test_validate_json_empty_array(self, temp_output_dir):
         """Test validation of empty JSON array."""
         json_file = temp_output_dir / "empty_array.json"
-        json_file.write_text('[]')
-        
+        json_file.write_text("[]")
+
         result = validate_json_file(str(json_file))
         # Empty arrays may not be considered valid (no transactions)
         assert isinstance(result, bool)
@@ -412,7 +409,7 @@ class TestValidateJsonFileExtended:
         """Test validation of JSON with boolean values."""
         json_file = temp_output_dir / "bool.json"
         json_file.write_text('{"active": true, "deleted": false}')
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
@@ -420,7 +417,7 @@ class TestValidateJsonFileExtended:
         """Test validation of JSON with various number types."""
         json_file = temp_output_dir / "numbers.json"
         json_file.write_text('{"int": 42, "float": 3.14, "negative": -10, "zero": 0}')
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
@@ -428,15 +425,15 @@ class TestValidateJsonFileExtended:
         """Test validation of single-line JSON."""
         json_file = temp_output_dir / "single.json"
         json_file.write_text('[{"a":1},{"b":2}]')
-        
+
         result = validate_json_file(str(json_file))
         assert result is True
 
     def test_validate_json_trailing_comma(self, temp_output_dir):
         """Test validation rejects JSON with trailing comma."""
         json_file = temp_output_dir / "trailing.json"
-        json_file.write_text('[1, 2, 3,]')  # Trailing comma is invalid
-        
+        json_file.write_text("[1, 2, 3,]")  # Trailing comma is invalid
+
         result = validate_json_file(str(json_file))
         assert result is False
 
@@ -467,7 +464,7 @@ class TestValidateOutputPathExtended:
         """Test output path with existing file, no prompt."""
         output_file = temp_output_dir / "exists.json"
         output_file.write_text('{"data": "existing"}')
-        
+
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert isinstance(result, bool)
 
@@ -475,7 +472,7 @@ class TestValidateOutputPathExtended:
         """Test output path with deep directory structure."""
         deep_dir = temp_output_dir / "a" / "b" / "c" / "d"
         deep_dir.mkdir(parents=True, exist_ok=True)
-        
+
         output_file = deep_dir / "output.json"
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert isinstance(result, bool)
@@ -484,7 +481,7 @@ class TestValidateOutputPathExtended:
         """Test output path with special characters."""
         special_dir = temp_output_dir / "test-dir_123"
         special_dir.mkdir(exist_ok=True)
-        
+
         output_file = special_dir / "output-file_2024.json"
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert isinstance(result, bool)
@@ -527,7 +524,7 @@ class TestConfirmActionExtended:
         """Test confirm action with invalid input, then uses default."""
         inputs = iter(["invalid", ""])
         monkeypatch.setattr("builtins.input", lambda prompt: next(inputs))
-        
+
         # Note: This will raise StopIteration on second call if function retries
         # The behavior depends on implementation
         try:
@@ -563,10 +560,10 @@ class TestCLIEdgeCases:
         """Test directory validation with spaces in path."""
         space_dir = temp_output_dir / "test dir with spaces"
         space_dir.mkdir(exist_ok=True)
-        
+
         csv_file = space_dir / "statement.csv"
         csv_file.write_text("Date,Description,Amount\n2025-01-01,Test,100.00")
-        
+
         result = validate_directory(str(space_dir))
         assert result is True
 
@@ -574,8 +571,8 @@ class TestCLIEdgeCases:
         """Test JSON validation with BOM (Byte Order Mark)."""
         json_file = temp_output_dir / "bom.json"
         # Write with UTF-8 BOM
-        json_file.write_bytes(b'\xef\xbb\xbf[1, 2, 3]')
-        
+        json_file.write_bytes(b"\xef\xbb\xbf[1, 2, 3]")
+
         # Should handle or reject gracefully
         result = validate_json_file(str(json_file))
         assert isinstance(result, bool)
@@ -584,9 +581,7 @@ class TestCLIEdgeCases:
         """Test output path validation with Unicode characters."""
         unicode_dir = temp_output_dir / "café"
         unicode_dir.mkdir(exist_ok=True)
-        
+
         output_file = unicode_dir / "résultats.json"
         result = validate_output_path(str(output_file), prompt_overwrite=False)
         assert isinstance(result, bool)
-
-

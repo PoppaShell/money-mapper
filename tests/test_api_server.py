@@ -5,9 +5,7 @@ Tests all 5 pages: Dashboard, Transactions, Import, Mappings, Settings.
 Uses httpx.AsyncClient with FastAPI TestClient pattern.
 """
 
-import json
 import tempfile
-from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
@@ -152,19 +150,19 @@ class TestImportRoute:
 
     def test_post_csv_file_accepted(self, client):
         """POST /import with CSV should be accepted."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
             f.write("date,description,amount\n2026-01-01,Store,100.00\n")
             f.flush()
-            with open(f.name, 'rb') as csv_file:
+            with open(f.name, "rb") as csv_file:
                 response = client.post("/import", files={"file": csv_file})
         assert response.status_code in [200, 400]  # Should at least not reject it
 
     def test_post_invalid_file_rejected(self, client):
         """POST /import with invalid file should fail appropriately."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("This is not a valid file format")
             f.flush()
-            with open(f.name, 'rb') as invalid_file:
+            with open(f.name, "rb") as invalid_file:
                 response = client.post("/import", files={"file": invalid_file})
         # Should return error code or redirect
         assert response.status_code in [400, 422]
@@ -196,11 +194,9 @@ class TestMappingsRoute:
 
     def test_mappings_post_adds_new(self, client):
         """POST /mappings should add new mapping."""
-        response = client.post("/mappings", data={
-            "merchant": "Test Store",
-            "category": "Shopping",
-            "source": "test"
-        })
+        response = client.post(
+            "/mappings", data={"merchant": "Test Store", "category": "Shopping", "source": "test"}
+        )
         assert response.status_code in [200, 201, 400]
 
     def test_mappings_shows_privacy_warnings(self, client):
@@ -267,9 +263,9 @@ class TestErrorHandling:
 
     def test_invalid_json_returns_422(self, client):
         """Malformed JSON should return 422."""
-        response = client.post("/mappings", 
-                             content="not json",
-                             headers={"Content-Type": "application/json"})
+        response = client.post(
+            "/mappings", content="not json", headers={"Content-Type": "application/json"}
+        )
         assert response.status_code == 422
 
     def test_file_upload_without_file_returns_400(self, client):
@@ -285,7 +281,7 @@ class TestErrorHandling:
     def test_too_large_file_rejected(self, client):
         """Uploading very large file should be rejected."""
         # In real implementation, check file size limit
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv') as f:
+        with tempfile.NamedTemporaryFile(mode="wb", suffix=".csv") as f:
             # Write 100MB of data
             f.write(b"x" * (100 * 1024 * 1024))
             f.flush()

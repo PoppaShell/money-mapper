@@ -161,7 +161,7 @@ This structure ensures:
 Edit `config/new_mappings.toml` and follow instructions in the file to add properly formatted and categorized mappings.
 
 **Categorization Guidelines:**
-The [Plaid PFC (Personal Finance Categories)](https://plaid.com/docs/transactions/pfc-migration/) is used as a standard and can be referenced. The taxonomy has 16 primary and 104 detailed categories. 
+The [Plaid PFC (Personal Finance Categories)](https://plaid.com/docs/transactions/pfc-migration/) is used as a standard and can be referenced. The taxonomy has 16 primary and 104 detailed categories.
 
 **Scope Guidelines:**
 - `scope = "private"` - Local businesses, personal services, your employer

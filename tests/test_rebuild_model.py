@@ -2,10 +2,6 @@
 
 import json
 import pickle
-import tempfile
-from pathlib import Path
-
-import pytest
 
 from money_mapper.ml_categorizer import (
     get_model_stats,
@@ -44,15 +40,6 @@ class TestRebuildPublicModel:
     def test_rebuild_public_model_creates_valid_pickle(self, tmp_path):
         """Test that rebuild creates valid pickle files."""
         # Create sample merchants data
-        import toml
-
-        config_data = {
-            "FOOD_AND_DRINK": {
-                "RESTAURANTS": {
-                    "pizza": {"name": "Pizza Place", "category": "FOOD", "subcategory": "RESTAURANTS"}
-                }
-            }
-        }
 
         output_dir = str(tmp_path)
         # For now, just verify the function can be called without error
@@ -142,7 +129,7 @@ class TestRebuildPrivateModel:
 
         # Check file was created if rebuild succeeded
         if stats is not None and stats:
-            model_file = tmp_path / "private_classifier.pkl"
+            tmp_path / "private_classifier.pkl"
             # File should exist or stats should indicate success
             assert stats is not None
 

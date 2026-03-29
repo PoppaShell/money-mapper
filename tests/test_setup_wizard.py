@@ -1,12 +1,10 @@
 """Tests for money_mapper.setup_wizard module."""
 
-import os
 import pytest
-from pathlib import Path
 
 from money_mapper.setup_wizard import (
-    check_first_run,
     check_and_offer_statement_processing,
+    check_first_run,
     display_setup_complete,
 )
 
@@ -23,11 +21,11 @@ class TestCheckFirstRun:
         """Test first-run detection with existing config."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         # Create a settings file to indicate not first run
         settings_file = config_dir / "public_settings.toml"
         settings_file.write_text("[test]\ndata = 'value'\n")
-        
+
         # Just verify we can call it without error
         result = check_first_run()
         assert isinstance(result, bool)
@@ -40,7 +38,7 @@ class TestCheckAndOfferStatementProcessing:
         """Test that function returns a dictionary."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         result = check_and_offer_statement_processing(config_dir=str(config_dir))
         assert isinstance(result, dict)
 
@@ -48,7 +46,7 @@ class TestCheckAndOfferStatementProcessing:
         """Test that result includes processing status."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         result = check_and_offer_statement_processing(config_dir=str(config_dir))
         # Should return a dict with processing info
         assert isinstance(result, dict)
@@ -67,11 +65,11 @@ class TestDisplaySetupComplete:
         """Test displaying setup complete without stats."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         # Should not raise error
         display_setup_complete(config_dir=str(config_dir), stats=None)
         captured = capsys.readouterr()
-        
+
         # Should produce some output
         assert len(captured.out) >= 0
 
@@ -79,19 +77,19 @@ class TestDisplaySetupComplete:
         """Test displaying setup complete with stats."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         stats = {
             "statements_processed": 5,
             "transactions_parsed": 150,
             "config_files_created": 3,
         }
-        
+
         # Should not raise error
         display_setup_complete(config_dir=str(config_dir), stats=stats)
         captured = capsys.readouterr()
-        
+
         # Should produce output with stats info
-        output = captured.out.lower()
+        captured.out.lower()
         # Check that output was produced
         assert len(captured.out) >= 0
 
@@ -107,6 +105,7 @@ class TestSetupWizardImports:
         """Test that module can be imported."""
         try:
             from money_mapper import setup_wizard
+
             assert setup_wizard is not None
         except ImportError:
             pytest.fail("Could not import setup_wizard module")
@@ -114,14 +113,14 @@ class TestSetupWizardImports:
     def test_all_functions_exist(self):
         """Test that all major functions exist."""
         from money_mapper import setup_wizard
-        
+
         required_functions = [
-            'check_first_run',
-            'run_setup_wizard',
-            'check_and_offer_statement_processing',
-            'display_setup_complete',
+            "check_first_run",
+            "run_setup_wizard",
+            "check_and_offer_statement_processing",
+            "display_setup_complete",
         ]
-        
+
         for func_name in required_functions:
             assert hasattr(setup_wizard, func_name), f"Missing function: {func_name}"
             assert callable(getattr(setup_wizard, func_name)), f"Not callable: {func_name}"
@@ -134,11 +133,11 @@ class TestSetupWizardIntegration:
         """Test typical setup completion workflow."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         # Check first run
         is_first_run = check_first_run()
         assert isinstance(is_first_run, bool)
-        
+
         # Check statement processing offer
         result = check_and_offer_statement_processing(config_dir=str(config_dir))
         assert isinstance(result, dict)
@@ -147,14 +146,14 @@ class TestSetupWizardIntegration:
         """Test display with various statistics."""
         config_dir = temp_output_dir / "config"
         config_dir.mkdir(exist_ok=True)
-        
+
         test_cases = [
             None,  # No stats
-            {},    # Empty stats
+            {},  # Empty stats
             {"transactions": 100},  # Simple stats
             {"statements": 5, "transactions": 150, "errors": 0},  # Multiple stats
         ]
-        
+
         for stats in test_cases:
             # Should not raise error
             display_setup_complete(config_dir=str(config_dir), stats=stats)
@@ -167,7 +166,7 @@ class TestSetupWizardConfiguration:
         """Test setup wizard with custom config directory."""
         config_dir = temp_output_dir / "custom_config"
         config_dir.mkdir(exist_ok=True)
-        
+
         # Check statement processing with custom dir
         result = check_and_offer_statement_processing(config_dir=str(config_dir))
         assert isinstance(result, dict)
@@ -176,7 +175,7 @@ class TestSetupWizardConfiguration:
         """Test that first-run check is consistent."""
         result1 = check_first_run()
         result2 = check_first_run()
-        
+
         # Results should be consistent (same boolean value)
         assert result1 == result2
         assert isinstance(result1, bool)

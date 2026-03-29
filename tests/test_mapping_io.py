@@ -1,11 +1,7 @@
 """Tests for mapping I/O module."""
 
 import json
-import tempfile
 from pathlib import Path
-from unittest.mock import patch
-
-import pytest
 
 from money_mapper.mapping_io import (
     backup_mappings,
@@ -158,7 +154,7 @@ class TestSaveMappings:
         output_file.write_text("old content")
 
         mappings = {"NEW": "content"}
-        result = save_mappings(mappings, str(output_file))
+        save_mappings(mappings, str(output_file))
 
         # File should be updated
         assert output_file.exists()

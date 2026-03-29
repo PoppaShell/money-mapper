@@ -1,7 +1,7 @@
 # Public Financial Transaction Mappings - National Chains and Services
-# 
+#
 # This file contains mappings for well-known national chains and services
-# that are widely applicable. These mappings have MEDIUM priority 
+# that are widely applicable. These mappings have MEDIUM priority
 # (after private_mappings.toml, before plaid_categories.toml).
 #
 # STRUCTURE:
@@ -842,4 +842,3 @@
 "hertz" = { name = "Hertz", category = "TRAVEL", subcategory = "TRAVEL_RENTAL_CARS", scope = "public" }
 "national car rental" = { name = "National Car Rental", category = "TRAVEL", subcategory = "TRAVEL_RENTAL_CARS", scope = "public" }
 "zipcar" = { name = "Zipcar", category = "TRAVEL", subcategory = "TRAVEL_RENTAL_CARS", scope = "public" }
-

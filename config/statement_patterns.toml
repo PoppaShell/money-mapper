@@ -4,7 +4,7 @@
 [detection.credit]
 indicators = [
     "visa signature",
-    "mastercard", 
+    "mastercard",
     "credit card",
     "purchases and adjustments"
 ]
@@ -14,7 +14,7 @@ weight = 1
 [detection.checking]
 indicators = [
     "adv plus banking",
-    "advantage plus", 
+    "advantage plus",
     "checking"
 ]
 strong_indicators = { "your adv plus banking" = 5 }
@@ -23,7 +23,7 @@ weight = 1
 [detection.savings]
 indicators = [
     "regular savings",
-    "savings account", 
+    "savings account",
     "your regular savings",
     "annual percentage yield",
     "interest earned"

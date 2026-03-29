@@ -1,26 +1,27 @@
 """Tests for money_mapper.utils module."""
 
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 import pytest
 
 from money_mapper.utils import (
-    load_transactions_from_json,
-    save_transactions_to_json,
-    sanitize_description,
-    standardize_date,
-    load_config,
+    calculate_confidence_score,
+    check_dependencies,
     clean_merchant_name,
     format_amount,
-    normalize_text_for_matching,
     fuzzy_match_similarity,
-    validate_transaction_data,
-    calculate_confidence_score,
     get_processing_stats,
+    load_config,
+    load_transactions_from_json,
     merge_transaction_data,
+    normalize_text_for_matching,
     prompt_yes_no,
-    check_dependencies,
+    sanitize_description,
+    save_transactions_to_json,
+    standardize_date,
+    validate_transaction_data,
 )
 
 
@@ -30,11 +31,11 @@ class TestLoadTransactions:
     def test_load_transactions_valid_file(self, sample_transactions, temp_output_dir):
         """Test loading valid transaction JSON file."""
         test_file = temp_output_dir / "transactions.json"
-        
+
         # Write sample transactions
-        with open(test_file, 'w') as f:
+        with open(test_file, "w") as f:
             json.dump(sample_transactions, f)
-        
+
         # Load and verify
         loaded = load_transactions_from_json(str(test_file))
         assert len(loaded) == 4
@@ -43,9 +44,9 @@ class TestLoadTransactions:
     def test_load_transactions_empty_file(self, temp_output_dir):
         """Test loading empty transaction file."""
         test_file = temp_output_dir / "empty.json"
-        with open(test_file, 'w') as f:
+        with open(test_file, "w") as f:
             json.dump([], f)
-        
+
         loaded = load_transactions_from_json(str(test_file))
         assert loaded == []
 
@@ -58,7 +59,7 @@ class TestLoadTransactions:
         """Test loading invalid JSON returns empty list."""
         test_file = temp_output_dir / "invalid.json"
         test_file.write_text("{invalid json")
-        
+
         loaded = load_transactions_from_json(str(test_file))
         assert loaded == []
 
@@ -69,14 +70,14 @@ class TestSaveTransactions:
     def test_save_transactions(self, sample_transactions, temp_output_dir):
         """Test saving transactions to JSON."""
         output_file = temp_output_dir / "output.json"
-        
+
         save_transactions_to_json(sample_transactions, str(output_file))
-        
+
         assert output_file.exists()
-        
+
         with open(output_file) as f:
             loaded = json.load(f)
-        
+
         assert len(loaded) == len(sample_transactions)
         assert loaded[0]["merchant"] == sample_transactions[0]["merchant"]
 
@@ -84,9 +85,9 @@ class TestSaveTransactions:
         """Test that save_transactions creates missing directories."""
         output_file = temp_output_dir / "subdir" / "transactions.json"
         transactions = [{"merchant": "Test", "amount": 10.0}]
-        
+
         save_transactions_to_json(transactions, str(output_file))
-        
+
         assert output_file.exists()
         assert output_file.parent.exists()
 
@@ -94,7 +95,7 @@ class TestSaveTransactions:
         """Test saving empty transaction list."""
         output_file = temp_output_dir / "empty.json"
         save_transactions_to_json([], str(output_file))
-        
+
         assert output_file.exists()
         loaded = json.loads(output_file.read_text())
         assert loaded == []
@@ -103,9 +104,9 @@ class TestSaveTransactions:
         """Test saving transactions with Unicode characters."""
         output_file = temp_output_dir / "unicode.json"
         transactions = [{"merchant": "Café ☕", "amount": 5.50}]
-        
+
         save_transactions_to_json(transactions, str(output_file))
-        
+
         loaded = load_transactions_from_json(str(output_file))
         assert loaded[0]["merchant"] == "Café ☕"
 
@@ -217,11 +218,14 @@ class TestFormatAmount:
         result = format_amount("not_a_number")
         assert result == "not_a_number"
 
-    @pytest.mark.parametrize("amount,expected", [
-        (0.01, "$0.01"),
-        (0, "$0.00"),
-        (999999.99, "$999,999.99"),
-    ])
+    @pytest.mark.parametrize(
+        "amount,expected",
+        [
+            (0.01, "$0.01"),
+            (0, "$0.00"),
+            (999999.99, "$999,999.99"),
+        ],
+    )
     def test_format_amount_edge_cases(self, amount, expected):
         """Test formatting edge case amounts."""
         assert format_amount(amount) == expected
@@ -360,14 +364,16 @@ class TestGetProcessingStats:
 
     def test_get_stats_single_transaction(self):
         """Test stats for single transaction with enrichment data."""
-        transactions = [{
-            "merchant": "STARBUCKS",
-            "amount": 5.50,
-            "date": "2024-01-15",
-            "category": "FOOD & DINING",
-            "confidence": 0.95,
-            "categorization_method": "private_mapping"
-        }]
+        transactions = [
+            {
+                "merchant": "STARBUCKS",
+                "amount": 5.50,
+                "date": "2024-01-15",
+                "category": "FOOD & DINING",
+                "confidence": 0.95,
+                "categorization_method": "private_mapping",
+            }
+        ]
         stats = get_processing_stats(transactions)
         assert stats["total_transactions"] == 1
         assert stats["categorized"] == 1
@@ -389,7 +395,7 @@ class TestGetProcessingStats:
                 "date": "2024-01-16",
                 "category": None,
                 "confidence": 0.0,
-            }
+            },
         ]
         stats = get_processing_stats(transactions)
         assert stats["total_transactions"] == 2
@@ -415,7 +421,7 @@ class TestMergeTransactionData:
         """Test that merge updates base with new data."""
         base = {"merchant": "OLD", "amount": 10.0, "date": "2024-01-01"}
         update = {"merchant": "NEW"}
-        
+
         result = merge_transaction_data(base, update)
         assert result["merchant"] == "NEW"
         assert result["amount"] == 10.0
@@ -424,7 +430,7 @@ class TestMergeTransactionData:
         """Test that merge preserves base fields."""
         base = {"merchant": "STARBUCKS", "amount": 5.50, "date": "2024-01-01"}
         update = {"category": "FOOD"}
-        
+
         result = merge_transaction_data(base, update)
         assert result["merchant"] == "STARBUCKS"
         assert result["category"] == "FOOD"
@@ -734,11 +740,12 @@ class TestMergeTransactionDataExtended:
         timestamp = result.get("last_updated")
         # Should be parseable as ISO format
         from datetime import datetime
+
         try:
             datetime.fromisoformat(timestamp)
             assert True
         except ValueError:
-            assert False, f"Timestamp not in ISO format: {timestamp}"
+            raise AssertionError(f"Timestamp not in ISO format: {timestamp}") from None
 
 
 class TestValidateTransactionExtended:
@@ -983,7 +990,7 @@ class TestLoadTransactionsEdgeCases:
             {"merchant": "STARBUCKS", "amount": 5.0, "date": "2024-01-01"},
         ]
         test_file.write_text(json.dumps(transactions))
-        
+
         loaded = load_transactions_from_json(str(test_file))
         assert len(loaded) == 2
 
@@ -996,7 +1003,7 @@ class TestLoadTransactionsEdgeCases:
             {"amount": 10.0},  # Missing merchant and date
         ]
         test_file.write_text(json.dumps(transactions))
-        
+
         loaded = load_transactions_from_json(str(test_file))
         assert len(loaded) == 3
 
@@ -1008,7 +1015,7 @@ class TestLoadTransactionsEdgeCases:
             for i in range(1000)
         ]
         test_file.write_text(json.dumps(transactions))
-        
+
         loaded = load_transactions_from_json(str(test_file))
         assert len(loaded) == 1000
 
@@ -1019,13 +1026,13 @@ class TestBackupFile:
     def test_backup_file_creates_backup(self, temp_output_dir):
         """Test that backup_file creates a backup with timestamp."""
         from money_mapper.utils import backup_file
-        
+
         original_file = temp_output_dir / "original.txt"
         original_file.write_text("original content")
-        
+
         backup_dir = temp_output_dir / "backups"
         backup_path = backup_file(str(original_file), str(backup_dir))
-        
+
         assert backup_path is not None
         assert Path(backup_path).exists()
         assert Path(backup_path).read_text() == "original content"
@@ -1033,20 +1040,20 @@ class TestBackupFile:
     def test_backup_file_nonexistent_source(self, temp_output_dir):
         """Test backup_file with nonexistent source file."""
         from money_mapper.utils import backup_file
-        
+
         backup_path = backup_file("/nonexistent/file.txt", str(temp_output_dir))
         assert backup_path is None
 
     def test_backup_file_creates_directory(self, temp_output_dir):
         """Test that backup_file creates backup directory if needed."""
         from money_mapper.utils import backup_file
-        
+
         original_file = temp_output_dir / "original.txt"
         original_file.write_text("content")
-        
+
         backup_dir = temp_output_dir / "new_backup_dir"
         backup_path = backup_file(str(original_file), str(backup_dir))
-        
+
         assert backup_dir.exists()
         assert backup_path is not None
 
@@ -1056,24 +1063,21 @@ class TestCheckDependencies:
 
     def test_check_dependencies_existing(self):
         """Test checking for installed dependencies."""
-        from money_mapper.utils import check_dependencies
-        
+
         all_present, missing = check_dependencies(["json", "sys"])
         assert all_present is True
         assert missing == []
 
     def test_check_dependencies_missing(self):
         """Test checking for missing dependencies."""
-        from money_mapper.utils import check_dependencies
-        
+
         all_present, missing = check_dependencies(["nonexistent_package_xyz"])
         assert all_present is False
         assert len(missing) > 0
 
     def test_check_dependencies_mixed(self):
         """Test checking for mixed existing and missing dependencies."""
-        from money_mapper.utils import check_dependencies
-        
+
         all_present, missing = check_dependencies(["json", "nonexistent_xyz"])
         assert all_present is False
         assert "nonexistent_xyz" in missing
@@ -1101,7 +1105,7 @@ class TestPromptWithValidation:
     def test_prompt_with_validation_valid_input(self, monkeypatch):
         """Test prompt_with_validation with valid input."""
         from money_mapper.utils import prompt_with_validation
-        
+
         monkeypatch.setattr("builtins.input", lambda prompt: "y")
         result = prompt_with_validation("Action?", ["y", "n", "back"], default="y")
         assert result == "y"
@@ -1109,7 +1113,7 @@ class TestPromptWithValidation:
     def test_prompt_with_validation_default(self, monkeypatch):
         """Test prompt_with_validation uses default on empty."""
         from money_mapper.utils import prompt_with_validation
-        
+
         monkeypatch.setattr("builtins.input", lambda prompt: "")
         result = prompt_with_validation("Action?", ["y", "n"], default="y")
         assert result == "y"
@@ -1121,7 +1125,7 @@ class TestShowProgress:
     def test_show_progress_full(self, capsys):
         """Test progress bar shows full progress."""
         from money_mapper.utils import show_progress
-        
+
         show_progress(100, 100)
         captured = capsys.readouterr()
         # Progress bar was shown
@@ -1130,7 +1134,7 @@ class TestShowProgress:
     def test_show_progress_zero_total(self, capsys):
         """Test progress bar with zero total."""
         from money_mapper.utils import show_progress
-        
+
         show_progress(0, 0)
         # Should handle gracefully without error
 
@@ -1141,12 +1145,12 @@ class TestBackupFilePath:
     def test_backup_file_has_timestamp(self, temp_output_dir):
         """Test that backup file includes timestamp."""
         from money_mapper.utils import backup_file
-        
+
         original = temp_output_dir / "test.txt"
         original.write_text("content")
-        
+
         backup_path = backup_file(str(original), str(temp_output_dir / "backups"))
-        
+
         # Check that filename includes timestamp format
         backup_name = Path(backup_path).name
         assert "test_" in backup_name
@@ -1160,22 +1164,15 @@ class TestSanitizeDescriptionPrivacy:
         """Test sanitization with privacy configuration."""
         privacy_config = {
             "enable_redaction": True,
-            "patterns": {
-                "account_numbers": [
-                    {"pattern": r"\b\d{4}\b", "replacement": "[ACCT]"}
-                ]
-            },
+            "patterns": {"account_numbers": [{"pattern": r"\b\d{4}\b", "replacement": "[ACCT]"}]},
             "keywords": {
                 "names": ["JOHN SMITH"],
                 "employers": ["ACME"],
-            }
+            },
         }
-        
-        result = sanitize_description(
-            "ACME CORP 1234 JOHN SMITH",
-            privacy_config=privacy_config
-        )
-        
+
+        result = sanitize_description("ACME CORP 1234 JOHN SMITH", privacy_config=privacy_config)
+
         # Should have redacted ACME and 1234
         assert "[ACCT]" in result or "[EMPLOYER]" in result
 
@@ -1183,18 +1180,11 @@ class TestSanitizeDescriptionPrivacy:
         """Test sanitization with privacy disabled."""
         privacy_config = {
             "enable_redaction": False,
-            "patterns": {
-                "account_numbers": [
-                    {"pattern": r"\b\d{4}\b", "replacement": "[ACCT]"}
-                ]
-            }
+            "patterns": {"account_numbers": [{"pattern": r"\b\d{4}\b", "replacement": "[ACCT]"}]},
         }
-        
-        result = sanitize_description(
-            "TEST 1234",
-            privacy_config=privacy_config
-        )
-        
+
+        sanitize_description("TEST 1234", privacy_config=privacy_config)
+
         # Privacy disabled, so number should remain
         # The behavior depends on implementation
 
@@ -1204,11 +1194,10 @@ class TestLoadConfig:
 
     def test_load_config_valid_file(self, temp_output_dir):
         """Test loading valid TOML file."""
-        from money_mapper.utils import load_config
-        
+
         config_file = temp_output_dir / "config.toml"
-        config_file.write_text("[section]\nkey = \"value\"\n")
-        
+        config_file.write_text('[section]\nkey = "value"\n')
+
         # This will call load_config which uses tomllib
         try:
             config = load_config(str(config_file))
@@ -1224,7 +1213,7 @@ class TestValidateTomlFiles:
     def test_validate_toml_files_valid(self, temp_output_dir):
         """Test TOML validation with valid files."""
         from money_mapper.utils import validate_toml_files
-        
+
         # This requires config manager setup, might not work in all contexts
         result = validate_toml_files(verbose=False)
         assert isinstance(result, bool)
@@ -1236,9 +1225,9 @@ class TestFormatDependencyStatus:
     def test_format_dependency_status(self):
         """Test formatting dependency status."""
         from money_mapper.utils import format_dependency_status
-        
+
         status = format_dependency_status()
-        
+
         assert isinstance(status, list)
         for package, version, is_installed in status:
             assert isinstance(package, str)
@@ -1251,7 +1240,7 @@ class TestEnsureDirectoriesExist:
     def test_ensure_directories_exist(self):
         """Test that ensure_directories_exist creates required directories."""
         from money_mapper.utils import ensure_directories_exist
-        
+
         result = ensure_directories_exist()
         # Should return bool
         assert isinstance(result, bool)
@@ -1262,8 +1251,7 @@ class TestLoadConfigErrors:
 
     def test_load_config_nonexistent_file(self):
         """Test loading nonexistent config file."""
-        from money_mapper.utils import load_config
-        
+
         try:
             config = load_config("/nonexistent/config.toml")
             # If it doesn't raise, it should return dict
@@ -1279,11 +1267,11 @@ class TestAdditionalEdgeCases:
     def test_fuzzy_match_normalized_text(self):
         """Test fuzzy matching normalizes text consistently."""
         from money_mapper.utils import fuzzy_match_similarity
-        
+
         # Should be case and punctuation insensitive
         sim1 = fuzzy_match_similarity("STARBUCKS.COM", "starbucks com")
         sim2 = fuzzy_match_similarity("STARBUCKS", "starbucks")
-        
+
         # Should both be high
         assert sim1 > 0.5
         assert sim2 > 0.9
@@ -1291,28 +1279,29 @@ class TestAdditionalEdgeCases:
     def test_merge_transaction_adds_timestamp(self):
         """Test that merge always adds timestamp."""
         from money_mapper.utils import merge_transaction_data
-        
+
         trans1 = {"id": 1}
         trans2 = {}
-        
+
         result = merge_transaction_data(trans1, trans2)
-        
+
         # Must have timestamp
         assert "last_updated" in result
         # Timestamp must be ISO format
         from datetime import datetime
+
         datetime.fromisoformat(result["last_updated"])
 
     def test_validate_transaction_empty_description(self):
         """Test validation with empty description field."""
         from money_mapper.utils import validate_transaction_data
-        
+
         trans = {
             "date": "2024-01-15",
             "description": "",  # Empty!
-            "amount": 10.0
+            "amount": 10.0,
         }
-        
+
         is_valid, errors = validate_transaction_data(trans)
         # Empty description might be caught
         assert isinstance(is_valid, bool)
@@ -1320,42 +1309,38 @@ class TestAdditionalEdgeCases:
     def test_validate_transaction_invalid_amount_format(self):
         """Test validation with non-numeric amount."""
         from money_mapper.utils import validate_transaction_data
-        
-        trans = {
-            "date": "2024-01-15",
-            "description": "TEST",
-            "amount": "not a number"
-        }
-        
+
+        trans = {"date": "2024-01-15", "description": "TEST", "amount": "not a number"}
+
         is_valid, errors = validate_transaction_data(trans)
-        
+
         if not is_valid:
             assert any("amount" in e.lower() for e in errors)
 
     def test_get_stats_with_confidence_edge_values(self):
         """Test stats calculation with confidence edge values."""
         from money_mapper.utils import get_processing_stats
-        
+
         transactions = [
             {
                 "category": "FOOD",
                 "confidence": 0.0,  # Very low
-                "categorization_method": "unknown"
+                "categorization_method": "unknown",
             },
             {
                 "category": "FOOD",
                 "confidence": 1.0,  # Perfect
-                "categorization_method": "private_mapping"
+                "categorization_method": "private_mapping",
             },
             {
                 "category": "FOOD",
                 "confidence": 0.5,  # Mid-range
-                "categorization_method": "fuzzy_match"
+                "categorization_method": "fuzzy_match",
             },
         ]
-        
+
         stats = get_processing_stats(transactions)
-        
+
         assert stats["total_transactions"] == 3
         assert "confidence_distribution" in stats
         assert "method_distribution" in stats
@@ -1363,18 +1348,18 @@ class TestAdditionalEdgeCases:
     def test_standardize_date_with_leading_zeros(self):
         """Test date standardization preserves leading zeros."""
         from money_mapper.utils import standardize_date
-        
+
         result = standardize_date("01/01/2024")
-        
+
         # Should have leading zeros
         assert result == "2024-01-01"
 
     def test_clean_merchant_with_path_separators(self):
         """Test cleaning merchant with path-like separators."""
         from money_mapper.utils import clean_merchant_name
-        
+
         result = clean_merchant_name("STARBUCKS/COFFEE/STORE")
-        
+
         # Should clean and limit
         assert len(result) > 0
         assert "STARBUCKS" in result.upper()
@@ -1382,10 +1367,10 @@ class TestAdditionalEdgeCases:
     def test_format_amount_edge_precision(self):
         """Test amount formatting with precision edge cases."""
         from money_mapper.utils import format_amount
-        
+
         # Various edge cases
         cases = [0.001, 0.001, 99.999, 0.005]
-        
+
         for amount in cases:
             result = format_amount(amount)
             assert "$" in result
@@ -1394,16 +1379,16 @@ class TestAdditionalEdgeCases:
     def test_normalize_text_with_numbers(self):
         """Test text normalization preserves structure."""
         from money_mapper.utils import normalize_text_for_matching
-        
+
         result = normalize_text_for_matching("TEST123MERCHANT456")
-        
+
         # Numbers might be preserved or removed
         assert isinstance(result, str)
 
     def test_load_transactions_with_special_fields(self, temp_output_dir):
         """Test loading transactions with unusual fields."""
         from money_mapper.utils import load_transactions_from_json
-        
+
         test_file = temp_output_dir / "special.json"
         transactions = [
             {
@@ -1412,12 +1397,12 @@ class TestAdditionalEdgeCases:
                 "date": "2024-01-01",
                 "custom_field_with_unicode": "Café ☕",
                 "nested": {"key": "value"},
-                "array_field": [1, 2, 3]
+                "array_field": [1, 2, 3],
             }
         ]
         test_file.write_text(json.dumps(transactions, ensure_ascii=False), encoding="utf-8")
-        
+
         loaded = load_transactions_from_json(str(test_file))
-        
+
         assert len(loaded) == 1
         assert loaded[0]["merchant"] == "TEST"

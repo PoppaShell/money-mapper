@@ -1,8 +1,5 @@
 """Tests for money_mapper.csv_importer module."""
 
-import pytest
-from pathlib import Path
-from tempfile import NamedTemporaryFile
 import csv
 
 from money_mapper.csv_importer import (
@@ -10,9 +7,8 @@ from money_mapper.csv_importer import (
     CSVValidator,
     detect_csv_type,
     parse_csv_transactions,
-    validate_csv_headers,
     standardize_csv_transaction,
-    parse_ofx_file,
+    validate_csv_headers,
 )
 
 
@@ -433,7 +429,7 @@ class TestCSVImportIntegration:
     def test_csv_to_json_workflow(self, temp_output_dir):
         """Test workflow from CSV to JSON output."""
         csv_file = temp_output_dir / "input.csv"
-        json_file = temp_output_dir / "output.json"
+        temp_output_dir / "output.json"
 
         # Create input CSV
         with open(csv_file, "w", newline="") as f:

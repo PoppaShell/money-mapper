@@ -73,8 +73,10 @@ class TestEmbeddings:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create test embeddings file
             test_data = {
-                "merchants": {0: {"name": "Test", "category": "FOOD"}, 
-                             1: {"name": "Test2", "category": "GAS"}},
+                "merchants": {
+                    0: {"name": "Test", "category": "FOOD"},
+                    1: {"name": "Test2", "category": "GAS"},
+                },
                 "embeddings": np.array([[1.0, 0.0], [0.0, 1.0]]),
             }
 
@@ -105,9 +107,7 @@ class TestEmbeddings:
         merchants = {0: {"name": "Test", "category": "FOOD"}}
         embeddings = np.array([])
 
-        result = find_similar_merchant(
-            "test", merchants, embeddings, model=MockModel()
-        )
+        result = find_similar_merchant("test", merchants, embeddings, model=MockModel())
 
         assert result is None
 
@@ -122,8 +122,11 @@ class TestEmbeddings:
                 return np.array([0.5, 0.5, 0.0])
 
         merchants = {
-            0: {"name": "Starbucks Coffee", "category": "FOOD_AND_DRINK", 
-                "subcategory": "FOOD_AND_DRINK.COFFEE"}
+            0: {
+                "name": "Starbucks Coffee",
+                "category": "FOOD_AND_DRINK",
+                "subcategory": "FOOD_AND_DRINK.COFFEE",
+            }
         }
 
         # Create embedding that matches Starbucks
