@@ -259,10 +259,11 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         Returns:
             HTMLResponse: Import results or error message
         """
+        import tempfile
+
         if not file:
             return HTMLResponse("No file provided", status_code=400)
 
-        # Validate file extension
         allowed_extensions = {".csv", ".ofx", ".qfx"}
         filename = file.filename or ""
         file_extension = Path(filename).suffix.lower()
@@ -270,7 +271,53 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         if file_extension not in allowed_extensions:
             return HTMLResponse("Invalid file format. Supported: CSV, OFX, QFX", status_code=400)
 
-        return HTMLResponse(f"Imported {file.filename} successfully", status_code=200)
+        output_dir = os.path.join(base_dir, "output")
+        os.makedirs(output_dir, exist_ok=True)
+
+        try:
+            content = await file.read()
+            with tempfile.NamedTemporaryFile(
+                mode="wb", suffix=file_extension, dir=output_dir, delete=False
+            ) as tmp:
+                tmp.write(content)
+                tmp_path_str = tmp.name
+
+            # Import transactions
+            from money_mapper.csv_importer import CSVImporter
+
+            importer = CSVImporter()
+            transactions = importer.import_file(tmp_path_str)
+
+            if not transactions:
+                os.unlink(tmp_path_str)
+                return HTMLResponse("No transactions found in file", status_code=200)
+
+            # Save raw transactions
+            raw_path = os.path.join(output_dir, "financial_transactions.json")
+            with open(raw_path, "w") as f:
+                json.dump(transactions, f, indent=2)
+
+            # Try enrichment
+            enriched_output = os.path.join(output_dir, "enriched_transactions.json")
+            try:
+                from money_mapper.transaction_enricher import process_transaction_enrichment
+
+                process_transaction_enrichment(
+                    raw_path, enriched_output, debug=False, use_multiprocessing=False
+                )
+                enriched = _load_enriched_transactions(enriched_output)
+                msg = f"Imported {len(transactions)} transactions, {len(enriched)} enriched"
+            except Exception:
+                msg = f"Imported {len(transactions)} transactions (enrichment skipped)"
+
+            # Cleanup temp file
+            os.unlink(tmp_path_str)
+            safe_msg = html.escape(msg)
+            return HTMLResponse(safe_msg, status_code=200)
+
+        except Exception as e:
+            safe_err = html.escape(str(e))
+            return HTMLResponse(f"Import failed: {safe_err}", status_code=500)
 
     # ===== Mappings Route =====
     @app.get("/mappings", response_class=HTMLResponse)
