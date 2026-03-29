@@ -539,13 +539,13 @@ def run_mapping_wizard(
             )
 
             if success:
-                print("\n✓ Added to new_mappings.toml:")
+                print("\n[OK] Added to new_mappings.toml:")
                 print(
                     f'  "{keyword}" = {{ name = "{name}", category = "{primary}", subcategory = "{detailed}", scope = "{scope}" }}'
                 )
                 mappings_created += 1
             else:
-                print("\n✗ Failed to create mapping")
+                print("\n[FAIL] Failed to create mapping")
                 if prompt_yes_no("Retry?", default=True):
                     continue  # Restart the while loop
                 else:
@@ -577,10 +577,10 @@ def run_mapping_wizard(
                 # Use run_combined_processing() which offers interactive duplicate resolution
                 success = processor.run_combined_processing()
                 if success:
-                    print("\n✓ Mapping processor completed successfully!")
+                    print("\n[OK] Mapping processor completed successfully!")
                     print("Your new mappings are now active.")
                 else:
-                    print("\n✗ Mapping processor encountered issues.")
+                    print("\n[FAIL] Mapping processor encountered issues.")
                     print("Please check the output above for details.")
             except Exception as e:
                 print(f"\nError running mapping processor: {e}")

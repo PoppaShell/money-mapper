@@ -810,7 +810,9 @@ Examples:
         print(f"Pipeline complete! Results in '{enriched_file}'")
 
         # Basic analysis
-        analyze_categorization_accuracy(enriched_file, verbose=False, debug=False)
+        analyze_categorization_accuracy(
+            enriched_file, verbose=False, debug=False, skip_interactive=True
+        )
 
     elif args.command == "validate":
         # Special handling for validate command - don't pre-validate
@@ -1082,9 +1084,9 @@ Examples:
                 break
             elif choice == "5":
                 if validate_toml_files(verbose=True):
-                    print("\n✓ All configuration files are valid.")
+                    print("\n[OK] All configuration files are valid.")
                 else:
-                    print("\n✗ Configuration errors found. Please fix them.")
+                    print("\n[FAIL] Configuration errors found. Please fix them.")
                 break
             elif choice == "6":
                 manage_mappings_interactive()

@@ -87,7 +87,7 @@ def run_setup_wizard(config_dir: str = "config") -> bool:
     print()
 
     if configure_privacy_settings(config_dir):
-        print("\n✓ Privacy settings configured successfully!")
+        print("\n[OK] Privacy settings configured successfully!")
     else:
         print("\nPrivacy settings configuration skipped.")
 
@@ -273,7 +273,7 @@ def save_privacy_settings(
     try:
         with open(private_settings_file, "w") as f:
             toml.dump(settings, f)
-        print(f"\n✓ Privacy settings saved to {private_settings_file}")
+        print(f"\n[OK] Privacy settings saved to {private_settings_file}")
         return True
     except Exception as e:
         print(f"Error: Could not save privacy settings: {e}")
@@ -335,7 +335,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         transactions = importer.import_directory(statements_dir)
 
         if not transactions:
-            print("\n✗ No transactions found in CSV files")
+            print("\n[FAIL] No transactions found in CSV files")
             print("You can try again later with:")
             print("  money-mapper parse --dir statements")
             return stats
@@ -347,7 +347,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         stats["num_transactions"] = num_transactions
 
         print(
-            f"✓ Successfully imported {num_transactions} transaction(s) from {len(csv_files)} file(s)"
+            f"[OK] Successfully imported {num_transactions} transaction(s) from {len(csv_files)} file(s)"
         )
         print(f"  Output: {parsed_file}")
 
@@ -361,7 +361,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
 
         process_transaction_enrichment(parsed_file, enriched_file, debug=False)
 
-        print(f"✓ Successfully enriched {num_transactions} transaction(s)")
+        print(f"[OK] Successfully enriched {num_transactions} transaction(s)")
         print(f"  Output: {enriched_file}")
 
         # Step 3: Show analysis with Interactive Mapping Builder integration
@@ -390,7 +390,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         print("  python src/cli.py parse --dir statements")
         return stats
     except Exception as e:
-        print(f"\n✗ Error during processing: {e}")
+        print(f"\n[FAIL] Error during processing: {e}")
         print("\nYou can try again later with:")
         print("  python src/cli.py parse --dir statements")
         print("  python src/cli.py enrich")
@@ -416,13 +416,13 @@ def display_setup_complete(
 
     # Show summary
     print("Summary:")
-    print("  ✓ Configuration files created")
-    print("  ✓ Privacy settings configured")
+    print("  [OK] Configuration files created")
+    print("  [OK] Privacy settings configured")
 
     if stats and (stats.get("num_transactions") or 0) > 0:
-        print(f"  ✓ Statements parsed: {stats['num_transactions']} transaction(s)")
+        print(f"  [OK] Statements parsed: {stats['num_transactions']} transaction(s)")
         if stats.get("categorization_rate") is not None:
-            print(f"  ✓ Categorization rate: {stats['categorization_rate']:.1f}%")
+            print(f"  [OK] Categorization rate: {stats['categorization_rate']:.1f}%")
 
     print()
     print("Configuration files:")

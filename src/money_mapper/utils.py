@@ -782,7 +782,11 @@ def prompt_yes_no(message: str, default: bool = True) -> bool:
         suffix = " [y/n, Enter=no]: "
 
     while True:
-        response = input(message + suffix).strip().lower()
+        try:
+            response = input(message + suffix).strip().lower()
+        except EOFError:
+            # Non-interactive mode: decline interactive operations
+            return False
 
         # Empty input = use default
         if not response:
@@ -831,7 +835,13 @@ def prompt_with_validation(
         suffix = f" [{'/'.join(valid_options)}]: "
 
     while True:
-        response = input(message + suffix).strip()
+        try:
+            response = input(message + suffix).strip()
+        except EOFError:
+            # Non-interactive mode: return first option (typically 'skip'/'no'/'quit')
+            if default:
+                return default
+            return valid_options[-1]
 
         # Empty input = use default if provided
         if not response and default:
