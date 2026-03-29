@@ -1053,7 +1053,10 @@ def analyze_categorization_accuracy(
         uncategorized_list = [t for t in transactions if t.get("category") == "UNCATEGORIZED"]
 
         if uncategorized_list:
-            from interactive_mapper import get_transaction_frequency, run_mapping_wizard
+            from money_mapper.interactive_mapper import (
+                get_transaction_frequency,
+                run_mapping_wizard,
+            )
 
             print("\n--- Top Uncategorized Transactions ---")
             print("Analyzing transaction frequency...")

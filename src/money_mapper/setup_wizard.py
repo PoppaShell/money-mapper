@@ -357,7 +357,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         print("-" * 60)
         print("Enriching transactions...")
 
-        from transaction_enricher import process_transaction_enrichment
+        from money_mapper.transaction_enricher import process_transaction_enrichment
 
         process_transaction_enrichment(parsed_file, enriched_file, debug=False)
 
@@ -369,7 +369,7 @@ def check_and_offer_statement_processing(config_dir: str = "config") -> dict:
         print("Categorization Analysis")
         print("-" * 60)
 
-        from transaction_enricher import analyze_categorization_accuracy
+        from money_mapper.transaction_enricher import analyze_categorization_accuracy
 
         # Load enriched transactions to calculate categorization rate
         with open(enriched_file) as f:

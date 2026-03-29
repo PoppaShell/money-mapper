@@ -572,7 +572,7 @@ class MappingProcessor:
                                     wildcard_patterns[section_key].append((pattern, pattern_info))
 
         # Now check for patterns covered by wildcards in the same category
-        from transaction_enricher import wildcard_pattern_match
+        from money_mapper.transaction_enricher import wildcard_pattern_match
 
         for pattern, pattern_info in all_patterns.items():
             # Skip wildcards themselves

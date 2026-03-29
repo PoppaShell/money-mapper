@@ -10,11 +10,26 @@ import shutil
 import subprocess
 import sys
 
-import pytest
-
 PYTHON = sys.executable
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures", "sample_statements")
-CONFIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config")
+REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
+CONFIG_DIR = os.path.join(REPO_ROOT, "config")
+
+
+def setup_test_env(tmp_path):
+    """Set up a complete test environment with config and output dirs."""
+    # Copy entire config directory (including templates)
+    dest_config = tmp_path / "config"
+    if CONFIG_DIR and os.path.exists(CONFIG_DIR):
+        shutil.copytree(CONFIG_DIR, dest_config)
+    else:
+        dest_config.mkdir()
+
+    # Create output directory
+    (tmp_path / "output").mkdir(exist_ok=True)
+
+    # Create models directory
+    (tmp_path / "models").mkdir(exist_ok=True)
 
 
 def run_cli(*args: str, cwd: str | None = None, timeout: int = 60) -> subprocess.CompletedProcess:
@@ -35,10 +50,10 @@ class TestParseCommand:
 
     def test_parse_bofa_checking(self, tmp_path):
         """Parse BofA checking fixture and verify 20 transactions are produced."""
+        setup_test_env(tmp_path)
         statements_dir = tmp_path / "statements"
         statements_dir.mkdir()
         output_dir = tmp_path / "output"
-        output_dir.mkdir()
 
         shutil.copy(
             os.path.join(FIXTURE_DIR, "bofa_checking_2024_01.csv"),
@@ -47,8 +62,10 @@ class TestParseCommand:
 
         result = run_cli(
             "parse",
-            "--dir", str(statements_dir),
-            "--output", str(output_dir / "financial_transactions.json"),
+            "--dir",
+            str(statements_dir),
+            "--output",
+            str(output_dir / "financial_transactions.json"),
             cwd=str(tmp_path),
         )
 
@@ -65,10 +82,10 @@ class TestParseCommand:
 
     def test_parse_bofa_savings(self, tmp_path):
         """Parse BofA savings fixture and verify 6 transactions are produced."""
+        setup_test_env(tmp_path)
         statements_dir = tmp_path / "statements"
         statements_dir.mkdir()
         output_dir = tmp_path / "output"
-        output_dir.mkdir()
 
         shutil.copy(
             os.path.join(FIXTURE_DIR, "bofa_savings_2024_01.csv"),
@@ -77,8 +94,10 @@ class TestParseCommand:
 
         result = run_cli(
             "parse",
-            "--dir", str(statements_dir),
-            "--output", str(output_dir / "financial_transactions.json"),
+            "--dir",
+            str(statements_dir),
+            "--output",
+            str(output_dir / "financial_transactions.json"),
             cwd=str(tmp_path),
         )
 
@@ -95,10 +114,10 @@ class TestParseCommand:
 
     def test_parse_bofa_credit(self, tmp_path):
         """Parse BofA credit fixture and verify 16 transactions are produced."""
+        setup_test_env(tmp_path)
         statements_dir = tmp_path / "statements"
         statements_dir.mkdir()
         output_dir = tmp_path / "output"
-        output_dir.mkdir()
 
         shutil.copy(
             os.path.join(FIXTURE_DIR, "bofa_credit_2024_01.csv"),
@@ -107,8 +126,10 @@ class TestParseCommand:
 
         result = run_cli(
             "parse",
-            "--dir", str(statements_dir),
-            "--output", str(output_dir / "financial_transactions.json"),
+            "--dir",
+            str(statements_dir),
+            "--output",
+            str(output_dir / "financial_transactions.json"),
             cwd=str(tmp_path),
         )
 
@@ -125,10 +146,10 @@ class TestParseCommand:
 
     def test_parse_all_bofa_fixtures(self, tmp_path):
         """Parse all 3 BofA fixtures together and verify 42 total transactions."""
+        setup_test_env(tmp_path)
         statements_dir = tmp_path / "statements"
         statements_dir.mkdir()
         output_dir = tmp_path / "output"
-        output_dir.mkdir()
 
         for filename in [
             "bofa_checking_2024_01.csv",
@@ -142,8 +163,10 @@ class TestParseCommand:
 
         result = run_cli(
             "parse",
-            "--dir", str(statements_dir),
-            "--output", str(output_dir / "financial_transactions.json"),
+            "--dir",
+            str(statements_dir),
+            "--output",
+            str(output_dir / "financial_transactions.json"),
             cwd=str(tmp_path),
         )
 
@@ -160,9 +183,11 @@ class TestParseCommand:
 
     def test_parse_nonexistent_directory(self, tmp_path):
         """Parse command with a nonexistent directory should fail gracefully."""
+        setup_test_env(tmp_path)
         result = run_cli(
             "parse",
-            "--dir", str(tmp_path / "does_not_exist"),
+            "--dir",
+            str(tmp_path / "does_not_exist"),
             cwd=str(tmp_path),
         )
 
@@ -174,12 +199,10 @@ class TestEnrichCommand:
 
     def test_enrich_parsed_transactions(self, tmp_path):
         """Parse then enrich transactions; verify enriched output has categories assigned."""
+        setup_test_env(tmp_path)
         statements_dir = tmp_path / "statements"
         statements_dir.mkdir()
         output_dir = tmp_path / "output"
-        output_dir.mkdir()
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
 
         # Copy fixture CSV
         shutil.copy(
@@ -187,19 +210,14 @@ class TestEnrichCommand:
             statements_dir / "bofa_checking_2024_01.csv",
         )
 
-        # Copy required config files so enrichment has mappings to use
-        for config_file in ["public_mappings.toml", "public_settings.toml", "plaid_categories.toml"]:
-            shutil.copy(
-                os.path.join(CONFIG_DIR, config_file),
-                config_dir / config_file,
-            )
-
         parsed_output = output_dir / "financial_transactions.json"
 
         parse_result = run_cli(
             "parse",
-            "--dir", str(statements_dir),
-            "--output", str(parsed_output),
+            "--dir",
+            str(statements_dir),
+            "--output",
+            str(parsed_output),
             cwd=str(tmp_path),
         )
 
@@ -210,8 +228,10 @@ class TestEnrichCommand:
 
         enrich_result = run_cli(
             "enrich",
-            "--input", str(parsed_output),
-            "--output", str(enriched_output),
+            "--input",
+            str(parsed_output),
+            "--output",
+            str(enriched_output),
             cwd=str(tmp_path),
         )
 
@@ -225,14 +245,18 @@ class TestEnrichCommand:
         assert len(transactions) > 0, "Enriched output has no transactions"
 
         # At least some transactions should have a category assigned
-        categorized = [t for t in transactions if t.get("category") and t["category"] != "UNCATEGORIZED"]
+        categorized = [
+            t for t in transactions if t.get("category") and t["category"] != "UNCATEGORIZED"
+        ]
         assert len(categorized) > 0, "No transactions were categorized after enrichment"
 
     def test_enrich_nonexistent_file(self, tmp_path):
         """Enrich command with a nonexistent input file should fail gracefully."""
+        setup_test_env(tmp_path)
         result = run_cli(
             "enrich",
-            "--input", str(tmp_path / "does_not_exist.json"),
+            "--input",
+            str(tmp_path / "does_not_exist.json"),
             cwd=str(tmp_path),
         )
 
@@ -244,37 +268,33 @@ class TestAnalyzeCommand:
 
     def _setup_enriched_file(self, tmp_path) -> str:
         """Parse and enrich a fixture CSV, returning the path to the enriched file."""
+        setup_test_env(tmp_path)
         statements_dir = tmp_path / "statements"
         statements_dir.mkdir()
         output_dir = tmp_path / "output"
-        output_dir.mkdir()
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
 
         shutil.copy(
             os.path.join(FIXTURE_DIR, "bofa_checking_2024_01.csv"),
             statements_dir / "bofa_checking_2024_01.csv",
         )
 
-        for config_file in ["public_mappings.toml", "public_settings.toml", "plaid_categories.toml"]:
-            shutil.copy(
-                os.path.join(CONFIG_DIR, config_file),
-                config_dir / config_file,
-            )
-
         parsed_output = output_dir / "financial_transactions.json"
         run_cli(
             "parse",
-            "--dir", str(statements_dir),
-            "--output", str(parsed_output),
+            "--dir",
+            str(statements_dir),
+            "--output",
+            str(parsed_output),
             cwd=str(tmp_path),
         )
 
         enriched_output = output_dir / "enriched_transactions.json"
         run_cli(
             "enrich",
-            "--input", str(parsed_output),
-            "--output", str(enriched_output),
+            "--input",
+            str(parsed_output),
+            "--output",
+            str(enriched_output),
             cwd=str(tmp_path),
         )
 
@@ -286,7 +306,8 @@ class TestAnalyzeCommand:
 
         result = run_cli(
             "analyze",
-            "--file", enriched_file,
+            "--file",
+            enriched_file,
             cwd=str(tmp_path),
         )
 
@@ -304,7 +325,8 @@ class TestAnalyzeCommand:
 
         result = run_cli(
             "analyze",
-            "--file", enriched_file,
+            "--file",
+            enriched_file,
             "--verbose",
             cwd=str(tmp_path),
         )
@@ -317,6 +339,7 @@ class TestOtherCommands:
 
     def test_check_deps(self, tmp_path):
         """check-deps command should return exit code 0."""
+        setup_test_env(tmp_path)
         result = run_cli("check-deps", cwd=str(tmp_path))
 
         assert result.returncode == 0, f"stderr: {result.stderr}\nstdout: {result.stdout}"
@@ -332,7 +355,8 @@ class TestOtherCommands:
         """privacy-audit command with --threshold high should complete without a Traceback."""
         result = run_cli(
             "privacy-audit",
-            "--threshold", "high",
+            "--threshold",
+            "high",
             cwd=str(tmp_path),
         )
 
@@ -340,14 +364,7 @@ class TestOtherCommands:
 
     def test_rebuild_model_public(self, tmp_path):
         """rebuild-model --public in a temp directory should complete without a Traceback."""
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
-
-        for config_file in ["public_mappings.toml", "public_settings.toml", "plaid_categories.toml"]:
-            shutil.copy(
-                os.path.join(CONFIG_DIR, config_file),
-                config_dir / config_file,
-            )
+        setup_test_env(tmp_path)
 
         result = run_cli(
             "rebuild-model",
@@ -364,12 +381,10 @@ class TestFullPipeline:
     def test_pipeline_command(self, tmp_path):
         """Run full pipeline against all 3 BofA fixtures; verify 42 enriched transactions
         and a categorization rate above 50%."""
+        setup_test_env(tmp_path)
         statements_dir = tmp_path / "statements"
         statements_dir.mkdir()
         output_dir = tmp_path / "output"
-        output_dir.mkdir()
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
 
         for filename in [
             "bofa_checking_2024_01.csv",
@@ -381,15 +396,10 @@ class TestFullPipeline:
                 statements_dir / filename,
             )
 
-        for config_file in ["public_mappings.toml", "public_settings.toml", "plaid_categories.toml"]:
-            shutil.copy(
-                os.path.join(CONFIG_DIR, config_file),
-                config_dir / config_file,
-            )
-
         result = run_cli(
             "pipeline",
-            "--dir", str(statements_dir),
+            "--dir",
+            str(statements_dir),
             cwd=str(tmp_path),
         )
 
@@ -411,8 +421,7 @@ class TestFullPipeline:
         assert len(transactions) == 42, f"Expected 42 transactions, got {len(transactions)}"
 
         categorized = [
-            t for t in transactions
-            if t.get("category") and t["category"] != "UNCATEGORIZED"
+            t for t in transactions if t.get("category") and t["category"] != "UNCATEGORIZED"
         ]
         categorization_rate = len(categorized) / len(transactions)
         assert categorization_rate > 0.5, (
