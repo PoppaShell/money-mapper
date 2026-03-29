@@ -628,6 +628,16 @@ Examples:
     )
     privacy_parser.add_argument("--debug", action="store_true", help="Enable debug output")
 
+    # Community contribution
+    contribute_parser = subparsers.add_parser(
+        "contribute", help="Contribute a merchant mapping via GitHub PR"
+    )
+    contribute_parser.add_argument("--merchant", required=True, help="Merchant name to contribute")
+    contribute_parser.add_argument(
+        "--category", required=True, help="Category to map the merchant to"
+    )
+    contribute_parser.add_argument("--debug", action="store_true", help="Enable debug output")
+
     args = parser.parse_args()
 
     # Print banner first
@@ -1026,6 +1036,23 @@ Examples:
             sys.exit(1)
         else:
             print("No PII risks detected.")
+
+    elif args.command == "contribute":
+        from money_mapper.community_flow import submit_community_contribution
+
+        print(f"Contributing mapping: {args.merchant} -> {args.category}")
+        result = submit_community_contribution(args.merchant, args.category, "cli")
+
+        if result.get("success"):
+            print(f"PR created: {result.get('pr_url', 'unknown')}")
+        else:
+            print(f"Contribution failed: {result.get('error', 'unknown error')}")
+            validation = result.get("validation", {})
+            if not validation.get("passed", True):
+                print(f"  Privacy score: {validation.get('score', 'N/A')}")
+                for issue in validation.get("issues", []):
+                    print(f"  - {issue}")
+            sys.exit(1)
 
     else:
         # Interactive mode

@@ -819,3 +819,60 @@ class TestPrivacyAuditCommand:
 
                                         main()
                                     assert exc_info.value.code == 1
+
+
+class TestContributeCommand:
+    """Test contribute CLI command."""
+
+    @patch("money_mapper.community_flow.submit_community_contribution")
+    def test_contribute_success(self, mock_submit):
+        """Test successful contribution creates PR."""
+        from money_mapper.cli import main
+
+        mock_submit.return_value = {
+            "success": True,
+            "pr_url": "https://github.com/PoppaShell/money-mapper/pull/999",
+            "validation": {"passed": True},
+        }
+        with patch(
+            "sys.argv",
+            [
+                "money-mapper",
+                "contribute",
+                "--merchant",
+                "Test Store",
+                "--category",
+                "FOOD_AND_DRINK",
+            ],
+        ):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            try:
+                                main()
+                            except SystemExit:
+                                pass
+        mock_submit.assert_called_once_with("Test Store", "FOOD_AND_DRINK", "cli")
+
+    @patch("money_mapper.community_flow.submit_community_contribution")
+    def test_contribute_failure_exits_1(self, mock_submit):
+        """Test failed contribution exits with code 1."""
+        from money_mapper.cli import main
+
+        mock_submit.return_value = {
+            "success": False,
+            "error": "Privacy audit failed",
+            "validation": {"passed": False, "score": 85, "issues": ["Medical keyword"]},
+        }
+        with patch(
+            "sys.argv",
+            ["money-mapper", "contribute", "--merchant", "Dr Smith", "--category", "MEDICAL"],
+        ):
+            with patch("money_mapper.cli.get_config_manager"):
+                with patch("money_mapper.cli.ensure_directories_exist", return_value=True):
+                    with patch("money_mapper.cli.validate_toml_files", return_value=True):
+                        with patch("money_mapper.setup_wizard.check_first_run", return_value=False):
+                            with pytest.raises(SystemExit) as exc_info:
+                                main()
+                            assert exc_info.value.code == 1
