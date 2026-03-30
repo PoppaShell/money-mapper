@@ -387,7 +387,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         if not cat_valid:
             safe_cat = html.escape(str(category))
             if suggestions:
-                suggestion_text = ", ".join(suggestions)
+                suggestion_text = ", ".join(html.escape(s) for s in suggestions)
                 msg = f"Invalid category: {safe_cat}. Did you mean: {suggestion_text}?"
             else:
                 msg = f"Invalid category: {safe_cat}. Check plaid_categories.toml for valid categories."
