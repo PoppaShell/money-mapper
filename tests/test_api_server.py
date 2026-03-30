@@ -224,6 +224,50 @@ class TestMappingsRoute:
         # Should at least load without error
         assert response.status_code == 200
 
+    def test_post_invalid_category_returns_400(self, client):
+        """POST /mappings with invalid PFC category returns 400 with suggestions."""
+        response = client.post(
+            "/mappings",
+            data={"merchant": "Test Store", "category": "FOOD_STUFF", "source": "public"},
+        )
+        assert response.status_code == 400
+        assert (
+            "invalid category" in response.text.lower() or "did you mean" in response.text.lower()
+        )
+
+    def test_post_valid_category_accepted(self, client):
+        """POST /mappings with valid PFC category is accepted."""
+        response = client.post(
+            "/mappings",
+            data={
+                "merchant": "Test Store",
+                "category": "FOOD_AND_DRINK_RESTAURANT",
+                "source": "public",
+            },
+        )
+        assert response.status_code == 201
+
+    def test_post_oversized_merchant_returns_400(self, client):
+        """POST /mappings with merchant name over 200 chars returns 400."""
+        response = client.post(
+            "/mappings",
+            data={
+                "merchant": "A" * 10000,
+                "category": "FOOD_AND_DRINK_RESTAURANT",
+                "source": "public",
+            },
+        )
+        assert response.status_code == 400
+        assert "200" in response.text
+
+    def test_post_empty_merchant_returns_400(self, client):
+        """POST /mappings with empty merchant returns 400."""
+        response = client.post(
+            "/mappings",
+            data={"merchant": "", "category": "FOOD_AND_DRINK_RESTAURANT", "source": "public"},
+        )
+        assert response.status_code in [400, 422]
+
 
 class TestSettingsRoute:
     """Test /settings GET/POST endpoints."""
@@ -617,16 +661,27 @@ class TestMappingsRealData:
 
     def test_create_mapping_writes_staging(self, tmp_path):
         """Adding a mapping should write to new_mappings.toml."""
+        import shutil
+        from pathlib import Path
+
         config_dir = tmp_path / "config"
         config_dir.mkdir()
         (config_dir / "public_mappings.toml").write_text("")
         (config_dir / "private_mappings.toml").write_text("")
+        # Provide plaid_categories.toml so PFC validation can run
+        real_plaid = Path(__file__).parent.parent / "config" / "plaid_categories.toml"
+        if real_plaid.exists():
+            shutil.copy(real_plaid, config_dir / "plaid_categories.toml")
 
         app = create_app(data_dir=str(tmp_path))
         client = TestClient(app)
         response = client.post(
             "/mappings",
-            data={"merchant": "Test Store", "category": "SHOPPING", "source": "manual"},
+            data={
+                "merchant": "Test Store",
+                "category": "GENERAL_MERCHANDISE_DEPARTMENT_STORES",
+                "source": "manual",
+            },
         )
         assert response.status_code == 201
         # Verify file was created

@@ -359,8 +359,29 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         merchant: str = Form(...), category: str = Form(...), source: str = Form(...)
     ) -> HTMLResponse:
         """Create new merchant mapping in staging file."""
+        from money_mapper.api.validation import validate_merchant_name, validate_pfc_category
+
         if not merchant or not category:
             return HTMLResponse("Merchant and category required", status_code=400)
+
+        # Validate merchant name
+        merchant_valid, merchant_result = validate_merchant_name(merchant)
+        if not merchant_valid:
+            safe_err = html.escape(merchant_result)
+            return HTMLResponse(safe_err, status_code=400)
+        cleaned_merchant = merchant_result
+
+        # Validate category against PFC taxonomy
+        plaid_path = os.path.join(base_dir, "config", "plaid_categories.toml")
+        cat_valid, suggestions = validate_pfc_category(category, plaid_path)
+        if not cat_valid:
+            safe_cat = html.escape(str(category))
+            if suggestions:
+                suggestion_text = ", ".join(suggestions)
+                msg = f"Invalid category: {safe_cat}. Did you mean: {suggestion_text}?"
+            else:
+                msg = f"Invalid category: {safe_cat}. Check plaid_categories.toml for valid categories."
+            return HTMLResponse(msg, status_code=400)
 
         new_mappings_path = os.path.join(base_dir, "config", "new_mappings.toml")
         try:
@@ -376,8 +397,8 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             if "NEW" not in existing["STAGING"]:
                 existing["STAGING"]["NEW"] = {}
 
-            existing["STAGING"]["NEW"][merchant.lower()] = {
-                "name": merchant,
+            existing["STAGING"]["NEW"][cleaned_merchant.lower()] = {
+                "name": cleaned_merchant,
                 "category": category,
                 "subcategory": category,
                 "scope": source if source in ("public", "private") else "private",
@@ -386,7 +407,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             with open(new_mappings_path, "w") as f:
                 toml_writer.dump(existing, f)
 
-            safe_merchant = html.escape(str(merchant))
+            safe_merchant = html.escape(str(cleaned_merchant))
             safe_category = html.escape(str(category))
             return HTMLResponse(
                 f"Added mapping: {safe_merchant} - {safe_category} (staged in new_mappings.toml)",
