@@ -223,17 +223,18 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         """Export transactions as CSV.
 
         Returns:
-            HTMLResponse: CSV data
+            HTMLResponse: CSV data with Content-Disposition header for download.
         """
+        from money_mapper.api.validation import build_csv_export
+
         transactions = _load_enriched_transactions(enriched_path)
-        lines = ["date,merchant,amount,category"]
-        for t in transactions:
-            merchant = t.get("merchant_name", t.get("description", ""))
-            lines.append(
-                f"{t.get('date', '')},{merchant},{t.get('amount', 0)},{t.get('category', '')}"
-            )
-        csv_data = "\n".join(lines) + "\n"
-        return HTMLResponse(csv_data, media_type="text/csv", status_code=200)
+        csv_data = build_csv_export(transactions)
+        return HTMLResponse(
+            csv_data,
+            media_type="text/csv",
+            status_code=200,
+            headers={"Content-Disposition": 'attachment; filename="transactions.csv"'},
+        )
 
     # ===== Import Route =====
     @app.get("/import", response_class=HTMLResponse)
@@ -276,6 +277,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         output_dir = os.path.join(base_dir, "output")
         os.makedirs(output_dir, exist_ok=True)
 
+        tmp_path_str = None
         try:
             content = await file.read()
             with tempfile.NamedTemporaryFile(
@@ -291,7 +293,6 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             transactions = importer.import_file(tmp_path_str)
 
             if not transactions:
-                os.unlink(tmp_path_str)
                 return HTMLResponse("No transactions found in file", status_code=200)
 
             # Save raw transactions
@@ -309,17 +310,27 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 )
                 enriched = _load_enriched_transactions(enriched_output)
                 msg = f"Imported {len(transactions)} transactions, {len(enriched)} enriched"
+                safe_msg = html.escape(msg)
+                return HTMLResponse(safe_msg, status_code=200)
             except Exception:
-                msg = f"Imported {len(transactions)} transactions (enrichment skipped)"
-
-            # Cleanup temp file
-            os.unlink(tmp_path_str)
-            safe_msg = html.escape(msg)
-            return HTMLResponse(safe_msg, status_code=200)
+                count = len(transactions)
+                warning_msg = (
+                    f"Imported {count} transactions. "
+                    f"Warning: enrichment failed -- categories not applied."
+                )
+                safe_msg = html.escape(warning_msg)
+                return HTMLResponse(
+                    f'<div class="warning">{safe_msg}</div>',
+                    status_code=200,
+                )
 
         except Exception as e:
             safe_err = html.escape(str(e))
             return HTMLResponse(f"Import failed: {safe_err}", status_code=500)
+        finally:
+            # Ensure temp file is always cleaned up
+            if tmp_path_str and os.path.exists(tmp_path_str):
+                os.unlink(tmp_path_str)
 
     # ===== Mappings Route =====
     @app.get("/mappings", response_class=HTMLResponse)
@@ -358,8 +369,29 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         merchant: str = Form(...), category: str = Form(...), source: str = Form(...)
     ) -> HTMLResponse:
         """Create new merchant mapping in staging file."""
+        from money_mapper.api.validation import validate_merchant_name, validate_pfc_category
+
         if not merchant or not category:
             return HTMLResponse("Merchant and category required", status_code=400)
+
+        # Validate merchant name
+        merchant_valid, merchant_result = validate_merchant_name(merchant)
+        if not merchant_valid:
+            safe_err = html.escape(merchant_result)
+            return HTMLResponse(safe_err, status_code=400)
+        cleaned_merchant = merchant_result
+
+        # Validate category against PFC taxonomy
+        plaid_path = os.path.join(base_dir, "config", "plaid_categories.toml")
+        cat_valid, suggestions = validate_pfc_category(category, plaid_path)
+        if not cat_valid:
+            safe_cat = html.escape(str(category))
+            if suggestions:
+                suggestion_text = ", ".join(html.escape(s) for s in suggestions)
+                msg = f"Invalid category: {safe_cat}. Did you mean: {suggestion_text}?"
+            else:
+                msg = f"Invalid category: {safe_cat}. Check plaid_categories.toml for valid categories."
+            return HTMLResponse(msg, status_code=400)
 
         new_mappings_path = os.path.join(base_dir, "config", "new_mappings.toml")
         try:
@@ -375,8 +407,8 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             if "NEW" not in existing["STAGING"]:
                 existing["STAGING"]["NEW"] = {}
 
-            existing["STAGING"]["NEW"][merchant.lower()] = {
-                "name": merchant,
+            existing["STAGING"]["NEW"][cleaned_merchant.lower()] = {
+                "name": cleaned_merchant,
                 "category": category,
                 "subcategory": category,
                 "scope": source if source in ("public", "private") else "private",
@@ -385,7 +417,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             with open(new_mappings_path, "w") as f:
                 toml_writer.dump(existing, f)
 
-            safe_merchant = html.escape(str(merchant))
+            safe_merchant = html.escape(str(cleaned_merchant))
             safe_category = html.escape(str(category))
             return HTMLResponse(
                 f"Added mapping: {safe_merchant} - {safe_category} (staged in new_mappings.toml)",

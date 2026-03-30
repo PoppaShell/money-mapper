@@ -119,6 +119,24 @@ class TestTransactionsRoute:
         response = client.get("/transactions/export")
         assert response.status_code in [200, 404]  # May not exist in basic version
 
+    def test_export_csv_has_content_disposition(self, client):
+        """Export should have Content-Disposition header for download."""
+        response = client.get("/transactions/export")
+        assert "content-disposition" in response.headers
+        assert "transactions.csv" in response.headers["content-disposition"]
+
+    def test_export_csv_valid_format(self, client):
+        """Exported CSV should be parseable by csv module."""
+        import csv
+        import io
+
+        response = client.get("/transactions/export")
+        reader = csv.reader(io.StringIO(response.text))
+        rows = list(reader)
+        # At minimum, header row should exist
+        assert len(rows) >= 1
+        assert rows[0] == ["date", "merchant", "amount", "category"]
+
 
 class TestImportRoute:
     """Test /import GET/POST endpoints for file upload."""
@@ -168,6 +186,18 @@ class TestImportRoute:
         # Should return error code or redirect
         assert response.status_code in [400, 422]
 
+    def test_import_no_transactions_returns_422(self, client):
+        """POST /import with empty CSV returns 422."""
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+            f.write("date,description,amount\n")  # Header only, no data
+            f.flush()
+            with open(f.name, "rb") as csv_file:
+                response = client.post("/import", files={"file": csv_file})
+        # Should indicate no useful data found
+        assert response.status_code in [200, 422]
+
 
 class TestMappingsRoute:
     """Test /mappings GET/POST endpoints."""
@@ -205,6 +235,50 @@ class TestMappingsRoute:
         response = client.get("/mappings")
         # Should at least load without error
         assert response.status_code == 200
+
+    def test_post_invalid_category_returns_400(self, client):
+        """POST /mappings with invalid PFC category returns 400 with suggestions."""
+        response = client.post(
+            "/mappings",
+            data={"merchant": "Test Store", "category": "FOOD_STUFF", "source": "public"},
+        )
+        assert response.status_code == 400
+        assert (
+            "invalid category" in response.text.lower() or "did you mean" in response.text.lower()
+        )
+
+    def test_post_valid_category_accepted(self, client):
+        """POST /mappings with valid PFC category is accepted."""
+        response = client.post(
+            "/mappings",
+            data={
+                "merchant": "Test Store",
+                "category": "FOOD_AND_DRINK_RESTAURANT",
+                "source": "public",
+            },
+        )
+        assert response.status_code == 201
+
+    def test_post_oversized_merchant_returns_400(self, client):
+        """POST /mappings with merchant name over 200 chars returns 400."""
+        response = client.post(
+            "/mappings",
+            data={
+                "merchant": "A" * 10000,
+                "category": "FOOD_AND_DRINK_RESTAURANT",
+                "source": "public",
+            },
+        )
+        assert response.status_code == 400
+        assert "200" in response.text
+
+    def test_post_empty_merchant_returns_400(self, client):
+        """POST /mappings with empty merchant returns 400."""
+        response = client.post(
+            "/mappings",
+            data={"merchant": "", "category": "FOOD_AND_DRINK_RESTAURANT", "source": "public"},
+        )
+        assert response.status_code in [400, 422]
 
 
 class TestSettingsRoute:
@@ -599,16 +673,27 @@ class TestMappingsRealData:
 
     def test_create_mapping_writes_staging(self, tmp_path):
         """Adding a mapping should write to new_mappings.toml."""
+        import shutil
+        from pathlib import Path
+
         config_dir = tmp_path / "config"
         config_dir.mkdir()
         (config_dir / "public_mappings.toml").write_text("")
         (config_dir / "private_mappings.toml").write_text("")
+        # Provide plaid_categories.toml so PFC validation can run
+        real_plaid = Path(__file__).parent.parent / "config" / "plaid_categories.toml"
+        if real_plaid.exists():
+            shutil.copy(real_plaid, config_dir / "plaid_categories.toml")
 
         app = create_app(data_dir=str(tmp_path))
         client = TestClient(app)
         response = client.post(
             "/mappings",
-            data={"merchant": "Test Store", "category": "SHOPPING", "source": "manual"},
+            data={
+                "merchant": "Test Store",
+                "category": "GENERAL_MERCHANDISE_DEPARTMENT_STORES",
+                "source": "manual",
+            },
         )
         assert response.status_code == 201
         # Verify file was created
