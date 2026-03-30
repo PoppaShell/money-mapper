@@ -1,5 +1,9 @@
 """Tests for api/validation.py -- CSV sanitization and input validation."""
 
+import os
+
+import pytest
+
 
 class TestSanitizeCsvValue:
     """Test OWASP CSV injection prevention."""
@@ -200,3 +204,65 @@ class TestValidateMerchantName:
         valid, result = validate_merchant_name("  Starbucks  ")
         assert valid is True
         assert result == "Starbucks"
+
+
+class TestValidatePfcCategory:
+    """Test PFC category validation with fuzzy suggestions."""
+
+    @pytest.fixture
+    def plaid_path(self):
+        """Path to the real plaid_categories.toml file."""
+        return os.path.join(os.path.dirname(__file__), "..", "config", "plaid_categories.toml")
+
+    def test_exact_match_passes(self, plaid_path):
+        """Exact PFC subcategory match passes."""
+        from money_mapper.api.validation import validate_pfc_category
+
+        valid, suggestions = validate_pfc_category("FOOD_AND_DRINK_RESTAURANT", plaid_path)
+        assert valid is True
+        assert suggestions == []
+
+    def test_case_insensitive_match(self, plaid_path):
+        """Category matching is case-insensitive."""
+        from money_mapper.api.validation import validate_pfc_category
+
+        valid, suggestions = validate_pfc_category("food_and_drink_restaurant", plaid_path)
+        assert valid is True
+
+    def test_invalid_returns_suggestions(self, plaid_path):
+        """Invalid category returns close matches."""
+        from money_mapper.api.validation import validate_pfc_category
+
+        valid, suggestions = validate_pfc_category("FOOD_RESTAURANT", plaid_path)
+        assert valid is False
+        assert len(suggestions) > 0
+        assert len(suggestions) <= 3
+
+    def test_completely_wrong_no_suggestions(self, plaid_path):
+        """Completely unrelated input may return empty suggestions."""
+        from money_mapper.api.validation import validate_pfc_category
+
+        valid, suggestions = validate_pfc_category("ZZZZXXXXXNOTACATEGORY", plaid_path)
+        assert valid is False
+
+    def test_empty_string_rejected(self, plaid_path):
+        """Empty string is rejected."""
+        from money_mapper.api.validation import validate_pfc_category
+
+        valid, suggestions = validate_pfc_category("", plaid_path)
+        assert valid is False
+
+    def test_primary_category_format_accepted(self, plaid_path):
+        """The subcategory key like BANK_FEES_ATM_FEES is accepted."""
+        from money_mapper.api.validation import validate_pfc_category
+
+        valid, suggestions = validate_pfc_category("BANK_FEES_ATM_FEES", plaid_path)
+        assert valid is True
+
+    def test_missing_plaid_file_returns_false(self):
+        """Missing plaid file returns invalid with no suggestions."""
+        from money_mapper.api.validation import validate_pfc_category
+
+        valid, suggestions = validate_pfc_category("ANYTHING", "/nonexistent/path.toml")
+        assert valid is False
+        assert suggestions == []

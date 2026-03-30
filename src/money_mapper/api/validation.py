@@ -5,7 +5,9 @@ validation with fuzzy suggestions. Designed for reuse across route handlers.
 """
 
 import csv
+import difflib
 import io
+import tomllib
 
 
 def sanitize_csv_value(value: str) -> str:
@@ -84,3 +86,44 @@ def validate_merchant_name(merchant: str) -> tuple[bool, str]:
         return (False, "Merchant name exceeds 200 character limit")
 
     return (True, cleaned)
+
+
+def validate_pfc_category(category: str, plaid_path: str) -> tuple[bool, list[str]]:
+    """Validate a category against the Plaid PFC taxonomy.
+
+    Checks for exact match (case-insensitive) against subcategory names
+    from plaid_categories.toml. On failure, suggests up to 3 close matches.
+
+    Args:
+        category: Category string to validate.
+        plaid_path: Path to plaid_categories.toml file.
+
+    Returns:
+        (True, []) on valid match, or (False, suggestions) on failure.
+    """
+    if not category or not category.strip():
+        return (False, [])
+
+    try:
+        with open(plaid_path, "rb") as f:
+            data = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
+        return (False, [])
+
+    # Collect all subcategory names (the DETAILED part of PRIMARY.DETAILED keys)
+    subcategories = []
+    for primary_key, primary_val in data.items():
+        if isinstance(primary_val, dict):
+            for detailed_key in primary_val:
+                subcategories.append(detailed_key)
+
+    # Case-insensitive exact match
+    category_upper = category.strip().upper()
+    if category_upper in (s.upper() for s in subcategories):
+        return (True, [])
+
+    # Fuzzy match for suggestions
+    suggestions = difflib.get_close_matches(
+        category_upper, [s.upper() for s in subcategories], n=3, cutoff=0.4
+    )
+    return (False, suggestions)
