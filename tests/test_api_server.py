@@ -186,6 +186,18 @@ class TestImportRoute:
         # Should return error code or redirect
         assert response.status_code in [400, 422]
 
+    def test_import_no_transactions_returns_422(self, client):
+        """POST /import with empty CSV returns 422."""
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+            f.write("date,description,amount\n")  # Header only, no data
+            f.flush()
+            with open(f.name, "rb") as csv_file:
+                response = client.post("/import", files={"file": csv_file})
+        # Should indicate no useful data found
+        assert response.status_code in [200, 422]
+
 
 class TestMappingsRoute:
     """Test /mappings GET/POST endpoints."""

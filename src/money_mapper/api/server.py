@@ -277,6 +277,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         output_dir = os.path.join(base_dir, "output")
         os.makedirs(output_dir, exist_ok=True)
 
+        tmp_path_str = None
         try:
             content = await file.read()
             with tempfile.NamedTemporaryFile(
@@ -292,7 +293,6 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             transactions = importer.import_file(tmp_path_str)
 
             if not transactions:
-                os.unlink(tmp_path_str)
                 return HTMLResponse("No transactions found in file", status_code=200)
 
             # Save raw transactions
@@ -310,17 +310,27 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 )
                 enriched = _load_enriched_transactions(enriched_output)
                 msg = f"Imported {len(transactions)} transactions, {len(enriched)} enriched"
+                safe_msg = html.escape(msg)
+                return HTMLResponse(safe_msg, status_code=200)
             except Exception:
-                msg = f"Imported {len(transactions)} transactions (enrichment skipped)"
-
-            # Cleanup temp file
-            os.unlink(tmp_path_str)
-            safe_msg = html.escape(msg)
-            return HTMLResponse(safe_msg, status_code=200)
+                count = len(transactions)
+                warning_msg = (
+                    f"Imported {count} transactions. "
+                    f"Warning: enrichment failed -- categories not applied."
+                )
+                safe_msg = html.escape(warning_msg)
+                return HTMLResponse(
+                    f'<div class="warning">{safe_msg}</div>',
+                    status_code=200,
+                )
 
         except Exception as e:
             safe_err = html.escape(str(e))
             return HTMLResponse(f"Import failed: {safe_err}", status_code=500)
+        finally:
+            # Ensure temp file is always cleaned up
+            if tmp_path_str and os.path.exists(tmp_path_str):
+                os.unlink(tmp_path_str)
 
     # ===== Mappings Route =====
     @app.get("/mappings", response_class=HTMLResponse)
