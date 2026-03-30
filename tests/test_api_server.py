@@ -119,6 +119,24 @@ class TestTransactionsRoute:
         response = client.get("/transactions/export")
         assert response.status_code in [200, 404]  # May not exist in basic version
 
+    def test_export_csv_has_content_disposition(self, client):
+        """Export should have Content-Disposition header for download."""
+        response = client.get("/transactions/export")
+        assert "content-disposition" in response.headers
+        assert "transactions.csv" in response.headers["content-disposition"]
+
+    def test_export_csv_valid_format(self, client):
+        """Exported CSV should be parseable by csv module."""
+        import csv
+        import io
+
+        response = client.get("/transactions/export")
+        reader = csv.reader(io.StringIO(response.text))
+        rows = list(reader)
+        # At minimum, header row should exist
+        assert len(rows) >= 1
+        assert rows[0] == ["date", "merchant", "amount", "category"]
+
 
 class TestImportRoute:
     """Test /import GET/POST endpoints for file upload."""

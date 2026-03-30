@@ -223,17 +223,18 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         """Export transactions as CSV.
 
         Returns:
-            HTMLResponse: CSV data
+            HTMLResponse: CSV data with Content-Disposition header for download.
         """
+        from money_mapper.api.validation import build_csv_export
+
         transactions = _load_enriched_transactions(enriched_path)
-        lines = ["date,merchant,amount,category"]
-        for t in transactions:
-            merchant = t.get("merchant_name", t.get("description", ""))
-            lines.append(
-                f"{t.get('date', '')},{merchant},{t.get('amount', 0)},{t.get('category', '')}"
-            )
-        csv_data = "\n".join(lines) + "\n"
-        return HTMLResponse(csv_data, media_type="text/csv", status_code=200)
+        csv_data = build_csv_export(transactions)
+        return HTMLResponse(
+            csv_data,
+            media_type="text/csv",
+            status_code=200,
+            headers={"Content-Disposition": 'attachment; filename="transactions.csv"'},
+        )
 
     # ===== Import Route =====
     @app.get("/import", response_class=HTMLResponse)
