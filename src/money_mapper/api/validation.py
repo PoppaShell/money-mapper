@@ -60,3 +60,27 @@ def build_csv_export(transactions: list[dict]) -> str:
             ]
         )
     return output.getvalue()
+
+
+def validate_merchant_name(merchant: str) -> tuple[bool, str]:
+    """Validate and clean a merchant name.
+
+    Strips control characters, trims whitespace, enforces length limit.
+
+    Args:
+        merchant: Raw merchant name string.
+
+    Returns:
+        (True, cleaned_name) on success, or (False, error_message) on failure.
+    """
+    # Strip control characters (below 0x20) except space (0x20)
+    cleaned = "".join(c for c in merchant if ord(c) >= 32)
+    cleaned = cleaned.strip()
+
+    if not cleaned:
+        return (False, "Merchant name cannot be empty")
+
+    if len(cleaned) > 200:
+        return (False, "Merchant name exceeds 200 character limit")
+
+    return (True, cleaned)

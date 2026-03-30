@@ -133,3 +133,70 @@ class TestBuildCsvExport:
         lines = result.strip().split("\n")
         assert len(lines) == 2
         # Should not crash, should have empty/default values
+
+
+class TestValidateMerchantName:
+    """Test merchant name validation."""
+
+    def test_valid_name_passes(self):
+        """Normal merchant name passes validation."""
+        from money_mapper.api.validation import validate_merchant_name
+
+        valid, result = validate_merchant_name("Starbucks")
+        assert valid is True
+        assert result == "Starbucks"
+
+    def test_empty_string_rejected(self):
+        """Empty string is rejected."""
+        from money_mapper.api.validation import validate_merchant_name
+
+        valid, result = validate_merchant_name("")
+        assert valid is False
+        assert "empty" in result.lower()
+
+    def test_whitespace_only_rejected(self):
+        """Whitespace-only string is rejected."""
+        from money_mapper.api.validation import validate_merchant_name
+
+        valid, result = validate_merchant_name("   ")
+        assert valid is False
+        assert "empty" in result.lower()
+
+    def test_too_long_rejected(self):
+        """Names over 200 chars are rejected."""
+        from money_mapper.api.validation import validate_merchant_name
+
+        valid, result = validate_merchant_name("A" * 201)
+        assert valid is False
+        assert "200" in result
+
+    def test_exactly_200_chars_passes(self):
+        """Names at exactly 200 chars pass."""
+        from money_mapper.api.validation import validate_merchant_name
+
+        valid, result = validate_merchant_name("A" * 200)
+        assert valid is True
+
+    def test_control_characters_stripped(self):
+        """Control characters (below 0x20 except space) are removed."""
+        from money_mapper.api.validation import validate_merchant_name
+
+        valid, result = validate_merchant_name("Star\x00bucks\x01")
+        assert valid is True
+        assert result == "Starbucks"
+
+    def test_spaces_preserved(self):
+        """Spaces (0x20) are not stripped as control characters."""
+        from money_mapper.api.validation import validate_merchant_name
+
+        valid, result = validate_merchant_name("Walmart Supercenter")
+        assert valid is True
+        assert result == "Walmart Supercenter"
+
+    def test_leading_trailing_whitespace_stripped(self):
+        """Leading and trailing whitespace is trimmed."""
+        from money_mapper.api.validation import validate_merchant_name
+
+        valid, result = validate_merchant_name("  Starbucks  ")
+        assert valid is True
+        assert result == "Starbucks"
