@@ -519,12 +519,21 @@ class TestDashboardRealData:
         response = client.get("/dashboard")
         assert response.status_code == 200
 
-    def test_root_shows_dashboard(self, tmp_path):
-        """Root route should render dashboard template."""
+    def test_root_redirects_to_dashboard(self, tmp_path):
+        """Root route should redirect to /dashboard."""
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app, follow_redirects=False)
+        response = client.get("/")
+        assert response.status_code == 307
+        assert response.headers["location"] == "/dashboard"
+
+    def test_root_follows_to_dashboard(self, tmp_path):
+        """Root route should ultimately show dashboard content."""
         app = create_app(data_dir=str(tmp_path))
         client = TestClient(app)
         response = client.get("/")
         assert response.status_code == 200
+        assert "dashboard" in response.text.lower()
 
 
 class TestTransactionsRealData:
