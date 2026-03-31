@@ -15,9 +15,9 @@ class TestLoadPublicMappings:
     """Test loading public mappings."""
 
     def test_load_public_mappings_returns_dict(self):
-        """Test that function returns dict."""
+        """Test that function returns dict when default config file exists."""
         result = load_public_mappings()
-        assert result is None or isinstance(result, dict)
+        assert isinstance(result, dict)
 
     def test_load_public_mappings_file_not_found(self, tmp_path):
         """Test with missing file."""
@@ -43,7 +43,7 @@ class TestLoadPublicMappings:
         mapping_file.write_text("")
 
         result = load_public_mappings(str(mapping_file))
-        assert result is None or isinstance(result, dict)
+        assert result is None
 
     def test_load_public_mappings_preserves_structure(self, tmp_path):
         """Test that nested structure is preserved."""
@@ -55,17 +55,24 @@ class TestLoadPublicMappings:
 """)
 
         result = load_public_mappings(str(mapping_file))
-        # Should preserve structure or return None
-        assert result is None or isinstance(result, dict)
+        # Should preserve the nested TOML structure
+        assert isinstance(result, dict)
+        assert "CATEGORY" in result
 
 
 class TestLoadPrivateMappings:
     """Test loading private mappings."""
 
-    def test_load_private_mappings_returns_list_or_dict(self):
-        """Test that function returns list or dict."""
-        result = load_private_mappings()
-        assert result is None or isinstance(result, (list, dict))
+    def test_load_private_mappings_returns_list_or_dict(self, tmp_path):
+        """Test that function returns list when given a valid JSON file."""
+        mapping_file = tmp_path / "transactions.json"
+        transactions = [{"merchant_name": "Walmart", "category": "GENERAL_MERCHANDISE"}]
+        with open(mapping_file, "w") as f:
+            json.dump(transactions, f)
+
+        result = load_private_mappings(str(mapping_file))
+        assert isinstance(result, list)
+        assert result[0]["merchant_name"] == "Walmart"
 
     def test_load_private_mappings_file_not_found(self, tmp_path):
         """Test with missing file."""
@@ -135,8 +142,9 @@ class TestSaveMappings:
 
         result = save_mappings(mappings, str(output_file))
 
-        # Should return path or None
-        assert result is None or isinstance(result, str)
+        # Should return the path to the saved file
+        assert isinstance(result, str)
+        assert result == str(output_file)
 
     def test_save_mappings_to_json(self, tmp_path):
         """Test saving to JSON format."""
@@ -189,8 +197,9 @@ class TestBackupMappings:
 
         result = backup_mappings(str(original_file))
 
-        # Should create backup or return None
-        assert result is None or isinstance(result, str)
+        # Should create backup and return path to it
+        assert isinstance(result, str)
+        assert Path(result).exists()
 
     def test_backup_mappings_returns_path(self, tmp_path):
         """Test that function returns backup path."""
@@ -199,8 +208,9 @@ class TestBackupMappings:
 
         result = backup_mappings(str(original_file))
 
-        # Should return path to backup or None
-        assert result is None or isinstance(result, str)
+        # Should return path to backup file
+        assert isinstance(result, str)
+        assert "original" in result
 
     def test_backup_mappings_nonexistent_file(self, tmp_path):
         """Test backup of nonexistent file."""
