@@ -201,12 +201,14 @@ class TestParseCSVTransactions:
         assert isinstance(transactions, list)
 
     def test_parse_malformed_csv(self, temp_output_dir):
-        """Test parsing malformed CSV returns gracefully."""
+        """Test parsing malformed CSV raises ValueError for unrecognized headers."""
+        import pytest
+
         csv_file = temp_output_dir / "malformed.csv"
         csv_file.write_text("This is\nnot valid\nCSV format,,,")
 
-        result = parse_csv_transactions(str(csv_file))
-        assert isinstance(result, list)
+        with pytest.raises(ValueError, match="[Cc]ould not detect|[Uu]nrecognized"):
+            parse_csv_transactions(str(csv_file))
 
 
 class TestCSVValidator:
@@ -414,15 +416,17 @@ class TestCSVImporter:
             assert len(transactions) >= 1
 
     def test_error_handling_on_import(self, temp_output_dir):
-        """Test error handling during import."""
+        """Test that import with unrecognizable headers raises ValueError even with explicit type."""
+        import pytest
+
         csv_file = temp_output_dir / "error.csv"
         csv_file.write_text("Invalid content")
 
         importer = CSVImporter()
-        result = importer.import_csv(str(csv_file), "checking")
-
-        # Should handle gracefully without crashing
-        assert isinstance(result, list)
+        # Explicit csv_type bypasses auto-detection but parse_csv_transactions still
+        # validates headers and raises ValueError for unrecognized content
+        with pytest.raises(ValueError, match="[Cc]ould not detect|[Uu]nrecognized"):
+            importer.import_csv(str(csv_file), "checking")
 
 
 class TestCSVImportIntegration:
@@ -464,10 +468,12 @@ class TestCSVImportIntegration:
         assert isinstance(transactions, list)
 
     def test_csv_column_mapping_flexibility(self, temp_output_dir):
-        """Test flexibility with different column names."""
+        """Test that unrecognized column names raise a ValueError with header info."""
+        import pytest
+
         csv_file = temp_output_dir / "flexible.csv"
 
-        # Create CSV with slightly different column names
+        # Create CSV with column names that don't match any known schema
         with open(csv_file, "w", newline="") as f:
             writer = csv.DictWriter(
                 f, fieldnames=["Transaction Date", "Merchant", "Debit Amount", "Credit Amount"]
@@ -482,11 +488,10 @@ class TestCSVImportIntegration:
                 }
             )
 
-        # Should either handle this or provide helpful error
+        # Unrecognized headers should raise ValueError with header info
         importer = CSVImporter()
-        result = importer.import_csv(str(csv_file))
-
-        assert isinstance(result, list)
+        with pytest.raises(ValueError, match="[Cc]ould not detect|[Uu]nrecognized"):
+            importer.import_csv(str(csv_file))
 
 
 class TestCSVEdgeCases:
@@ -1320,15 +1325,15 @@ class TestParseCSVTransactionsExact:
         # Should parse without crashing
         assert isinstance(result, list)
 
-    def test_unknown_headers_fallback_to_checking(self, tmp_path):
-        """CSV with unrecognized headers falls back to checking type and still processes."""
-        csv_file = tmp_path / "unknown.csv"
+    def test_alternative_checking_headers_are_parsed(self, tmp_path):
+        """CSV with Date/Description/Amount is detected as checking and processed."""
+        csv_file = tmp_path / "alt_checking.csv"
         with open(csv_file, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=["Date", "Description", "Amount"])
             writer.writeheader()
             writer.writerow({"Date": "03/15/2024", "Description": "PURCHASE", "Amount": "50.00"})
+        # Date+Description+Amount matches alternative checking path in detect_csv_type
         result = parse_csv_transactions(str(csv_file))
-        # Should not crash, may or may not find amount depending on validation
         assert isinstance(result, list)
 
 
@@ -1495,14 +1500,15 @@ class TestCSVImporterExact:
         result = importer.import_directory(str(d))
         assert len(result) == 2
 
-    def test_import_csv_auto_detect_exception_fallback(self, tmp_path):
-        """import_csv with unreadable/weird file still returns list without crashing."""
-        # A file that can be opened but has no recognizable headers falls back to checking
+    def test_import_csv_auto_detect_unrecognized_raises_valueerror(self, tmp_path):
+        """import_csv with unrecognized headers raises ValueError."""
+        import pytest
+
         weird = tmp_path / "weird.csv"
-        weird.write_text("\x00\x00\x00\n")  # null bytes - hard to read
+        weird.write_text("Foo,Bar,Baz\n1,2,3\n")  # headers that match no known schema
         importer = CSVImporter()
-        result = importer.import_csv(str(weird))
-        assert isinstance(result, list)
+        with pytest.raises(ValueError, match="[Cc]ould not detect|[Uu]nrecognized"):
+            importer.import_csv(str(weird))
 
 
 class TestParseOFXFile:
@@ -1544,3 +1550,59 @@ class TestParseOFXFile:
         bad_ofx.write_text("Invalid OFX")
         result = parse_ofx_file(str(bad_ofx), debug=True)
         assert result == []
+
+
+class TestCSVImporterWarnings:
+    """Test CSVImporter.warnings collection for parse errors."""
+
+    def test_successful_import_no_warnings(self, tmp_path):
+        """Successful import produces empty warnings list."""
+        csv_file = tmp_path / "good.csv"
+        csv_file.write_text("Date,Description,Debit,Credit\n2026-01-15,Starbucks,5.50,\n")
+
+        importer = CSVImporter()
+        importer.import_csv(str(csv_file))
+        assert hasattr(importer, "warnings")
+        assert importer.warnings == []
+
+    def test_unparseable_amount_produces_warning(self, tmp_path):
+        """Row with unparseable amount adds warning to importer.warnings."""
+        csv_file = tmp_path / "bad_amount.csv"
+        csv_file.write_text("Date,Description,Debit,Credit\n2026-01-15,Starbucks,N/A,\n")
+
+        importer = CSVImporter()
+        importer.import_csv(str(csv_file))
+        assert len(importer.warnings) > 0
+        assert any("parse" in w.lower() or "amount" in w.lower() for w in importer.warnings)
+
+    def test_undetectable_format_raises_valueerror(self, tmp_path):
+        """CSV with unrecognizable headers raises ValueError."""
+        import pytest
+
+        csv_file = tmp_path / "unknown.csv"
+        csv_file.write_text("Foo,Bar,Baz\n1,2,3\n")
+
+        importer = CSVImporter()
+        with pytest.raises(ValueError, match="[Cc]ould not detect|[Uu]nrecognized"):
+            importer.import_csv(str(csv_file))
+
+    def test_undetectable_format_lists_found_headers(self, tmp_path):
+        """ValueError message includes the headers that were found."""
+        import pytest
+
+        csv_file = tmp_path / "unknown.csv"
+        csv_file.write_text("Foo,Bar,Baz\n1,2,3\n")
+
+        importer = CSVImporter()
+        with pytest.raises(ValueError, match="Foo"):
+            importer.import_csv(str(csv_file))
+
+    def test_warnings_reset_between_imports(self, tmp_path):
+        """Warnings list resets on each new import call."""
+        csv_file = tmp_path / "good.csv"
+        csv_file.write_text("Date,Description,Debit,Credit\n2026-01-15,Starbucks,5.50,\n")
+
+        importer = CSVImporter()
+        importer.warnings = ["old warning"]
+        importer.import_csv(str(csv_file))
+        assert "old warning" not in importer.warnings

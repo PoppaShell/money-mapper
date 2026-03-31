@@ -248,6 +248,8 @@ def parse_statements_interactive():
     try:
         importer = CSVImporter()
         transactions = importer.import_csv(csv_file)
+        for warning in importer.warnings:
+            print(f"  Warning: {warning}")
 
         if transactions:
             from money_mapper.utils import save_transactions_to_json
@@ -449,6 +451,8 @@ def run_full_pipeline_interactive(debug: bool = False):
         print(f"\nStep 1: Importing CSV transactions from '{directory}'...")
         importer = CSVImporter(debug=debug)
         transactions = importer.import_directory(directory)
+        for warning in importer.warnings:
+            print(f"  Warning: {warning}")
 
         if not transactions:
             print("No transactions found in CSV files")
@@ -729,6 +733,8 @@ Examples:
         print(f"\nImporting CSV transactions from '{directory}'...")
         importer = CSVImporter(debug=args.debug)
         transactions = importer.import_directory(directory)
+        for warning in importer.warnings:
+            print(f"  Warning: {warning}")
 
         if transactions:
             from money_mapper.utils import save_transactions_to_json
@@ -796,6 +802,8 @@ Examples:
         # Parse
         importer = CSVImporter(debug=args.debug)
         transactions = importer.import_directory(directory)
+        for warning in importer.warnings:
+            print(f"  Warning: {warning}")
         if not transactions:
             print("No transactions found")
             sys.exit(1)

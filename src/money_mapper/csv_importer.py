@@ -208,15 +208,21 @@ def _extract_amount(row: dict[str, Any], schema: dict[str, Any], csv_type: str) 
     return None
 
 
-def parse_csv_transactions(csv_file_path: str) -> list[dict[str, Any]]:
+def parse_csv_transactions(
+    csv_file_path: str, warnings: list[str] | None = None
+) -> list[dict[str, Any]]:
     """
     Parse CSV file and return standardized transactions.
 
     Args:
         csv_file_path: Path to CSV file
+        warnings: Optional list to collect parse warnings
 
     Returns:
         List of standardized transaction dictionaries
+
+    Raises:
+        ValueError: If CSV format cannot be detected from headers
     """
     transactions: list[dict[str, Any]] = []
 
@@ -244,18 +250,26 @@ def parse_csv_transactions(csv_file_path: str) -> list[dict[str, Any]]:
             fieldnames = list(reader.fieldnames)
             csv_type = detect_csv_type(fieldnames)
 
-            # If type detection failed, try to infer from content
+            # If type detection failed, raise error
             if csv_type is None:
-                # Try checking first (most common)
-                csv_type = "checking"
+                expected = []
+                for fmt, schema in CSV_SCHEMAS.items():
+                    expected.append(f"  {fmt}: {', '.join(schema['required_headers'])}")
+                raise ValueError(
+                    f"Could not detect CSV format. "
+                    f"Found headers: {', '.join(fieldnames)}. "
+                    f"Expected one of:\n" + "\n".join(expected)
+                )
 
             # Validate headers
             is_valid = validate_csv_headers(fieldnames, csv_type)
             if not is_valid if isinstance(is_valid, bool) else not is_valid[0]:
-                # If validation fails, still try to parse
-                pass
+                validation_msg = is_valid[1] if isinstance(is_valid, tuple) else "unknown issue"
+                if warnings is not None:
+                    warnings.append(f"CSV validation warning: {validation_msg}")
 
             # Parse rows
+            skipped_count = 0
             for row_num, row in enumerate(reader, start=2):
                 # Skip empty rows
                 if not any(row.values()):
@@ -264,11 +278,31 @@ def parse_csv_transactions(csv_file_path: str) -> list[dict[str, Any]]:
                 # Standardize transaction
                 transaction = standardize_csv_transaction(row, csv_type)
 
-                # Only add if we have at least date and amount
-                if transaction and ("date" in transaction or "merchant" in transaction):
-                    if "amount" in transaction or "merchant" in transaction:
-                        transactions.append(transaction)
+                # Check for missing amount and warn
+                if transaction and "amount" not in transaction:
+                    schema = CSV_SCHEMAS.get(csv_type, {})
+                    raw_fields = []
+                    for field in schema.get("amount_fields", []):
+                        if field in row:
+                            raw_fields.append(f"{field}={row[field]!r}")
+                    raw_value = ", ".join(raw_fields) if raw_fields else "empty"
+                    if warnings is not None:
+                        warnings.append(
+                            f"Row {row_num}: Could not parse amount ({raw_value}), "
+                            f"transaction skipped"
+                        )
+                    skipped_count += 1
+                    continue
 
+                # Only add if we have at least date or merchant
+                if transaction and ("date" in transaction or "merchant" in transaction):
+                    transactions.append(transaction)
+
+            if skipped_count > 0 and warnings is not None:
+                warnings.append(f"{skipped_count} transaction(s) skipped due to parse errors")
+
+    except ValueError:
+        raise
     except Exception as e:
         print(f"Warning: Error parsing CSV file {csv_file_path}: {e}")
 
@@ -342,6 +376,7 @@ class CSVImporter:
         """
         self.validator = None
         self.debug = debug
+        self.warnings: list[str] = []
 
     def validate_file(self, csv_file_path: str) -> bool | tuple[bool, str]:
         """
@@ -395,7 +430,12 @@ class CSVImporter:
 
         Returns:
             List of standardized transaction dictionaries
+
+        Raises:
+            ValueError: If CSV format cannot be detected from headers
         """
+        self.warnings = []
+
         if not os.path.exists(csv_file_path):
             print(f"Error: CSV file not found: {csv_file_path}")
             return []
@@ -406,20 +446,32 @@ class CSVImporter:
                 with open(csv_file_path, encoding="utf-8", errors="replace") as f:
                     reader = csv.DictReader(f)
                     if reader.fieldnames:
-                        detected_type = detect_csv_type(list(reader.fieldnames))
-                        csv_type = detected_type or "checking"
+                        headers = list(reader.fieldnames)
+                        detected_type = detect_csv_type(headers)
+                        if detected_type is None:
+                            expected = []
+                            for fmt, schema in CSV_SCHEMAS.items():
+                                expected.append(f"  {fmt}: {', '.join(schema['required_headers'])}")
+                            raise ValueError(
+                                f"Could not detect CSV format. "
+                                f"Found headers: {', '.join(headers)}. "
+                                f"Expected one of:\n" + "\n".join(expected)
+                            )
+                        csv_type = detected_type
+            except ValueError:
+                raise
             except Exception as e:
-                print(f"Warning: Could not auto-detect CSV type, defaulting to checking: {e}")
-                csv_type = "checking"
+                raise ValueError(f"Could not read CSV file: {e}") from e
 
         # Validate file
         validator = CSVValidator(csv_type)
         is_valid = validator.validate(csv_file_path)
         if not is_valid if isinstance(is_valid, bool) else not is_valid[0]:
-            print("Warning: CSV validation failed, attempting import anyway")
+            validation_msg = is_valid[1] if isinstance(is_valid, tuple) else "unknown issue"
+            self.warnings.append(f"CSV validation warning: {validation_msg}")
 
         # Parse transactions
-        transactions = parse_csv_transactions(csv_file_path)
+        transactions = parse_csv_transactions(csv_file_path, warnings=self.warnings)
 
         return transactions
 

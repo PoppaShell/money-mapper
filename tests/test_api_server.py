@@ -198,6 +198,18 @@ class TestImportRoute:
         # Should indicate no useful data found
         assert response.status_code in [200, 422]
 
+    def test_import_csv_with_bad_format_returns_error(self, client):
+        """POST /import with unrecognizable CSV returns error with headers."""
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+            f.write("Foo,Bar,Baz\n1,2,3\n")
+            f.flush()
+            with open(f.name, "rb") as csv_file:
+                response = client.post("/import", files={"file": csv_file})
+        assert response.status_code in [400, 500]
+        assert "could not detect" in response.text.lower() or "format" in response.text.lower()
+
 
 class TestMappingsRoute:
     """Test /mappings GET/POST endpoints."""
