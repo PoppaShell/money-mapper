@@ -2299,3 +2299,53 @@ class TestFindMerchantMappingDebugMode:
         find_merchant_mapping("TOTALLY UNKNOWN MERCHANT", {}, {}, {}, 0.7, debug=True)
         captured = capsys.readouterr()
         assert "No category found" in captured.out
+
+
+class TestFindMerchantMappingNormalization:
+    """Test that description normalization affects matching."""
+
+    def test_mixed_case_description_matches_lowercase_mapping(self):
+        """Description with mixed case should match lowercase mapping keys."""
+        from money_mapper.transaction_enricher import find_merchant_mapping
+
+        private_mappings = {}
+        public_mappings = {
+            "FOOD_AND_DRINK": {
+                "FOOD_AND_DRINK_RESTAURANT": {
+                    "starbucks": {
+                        "name": "Starbucks",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "FOOD_AND_DRINK_RESTAURANT",
+                    }
+                }
+            }
+        }
+        plaid_categories = {}
+
+        result = find_merchant_mapping(
+            "  STARBUCKS  ", private_mappings, public_mappings, plaid_categories, 0.7, False
+        )
+        assert result.get("category") != "UNCATEGORIZED"
+
+    def test_whitespace_description_matches_trimmed_mapping(self):
+        """Description with leading/trailing whitespace should match."""
+        from money_mapper.transaction_enricher import find_merchant_mapping
+
+        private_mappings = {}
+        public_mappings = {
+            "FOOD_AND_DRINK": {
+                "FOOD_AND_DRINK_RESTAURANT": {
+                    "starbucks": {
+                        "name": "Starbucks",
+                        "category": "FOOD_AND_DRINK",
+                        "subcategory": "FOOD_AND_DRINK_RESTAURANT",
+                    }
+                }
+            }
+        }
+        plaid_categories = {}
+
+        result = find_merchant_mapping(
+            "  starbucks  ", private_mappings, public_mappings, plaid_categories, 0.7, False
+        )
+        assert result.get("category") != "UNCATEGORIZED"
