@@ -10,13 +10,22 @@
 </div>
 
 <h2>Configuration</h2>
-<form method="post">
-    {% for option in options %}
-        <label>{{ option.name }}</label>
-        <input type="text" value="{{ option.value }}" placeholder="{{ option.name }}">
-    {% endfor %}
-    <button type="submit">Save Settings</button>
-</form>
+<table>
+    <thead>
+        <tr>
+            <th>Setting</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for option in options %}
+            <tr>
+                <td>{{ option.name }}</td>
+                <td>{{ option.value }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 <h2>About</h2>
 <div class="info">

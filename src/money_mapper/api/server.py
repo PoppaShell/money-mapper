@@ -297,7 +297,11 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 return HTMLResponse(f"Import failed: {safe_err}", status_code=400)
 
             if not transactions:
-                return HTMLResponse("No transactions found in file", status_code=200)
+                return HTMLResponse(
+                    "No transactions found in file. "
+                    "Check that the file format is supported (CSV, OFX, QFX).",
+                    status_code=422,
+                )
 
             # Save raw transactions
             raw_path = os.path.join(output_dir, "financial_transactions.json")

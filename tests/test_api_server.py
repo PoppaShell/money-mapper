@@ -196,7 +196,7 @@ class TestImportRoute:
             with open(f.name, "rb") as csv_file:
                 response = client.post("/import", files={"file": csv_file})
         # Should indicate no useful data found
-        assert response.status_code in [200, 422]
+        assert response.status_code == 422
 
     def test_import_csv_with_bad_format_returns_error(self, client):
         """POST /import with unrecognizable CSV returns error with headers."""
@@ -322,10 +322,11 @@ class TestSettingsRoute:
         response = client.get("/settings")
         assert "about" in response.text.lower() or "money mapper" in response.text.lower()
 
-    def test_settings_has_save_button(self, client):
-        """Settings should have a Save Settings button."""
+    def test_settings_is_display_only(self, client):
+        """Settings should be display-only with no form or save button."""
         response = client.get("/settings")
-        assert "save" in response.text.lower()
+        assert "save" not in response.text.lower()
+        assert "<form" not in response.text.lower()
 
 
 class TestErrorHandling:
