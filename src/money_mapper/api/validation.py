@@ -6,6 +6,7 @@ validation with fuzzy suggestions. Designed for reuse across route handlers.
 
 import csv
 import difflib
+import html
 import io
 import tomllib
 
@@ -127,3 +128,21 @@ def validate_pfc_category(category: str, plaid_path: str) -> tuple[bool, list[st
         category_upper, [s.upper() for s in subcategories], n=3, cutoff=0.4
     )
     return (False, suggestions)
+
+
+def format_warnings_html(warnings: list[str]) -> str:
+    """Format a list of warning strings as an HTML warning block.
+
+    Produces a div with class "warning" containing an unordered list of
+    escaped warning messages. Returns empty string if no warnings.
+
+    Args:
+        warnings: List of warning message strings.
+
+    Returns:
+        HTML string with warning block, or empty string.
+    """
+    if not warnings:
+        return ""
+    items = "".join(f"<li>{html.escape(w)}</li>" for w in warnings)
+    return f'<div class="warning"><strong>Warnings:</strong><ul>{items}</ul></div>'
