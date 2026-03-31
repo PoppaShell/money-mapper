@@ -290,7 +290,11 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             from money_mapper.csv_importer import CSVImporter
 
             importer = CSVImporter()
-            transactions = importer.import_file(tmp_path_str)
+            try:
+                transactions = importer.import_file(tmp_path_str)
+            except ValueError as e:
+                safe_err = html.escape(str(e))
+                return HTMLResponse(f"Import failed: {safe_err}", status_code=400)
 
             if not transactions:
                 return HTMLResponse("No transactions found in file", status_code=200)
@@ -309,18 +313,24 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                     raw_path, enriched_output, debug=False, use_multiprocessing=False
                 )
                 enriched = _load_enriched_transactions(enriched_output)
+                from money_mapper.api.validation import format_warnings_html
+
                 msg = f"Imported {len(transactions)} transactions, {len(enriched)} enriched"
                 safe_msg = html.escape(msg)
-                return HTMLResponse(safe_msg, status_code=200)
+                warnings_html = format_warnings_html(importer.warnings)
+                return HTMLResponse(safe_msg + warnings_html, status_code=200)
             except Exception:
+                from money_mapper.api.validation import format_warnings_html
+
                 count = len(transactions)
                 warning_msg = (
                     f"Imported {count} transactions. "
                     f"Warning: enrichment failed -- categories not applied."
                 )
                 safe_msg = html.escape(warning_msg)
+                warnings_html = format_warnings_html(importer.warnings)
                 return HTMLResponse(
-                    f'<div class="warning">{safe_msg}</div>',
+                    f'<div class="warning">{safe_msg}</div>{warnings_html}',
                     status_code=200,
                 )
 

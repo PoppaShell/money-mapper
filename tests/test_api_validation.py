@@ -266,3 +266,40 @@ class TestValidatePfcCategory:
         valid, suggestions = validate_pfc_category("ANYTHING", "/nonexistent/path.toml")
         assert valid is False
         assert suggestions == []
+
+
+class TestFormatWarningsHtml:
+    """Test HTML warning formatter."""
+
+    def test_empty_list_returns_empty_string(self):
+        """No warnings produces no HTML."""
+        from money_mapper.api.validation import format_warnings_html
+
+        assert format_warnings_html([]) == ""
+
+    def test_single_warning_produces_div(self):
+        """Single warning produces a div with warning class."""
+        from money_mapper.api.validation import format_warnings_html
+
+        result = format_warnings_html(["Something went wrong"])
+        assert '<div class="warning">' in result
+        assert "Something went wrong" in result
+        assert "</div>" in result
+
+    def test_multiple_warnings_produces_list(self):
+        """Multiple warnings produce a bullet list."""
+        from money_mapper.api.validation import format_warnings_html
+
+        result = format_warnings_html(["Warning 1", "Warning 2"])
+        assert "<ul>" in result
+        assert "<li>" in result
+        assert "Warning 1" in result
+        assert "Warning 2" in result
+
+    def test_html_in_warnings_is_escaped(self):
+        """HTML characters in warnings are escaped for XSS prevention."""
+        from money_mapper.api.validation import format_warnings_html
+
+        result = format_warnings_html(['<script>alert("xss")</script>'])
+        assert "<script>" not in result
+        assert "&lt;script&gt;" in result

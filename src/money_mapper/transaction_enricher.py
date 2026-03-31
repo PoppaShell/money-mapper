@@ -472,7 +472,6 @@ def enrich_transaction(
 
     # Extract basic info
     description = transaction.get("description", "").strip()
-    transaction.get("amount", 0.0)
 
     # Extract merchant name
     merchant_name = extract_merchant_name(description)
@@ -588,7 +587,7 @@ def find_merchant_mapping(
     Returns:
         Dictionary with categorization results
     """
-    description.lower().strip()
+    description = description.lower().strip()
     merchant_name = extract_merchant_name(description).lower()
 
     # 1. Try private mappings first (highest priority)
