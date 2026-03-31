@@ -168,7 +168,7 @@ class TestEncryptDecryptAmount:
         """Test decrypting invalid encrypted format."""
         result = decrypt_amount("invalid_encrypted_data")
         # Should handle gracefully
-        assert result is None or isinstance(result, (int, float))
+        assert result is None
 
 
 class TestCreateAuditLog:

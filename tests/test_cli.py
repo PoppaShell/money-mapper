@@ -196,7 +196,7 @@ class TestPrintBanner:
         captured = capsys.readouterr()
 
         # Banner should print something
-        assert len(captured.out) >= 0
+        assert len(captured.out) > 0
 
     def test_print_banner_callable(self):
         """Test that print_banner is callable."""

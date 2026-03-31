@@ -71,7 +71,7 @@ class TestDisplaySetupComplete:
         captured = capsys.readouterr()
 
         # Should produce some output
-        assert len(captured.out) >= 0
+        assert len(captured.out) > 0
 
     def test_display_setup_complete_with_stats(self, temp_output_dir, capsys):
         """Test displaying setup complete with stats."""
@@ -91,7 +91,7 @@ class TestDisplaySetupComplete:
         # Should produce output with stats info
         captured.out.lower()
         # Check that output was produced
-        assert len(captured.out) >= 0
+        assert len(captured.out) > 0
 
     def test_display_setup_complete_callable(self):
         """Test that function is callable."""

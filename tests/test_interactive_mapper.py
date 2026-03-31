@@ -51,7 +51,7 @@ class TestGetTransactionFrequency:
 
         for key, value in result.items():
             assert isinstance(value, int)
-            assert value >= 0
+            assert value >= 1
 
 
 class TestSuggestKeyword:
@@ -61,7 +61,7 @@ class TestSuggestKeyword:
         """Test keyword suggestion with basic description."""
         result = suggest_keyword("STARBUCKS COFFEE SEATTLE WA")
         assert isinstance(result, str)
-        assert len(result) >= 0
+        assert len(result) > 0
 
     def test_suggest_keyword_empty_string(self):
         """Test keyword suggestion with empty string."""
@@ -174,8 +174,7 @@ class TestLoadCategoryTaxonomy:
         # Categories should have valid structure
         for category, subcats in categories.items():
             assert isinstance(category, str)
-            # subcats can be dict or list depending on structure
-            assert isinstance(subcats, dict) or isinstance(subcats, list)
+            assert isinstance(subcats, list)
             assert len(subcats) > 0
 
     def test_taxonomy_consistency(self):
