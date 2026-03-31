@@ -245,6 +245,37 @@ class TestConfigManagerThresholds:
         assert 0.0 <= threshold <= 1.0
 
 
+class TestGetFuzzyThresholdSafety:
+    """Test that invalid config values don't crash the app."""
+
+    def test_invalid_string_threshold_returns_default(self, tmp_path):
+        """Non-numeric threshold should return 0.7 default."""
+        from money_mapper.config_manager import ConfigManager
+
+        # Create a minimal config with invalid threshold
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        settings_file = config_dir / "public_settings.toml"
+        settings_file.write_text('[fuzzy_matching]\nenrichment_threshold = "high"\n')
+
+        cm = ConfigManager(str(config_dir))
+        result = cm.get_fuzzy_threshold("enrichment")
+        assert result == 0.7
+
+    def test_valid_numeric_threshold_returns_value(self, tmp_path):
+        """Valid numeric threshold should return the configured value."""
+        from money_mapper.config_manager import ConfigManager
+
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        settings_file = config_dir / "public_settings.toml"
+        settings_file.write_text("[fuzzy_matching]\nenrichment_threshold = 0.85\n")
+
+        cm = ConfigManager(str(config_dir))
+        result = cm.get_fuzzy_threshold("enrichment")
+        assert result == 0.85
+
+
 class TestConfigManagerDisplaySettings:
     """Test display-related settings."""
 

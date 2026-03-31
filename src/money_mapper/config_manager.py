@@ -255,7 +255,12 @@ class ConfigManager:
         """
         fuzzy_matching = self.settings.get("fuzzy_matching", {})
         key = f"{threshold_type}_threshold"
-        return float(fuzzy_matching.get(key, 0.7))
+        raw_value = fuzzy_matching.get(key, 0.7)
+        try:
+            return float(raw_value)
+        except (ValueError, TypeError):
+            print(f"Warning: Invalid {key} value '{raw_value}' in config, using default 0.7")
+            return 0.7
 
     def get_confidence_threshold(self, confidence_level: str) -> float:
         """
