@@ -101,8 +101,8 @@ class TestTransactionsRoute:
         # This will need real transaction fixtures in GREEN phase
         # For now, test the endpoint exists
         response = client.post("/transactions/1", json={"category": "Food"})
-        # Should either succeed or return appropriate error
-        assert response.status_code in [200, 404, 400]
+        # category is a query param; JSON body is ignored, so category is None -> 400
+        assert response.status_code == 400
 
     def test_transactions_filter_by_date(self, client):
         """GET /transactions?date=YYYY-MM should filter by date."""
@@ -174,7 +174,8 @@ class TestImportRoute:
             f.flush()
             with open(f.name, "rb") as csv_file:
                 response = client.post("/import", files={"file": csv_file})
-        assert response.status_code in [200, 400, 422]  # Accept, error, or no transactions
+        # CSV has 'amount' col but checking schema expects Debit/Credit -> no amount parsed -> 422
+        assert response.status_code == 422
 
     def test_post_invalid_file_rejected(self, client):
         """POST /import with invalid file should fail appropriately."""
@@ -315,7 +316,8 @@ class TestSettingsRoute:
     def test_settings_post_updates_config(self, client):
         """POST /settings should update configuration."""
         response = client.post("/settings", json={"option": "value"})
-        assert response.status_code in [200, 400]
+        # POST /settings stub always returns 200
+        assert response.status_code == 200
 
     def test_settings_has_about_section(self, client):
         """Settings should have an About section."""
