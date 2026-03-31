@@ -26,7 +26,6 @@
             <th>Merchant</th>
             <th>Amount</th>
             <th>Category</th>
-            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -36,16 +35,15 @@
                 <td>{{ txn.merchant }}</td>
                 <td>${{ txn.amount }}</td>
                 <td>
-                    <form method="post" style="display: inline;">
+                    <form method="post" action="/transactions/{{ txn.id }}" style="display: inline;">
                         <input type="text" name="category" value="{{ txn.category }}" placeholder="Enter category" required>
                         <button type="submit">Update</button>
                     </form>
                 </td>
-                <td><a href="#">Edit</a></td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="5">No transactions found</td>
+                <td colspan="4">No transactions found</td>
             </tr>
         {% endfor %}
     </tbody>

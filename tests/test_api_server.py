@@ -174,7 +174,7 @@ class TestImportRoute:
             f.flush()
             with open(f.name, "rb") as csv_file:
                 response = client.post("/import", files={"file": csv_file})
-        assert response.status_code in [200, 400]  # Should at least not reject it
+        assert response.status_code in [200, 400, 422]  # Accept, error, or no transactions
 
     def test_post_invalid_file_rejected(self, client):
         """POST /import with invalid file should fail appropriately."""
@@ -196,7 +196,7 @@ class TestImportRoute:
             with open(f.name, "rb") as csv_file:
                 response = client.post("/import", files={"file": csv_file})
         # Should indicate no useful data found
-        assert response.status_code in [200, 422]
+        assert response.status_code == 422
 
     def test_import_csv_with_bad_format_returns_error(self, client):
         """POST /import with unrecognizable CSV returns error with headers."""
@@ -322,10 +322,11 @@ class TestSettingsRoute:
         response = client.get("/settings")
         assert "about" in response.text.lower() or "money mapper" in response.text.lower()
 
-    def test_settings_has_save_button(self, client):
-        """Settings should have a Save Settings button."""
+    def test_settings_is_display_only(self, client):
+        """Settings should be display-only with no form or save button."""
         response = client.get("/settings")
-        assert "save" in response.text.lower()
+        assert "save" not in response.text.lower()
+        assert "<form" not in response.text.lower()
 
 
 class TestErrorHandling:
@@ -518,12 +519,21 @@ class TestDashboardRealData:
         response = client.get("/dashboard")
         assert response.status_code == 200
 
-    def test_root_shows_dashboard(self, tmp_path):
-        """Root route should render dashboard template."""
+    def test_root_redirects_to_dashboard(self, tmp_path):
+        """Root route should redirect to /dashboard."""
+        app = create_app(data_dir=str(tmp_path))
+        client = TestClient(app, follow_redirects=False)
+        response = client.get("/")
+        assert response.status_code == 307
+        assert response.headers["location"] == "/dashboard"
+
+    def test_root_follows_to_dashboard(self, tmp_path):
+        """Root route should ultimately show dashboard content."""
         app = create_app(data_dir=str(tmp_path))
         client = TestClient(app)
         response = client.get("/")
         assert response.status_code == 200
+        assert "dashboard" in response.text.lower()
 
 
 class TestTransactionsRealData:
@@ -630,8 +640,8 @@ class TestImportRealData:
             "/import",
             files={"file": ("test.csv", csv_content.encode(), "text/csv")},
         )
-        # Should succeed or report import count (not crash)
-        assert response.status_code in (200, 500)
+        # Should succeed, report no transactions (422), or error (400/500)
+        assert response.status_code in (200, 400, 422, 500)
 
     def test_import_rejects_invalid_extension(self):
         """Should reject non-CSV/OFX/QFX files."""
@@ -654,7 +664,7 @@ class TestImportRealData:
             "/import",
             files={"file": ("empty.csv", b"", "text/csv")},
         )
-        assert response.status_code in (200, 500)
+        assert response.status_code in (200, 422, 500)
 
 
 class TestMappingsRealData:

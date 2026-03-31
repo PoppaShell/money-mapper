@@ -297,7 +297,11 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 return HTMLResponse(f"Import failed: {safe_err}", status_code=400)
 
             if not transactions:
-                return HTMLResponse("No transactions found in file", status_code=200)
+                return HTMLResponse(
+                    "No transactions found in file. "
+                    "Check that the file format is supported (CSV, OFX, QFX).",
+                    status_code=422,
+                )
 
             # Save raw transactions
             raw_path = os.path.join(output_dir, "financial_transactions.json")
@@ -479,31 +483,12 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         return HTMLResponse("Settings updated", status_code=200)
 
     # ===== Root Route =====
-    @app.get("/", response_class=HTMLResponse)
-    async def root() -> HTMLResponse:
-        """Root route shows dashboard.
+    @app.get("/")
+    async def root():
+        """Root route redirects to dashboard."""
+        from fastapi.responses import RedirectResponse
 
-        Returns:
-            HTMLResponse: Rendered HTML dashboard
-        """
-        template = env.get_template("dashboard.html")
-        transactions = _load_enriched_transactions(enriched_path)
-        spending = _compute_spending_by_category(transactions)
-        recent = sorted(transactions, key=lambda t: t.get("date", ""), reverse=True)[:10]
-        recent_formatted = [
-            {
-                "date": t.get("date", ""),
-                "merchant": t.get("merchant_name", t.get("description", "Unknown")),
-                "amount": abs(float(t.get("amount", 0))),
-            }
-            for t in recent
-        ]
-        data = {
-            "title": "Dashboard",
-            "spending": spending,
-            "recent_transactions": recent_formatted,
-        }
-        return HTMLResponse(template.render(**data))
+        return RedirectResponse(url="/dashboard", status_code=307)
 
     # Mount static files if they exist
     static_path = Path(__file__).parent / "static"
