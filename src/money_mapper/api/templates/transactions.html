@@ -26,7 +26,6 @@
             <th>Merchant</th>
             <th>Amount</th>
             <th>Category</th>
-            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -41,11 +40,10 @@
                         <button type="submit">Update</button>
                     </form>
                 </td>
-                <td><a href="#">Edit</a></td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="5">No transactions found</td>
+                <td colspan="4">No transactions found</td>
             </tr>
         {% endfor %}
     </tbody>

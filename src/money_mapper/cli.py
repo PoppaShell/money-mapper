@@ -688,12 +688,12 @@ Examples:
                         "Configuration validation failed. Please fix TOML files before proceeding."
                     )
                     print("\nTo check mapping files specifically, try:")
-                    print("  python cli.py check-mappings")
+                    print("  money-mapper check-mappings")
                     sys.exit(1)
             except Exception as e:
                 print(f"Configuration validation failed: {e}")
                 print("\nTo check mapping files specifically, try:")
-                print("  python cli.py check-mappings")
+                print("  money-mapper check-mappings")
                 sys.exit(1)
     else:
         # For interactive mode, try to initialize config but don't fail if it doesn't work
@@ -846,7 +846,7 @@ Examples:
         else:
             print("One or more TOML files have syntax errors. Please fix them.")
             print("\nTo check mapping files specifically, try:")
-            print("  python cli.py check-mappings")
+            print("  money-mapper check-mappings")
             sys.exit(1)
 
     elif args.command == "analyze":
@@ -1012,7 +1012,7 @@ Examples:
     elif args.command == "privacy-audit":
         from money_mapper.privacy_audit import audit_merchant_name
 
-        threshold_map = {"low": 0, "medium": 30, "high": 70}
+        threshold_map = {"low": 10, "medium": 30, "high": 70}
         min_score = threshold_map.get(args.threshold, 30)
 
         mapping_file = args.file
