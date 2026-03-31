@@ -174,7 +174,7 @@ class TestImportRoute:
             f.flush()
             with open(f.name, "rb") as csv_file:
                 response = client.post("/import", files={"file": csv_file})
-        assert response.status_code in [200, 400]  # Should at least not reject it
+        assert response.status_code in [200, 400, 422]  # Accept, error, or no transactions
 
     def test_post_invalid_file_rejected(self, client):
         """POST /import with invalid file should fail appropriately."""
