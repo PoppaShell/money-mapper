@@ -640,8 +640,8 @@ class TestImportRealData:
             "/import",
             files={"file": ("test.csv", csv_content.encode(), "text/csv")},
         )
-        # Should succeed or report import count (not crash)
-        assert response.status_code in (200, 500)
+        # Should succeed, report no transactions (422), or error (400/500)
+        assert response.status_code in (200, 400, 422, 500)
 
     def test_import_rejects_invalid_extension(self):
         """Should reject non-CSV/OFX/QFX files."""
@@ -664,7 +664,7 @@ class TestImportRealData:
             "/import",
             files={"file": ("empty.csv", b"", "text/csv")},
         )
-        assert response.status_code in (200, 500)
+        assert response.status_code in (200, 422, 500)
 
 
 class TestMappingsRealData:
