@@ -440,7 +440,7 @@ def ensure_directories_exist() -> bool:
             backup_dir = config_manager.get_mapping_processor_files()["backup_directory"]
             if backup_dir:
                 directories_to_check.append(backup_dir)
-        except:
+        except (KeyError, AttributeError, OSError):
             pass  # Backup directory is optional
 
         all_success = True

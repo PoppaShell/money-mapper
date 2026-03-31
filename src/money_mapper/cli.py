@@ -177,7 +177,7 @@ def validate_config_paths(config_manager, command: str | None = None) -> bool:
             file_path = config_manager.get_file_path(file_key)
             if not os.path.exists(file_path):
                 print(f"Info: Optional file missing: {file_path}")
-        except:
+        except (KeyError, AttributeError, OSError):
             pass  # File key might not be configured
 
     if validation_errors:
