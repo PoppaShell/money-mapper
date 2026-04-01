@@ -436,6 +436,10 @@ def create_app(data_dir: str | None = None) -> FastAPI:
             with open(new_mappings_path, "w") as f:
                 toml_writer.dump(existing, f)
 
+            from money_mapper.transaction_enricher import clear_pattern_cache
+
+            clear_pattern_cache()
+
             safe_merchant = html.escape(str(cleaned_merchant))
             safe_category = html.escape(str(category))
             return HTMLResponse(
