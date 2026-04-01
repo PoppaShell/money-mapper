@@ -33,7 +33,7 @@
             <tr>
                 <td>{{ txn.date }}</td>
                 <td>{{ txn.merchant }}</td>
-                <td>${{ txn.amount }}</td>
+                <td class="{{ txn.amount_type }}">${{ txn.amount }}</td>
                 <td>
                     <form method="post" action="/transactions/{{ txn.id }}" style="display: inline;">
                         <input type="text" name="category" value="{{ txn.category }}" placeholder="Enter category" required>

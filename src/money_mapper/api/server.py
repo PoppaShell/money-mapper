@@ -187,7 +187,8 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 "id": i,
                 "date": t.get("date", ""),
                 "merchant": t.get("merchant_name", t.get("description", "Unknown")),
-                "amount": float(t.get("amount", 0)),
+                "amount": abs(float(t.get("amount", 0))),
+                "amount_type": "credit" if float(t.get("amount", 0)) >= 0 else "debit",
                 "category": t.get("category", "Uncategorized"),
             }
             for i, t in enumerate(filtered)
