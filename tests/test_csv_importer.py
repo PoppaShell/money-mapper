@@ -21,19 +21,19 @@ class TestDetectCSVType:
         """Test detecting checking account CSV format."""
         headers = ["Date", "Description", "Debit", "Credit", "Balance"]
         result = detect_csv_type(headers)
-        assert result in ["checking", "savings", "credit", None]
+        assert result == "checking"
 
     def test_detect_credit_card_csv(self):
         """Test detecting credit card CSV format."""
         headers = ["Transaction Date", "Post Date", "Description", "Amount"]
         result = detect_csv_type(headers)
-        assert result in ["checking", "savings", "credit", None]
+        assert result == "credit"
 
     def test_detect_savings_account_csv(self):
         """Test detecting savings account CSV format."""
         headers = ["Date", "Transaction", "Withdrawal", "Deposit", "Balance"]
         result = detect_csv_type(headers)
-        assert result in ["checking", "savings", "credit", None]
+        assert result == "savings"
 
     def test_detect_unknown_csv(self):
         """Test detecting unknown CSV format."""
@@ -61,13 +61,13 @@ class TestValidateCSVHeaders:
         """Test validation fails with missing headers."""
         headers = ["Date", "Description"]
         result = validate_csv_headers(headers, "checking")
-        assert isinstance(result, (bool, tuple))
+        assert result == (False, "Missing required headers for checking: debit, credit")
 
     def test_validate_empty_headers(self):
         """Test validation with empty headers."""
         headers = []
         result = validate_csv_headers(headers, "checking")
-        assert isinstance(result, (bool, tuple))
+        assert result == (False, "No headers found in CSV")
 
 
 class TestStandardizeCSVTransaction:
@@ -162,9 +162,8 @@ class TestParseCSVTransactions:
             )
 
         transactions = parse_csv_transactions(str(csv_file))
-        assert len(transactions) >= 0
-        if len(transactions) > 0:
-            assert "date" in transactions[0] or "transaction_date" in transactions[0]
+        assert len(transactions) == 2
+        assert "date" in transactions[0] or "transaction_date" in transactions[0]
 
     def test_parse_credit_csv(self, temp_output_dir):
         """Test parsing credit card CSV."""
@@ -241,7 +240,7 @@ class TestCSVValidator:
 
         validator = CSVValidator("checking")
         result = validator.validate(str(csv_file))
-        assert isinstance(result, (bool, dict, tuple))
+        assert result is True
 
     def test_validator_invalid_csv(self, temp_output_dir):
         """Test validator rejects invalid CSV."""
@@ -250,7 +249,10 @@ class TestCSVValidator:
 
         validator = CSVValidator("checking")
         result = validator.validate(str(csv_file))
-        assert isinstance(result, (bool, dict, tuple))
+        assert result == (
+            False,
+            "Missing required headers for checking: date, description, debit, credit",
+        )
 
     def test_validator_missing_headers(self, temp_output_dir):
         """Test validator detects missing headers."""
@@ -263,7 +265,10 @@ class TestCSVValidator:
 
         validator = CSVValidator("checking")
         result = validator.validate(str(csv_file))
-        assert isinstance(result, (bool, dict, tuple))
+        assert result == (
+            False,
+            "Missing required headers for checking: date, description, debit, credit",
+        )
 
 
 class TestCSVImporter:
@@ -308,7 +313,7 @@ class TestCSVImporter:
         transactions = importer.import_csv(str(csv_file), "checking")
 
         assert isinstance(transactions, list)
-        assert len(transactions) >= 0
+        assert len(transactions) == 2
 
     def test_import_credit_csv(self, temp_output_dir):
         """Test importing credit CSV."""
@@ -338,7 +343,7 @@ class TestCSVImporter:
         importer = CSVImporter()
         result = importer.validate_file("/nonexistent/file.csv")
 
-        assert isinstance(result, (bool, dict, tuple))
+        assert result == (False, "File does not exist")
 
     def test_validate_checking_file(self, temp_output_dir):
         """Test validate_file for checking CSV."""
@@ -362,7 +367,7 @@ class TestCSVImporter:
         importer = CSVImporter()
         result = importer.validate_file(str(csv_file))
 
-        assert isinstance(result, (bool, dict, tuple))
+        assert result is True
 
     def test_detect_csv_type_automatically(self, temp_output_dir):
         """Test automatic CSV type detection."""

@@ -3,6 +3,9 @@
 import json
 import pickle
 
+import pytest
+
+import money_mapper.config_manager as config_module
 from money_mapper.ml_categorizer import (
     get_model_stats,
     rebuild_private_model,
@@ -10,15 +13,31 @@ from money_mapper.ml_categorizer import (
 )
 
 
+@pytest.fixture(autouse=True)
+def reset_config_manager():
+    """Reset the global config manager singleton before each test.
+
+    Prevents test contamination from other tests that set the global
+    _config_manager to a different directory.
+    """
+    config_module._config_manager = None
+    yield
+    config_module._config_manager = None
+
+
 class TestRebuildPublicModel:
     """Test public model rebuilding."""
 
     def test_rebuild_public_model_missing_config(self, tmp_path):
-        """Test that rebuild handles missing config gracefully."""
+        """Test that rebuild returns stats dict when the real config exists.
+
+        rebuild_public_model loads config from the real project config dir,
+        not from output_dir. public_mappings.toml is present in the project,
+        so the function always returns a dict.
+        """
         output_dir = str(tmp_path)
-        # Config file doesn't exist in temp dir, should return None
         stats = rebuild_public_model(output_dir=output_dir, debug=False)
-        assert stats is None
+        assert isinstance(stats, dict)
 
     def test_rebuild_public_model_returns_stats_when_config_exists(self, tmp_path):
         """Test that rebuild returns statistics when config exists."""
@@ -30,12 +49,12 @@ class TestRebuildPublicModel:
 "starbucks" = { name = "Starbucks", category = "FOOD_AND_DRINK", subcategory = "RESTAURANTS" }
 """)
 
-        # We can't easily change the config loading to use temp file
-        # So we just test that the function returns correct type
+        # The config file written to tmp_path is ignored -- the function loads
+        # from the real project config dir via config_manager. The real
+        # public_mappings.toml exists, so the function returns a dict.
         output_dir = str(tmp_path)
-        # When config file missing, returns None (not a dict)
         stats = rebuild_public_model(output_dir=output_dir, debug=False)
-        assert stats is None or isinstance(stats, dict)
+        assert isinstance(stats, dict)
 
     def test_rebuild_public_model_creates_valid_pickle(self, tmp_path):
         """Test that rebuild creates valid pickle files."""
@@ -45,8 +64,8 @@ class TestRebuildPublicModel:
         # For now, just verify the function can be called without error
         # The actual pickle creation is tested separately
         result = rebuild_public_model(output_dir=output_dir, debug=False)
-        # Result is None if config not found, which is expected in tests
-        assert result is None or isinstance(result, dict)
+        # Real public_mappings.toml exists in the project, so result is always a dict
+        assert isinstance(result, dict)
 
 
 class TestRebuildPrivateModel:
@@ -62,8 +81,8 @@ class TestRebuildPrivateModel:
             enriched_file=missing_file, output_dir=output_dir, debug=False
         )
 
-        # Should return empty stats or None, not crash
-        assert result is None or isinstance(result, dict)
+        # File does not exist -- function returns None
+        assert result is None
 
     def test_rebuild_private_model_with_transactions(self, tmp_path):
         """Test rebuilding with actual transaction data."""
@@ -142,8 +161,8 @@ class TestGetModelStats:
         missing_file = str(tmp_path / "missing.pkl")
         stats = get_model_stats(missing_file)
 
-        # Should return None or empty dict, not crash
-        assert stats is None or isinstance(stats, dict)
+        # File does not exist -- must return None
+        assert stats is None
 
     def test_get_stats_valid_model(self, tmp_path):
         """Test getting stats for valid model."""
@@ -156,8 +175,8 @@ class TestGetModelStats:
 
         stats = get_model_stats(str(model_file))
 
-        # Should return stats or dict
-        assert stats is None or isinstance(stats, dict)
+        # The pickle has no "stats" key, so get_model_stats returns None
+        assert stats is None
 
 
 class TestModelIntegration:
@@ -183,7 +202,8 @@ class TestModelIntegration:
         # Rebuild only public
         public_stats = rebuild_public_model(output_dir=str(public_dir))
 
-        assert public_stats is None or isinstance(public_stats, dict)
+        # Real public_mappings.toml exists in the project, so we get a dict
+        assert isinstance(public_stats, dict)
 
         # Private should still work independently
         private_dir = tmp_path / "private"
@@ -197,4 +217,5 @@ class TestModelIntegration:
             enriched_file=str(transactions_file), output_dir=str(private_dir)
         )
 
-        assert private_stats is None or isinstance(private_stats, dict)
+        # Transactions file exists and has a merchant name, so we get a dict
+        assert isinstance(private_stats, dict)

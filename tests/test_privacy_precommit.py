@@ -146,7 +146,7 @@ class TestPrecommitCheck:
 
                 result = run_precommit_check(threshold="high")
                 assert isinstance(result, int)
-                assert result >= 0  # Valid exit code
+                assert result == 0  # No staged files means success
 
     def test_precommit_check_respects_override(self):
         """Test that override skips check."""

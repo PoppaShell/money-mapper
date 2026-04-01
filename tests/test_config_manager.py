@@ -172,7 +172,7 @@ class TestConfigManagerAllConfigFiles:
         files = cm.get_all_config_files()
 
         assert isinstance(files, list)
-        assert len(files) >= 0
+        assert len(files) > 0
 
     def test_all_config_files_are_strings(self):
         """Test that all config files are strings."""

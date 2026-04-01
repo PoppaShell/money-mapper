@@ -540,9 +540,9 @@ class TestFuzzyMatchExtended:
         assert similarity > 0.3
 
     def test_fuzzy_match_threshold_zero(self):
-        """Test that even completely different strings have > 0 similarity."""
+        """Test that completely different strings have 0 similarity."""
         similarity = fuzzy_match_similarity("AAA", "BBB")
-        assert similarity >= 0.0
+        assert similarity == 0.0
 
     def test_fuzzy_match_case_variations(self):
         """Test case variations in fuzzy matching."""
@@ -600,13 +600,6 @@ class TestCalculateConfidenceScoreExtended:
         private = calculate_confidence_score("private_mapping")
         fuzzy = calculate_confidence_score("fuzzy_match", similarity=1.0)
         assert private > fuzzy
-
-    def test_confidence_negative_similarity(self):
-        """Test fuzzy match with negative similarity (edge case)."""
-        # min() will cap at 0.0 or use the negative value as-is
-        score = calculate_confidence_score("fuzzy_match", similarity=-0.5)
-        # The function uses min(0.80, similarity), so negative gets used
-        assert score == -0.5 or score >= 0.0  # Depends on implementation
 
     def test_confidence_similarity_greater_than_one(self):
         """Test fuzzy match with similarity > 1.0 (edge case)."""
