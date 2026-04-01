@@ -202,53 +202,72 @@ class TestCommunityPRCreation:
     def test_create_pr_success(self, mock_available, mock_run):
         """create_community_pr() should successfully create PR."""
         mock_available.return_value = True
-        mock_run.return_value = MagicMock(stdout="https://github.com/user/repo/pull/1\n")
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="https://github.com/user/repo/pull/1\n", stderr=""
+        )
         template = {"title": "Test", "body": "Body"}
-        result = create_community_pr(template)
-        assert result is not None
+        pr_url, error_output = create_community_pr(template)
+        assert pr_url is not None
+        assert error_output == ""
 
     @patch("money_mapper.community_flow.subprocess.run")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     def test_create_pr_with_full_template(self, mock_available, mock_run):
         """Should create PR with complete template data."""
         mock_available.return_value = True
-        mock_run.return_value = MagicMock(stdout="https://github.com/user/repo/pull/2\n")
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="https://github.com/user/repo/pull/2\n", stderr=""
+        )
         template = generate_pr_template("Test", "Cat", "src")
-        result = create_community_pr(template)
-        assert result is not None
+        pr_url, error_output = create_community_pr(template)
+        assert pr_url is not None
 
     @patch("money_mapper.community_flow.subprocess.run")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     def test_create_pr_returns_pr_url(self, mock_available, mock_run):
         """Should return the created PR's URL."""
         mock_available.return_value = True
-        mock_run.return_value = MagicMock(stdout="https://github.com/user/repo/pull/123\n")
-        result = create_community_pr({"title": "T", "body": "B"})
-        assert result is not None
-        assert result.startswith("https://github.com/")
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="https://github.com/user/repo/pull/123\n", stderr=""
+        )
+        pr_url, error_output = create_community_pr({"title": "T", "body": "B"})
+        assert pr_url is not None
+        assert pr_url.startswith("https://github.com/")
 
     @patch("money_mapper.community_flow.check_gh_cli_available")
     def test_create_pr_handles_missing_gh(self, mock_available):
-        """Should return None if gh CLI not available."""
+        """Should return (None, error) if gh CLI not available."""
         mock_available.return_value = False
-        result = create_community_pr({"title": "T", "body": "B"})
-        assert result is None
+        pr_url, error_output = create_community_pr({"title": "T", "body": "B"})
+        assert pr_url is None
+        assert "not installed" in error_output
 
     @patch("money_mapper.community_flow.subprocess.run")
     @patch("money_mapper.community_flow.check_gh_cli_available")
-    def test_create_pr_handles_git_error(self, mock_available, mock_run):
-        """Should handle git command failures gracefully."""
+    def test_create_pr_handles_nonzero_returncode(self, mock_available, mock_run):
+        """Should return (None, error_text) when gh returns non-zero exit code."""
         mock_available.return_value = True
-        mock_run.side_effect = subprocess.CalledProcessError(1, "gh")
-        result = create_community_pr({"title": "T", "body": "B"})
-        assert result is None
+        mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="authentication required")
+        pr_url, error_output = create_community_pr({"title": "T", "body": "B"})
+        assert pr_url is None
+        assert "authentication required" in error_output
+
+    @patch("money_mapper.community_flow.subprocess.run")
+    @patch("money_mapper.community_flow.check_gh_cli_available")
+    def test_create_pr_handles_os_error(self, mock_available, mock_run):
+        """Should return (None, error_text) on OS-level errors."""
+        mock_available.return_value = True
+        mock_run.side_effect = OSError("process failed")
+        pr_url, error_output = create_community_pr({"title": "T", "body": "B"})
+        assert pr_url is None
+        assert error_output != ""
 
     @patch("money_mapper.community_flow.subprocess.run")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     def test_create_pr_sets_labels(self, mock_available, mock_run):
         """Should set 'community-contribution' label on PR."""
         mock_available.return_value = True
-        mock_run.return_value = MagicMock(stdout="https://pr\n")
+        mock_run.return_value = MagicMock(returncode=0, stdout="https://pr\n", stderr="")
         create_community_pr({"title": "T", "body": "B"})
         # Verify label was included in call
         call_args = mock_run.call_args[0][0]
@@ -293,14 +312,18 @@ class TestEndToEndFlow:
 
     @patch("money_mapper.community_flow.create_community_pr")
     @patch("money_mapper.community_flow.create_contribution_branch")
+    @patch("money_mapper.community_flow.subprocess.run")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     @patch("money_mapper.community_flow.audit_merchant_name")
-    def test_full_workflow_happy_path(self, mock_audit, mock_gh, mock_branch, mock_pr):
+    def test_full_workflow_happy_path(
+        self, mock_audit, mock_gh, mock_subproc, mock_branch, mock_pr
+    ):
         """Complete flow from validation to PR creation should work."""
         mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
         mock_gh.return_value = True
+        mock_subproc.return_value = MagicMock(returncode=0)
         mock_branch.return_value = True
-        mock_pr.return_value = "https://pr"
+        mock_pr.return_value = ("https://pr", "")
 
         result = submit_community_contribution("Test", "Category", "source")
         assert result["success"] is True
@@ -325,28 +348,78 @@ class TestEndToEndFlow:
         result = submit_community_contribution("Test", "Cat", "src")
         assert result["success"] is False
 
-    @patch("money_mapper.community_flow.create_community_pr")
-    @patch("money_mapper.community_flow.create_contribution_branch")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     @patch("money_mapper.community_flow.audit_merchant_name")
-    def test_workflow_creates_feature_branch(self, mock_audit, mock_gh, mock_branch, mock_pr):
+    def test_workflow_requires_gh_auth(self, mock_audit, mock_gh):
+        """Complete flow should fail when gh CLI is not authenticated."""
+        mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
+        mock_gh.return_value = True
+        with patch("money_mapper.community_flow.subprocess.run") as mock_subproc:
+            mock_subproc.return_value = MagicMock(returncode=1)
+            result = submit_community_contribution("Test", "Cat", "src")
+        assert result["success"] is False
+        assert "gh auth login" in result["error"]
+
+    @patch("money_mapper.community_flow.create_community_pr")
+    @patch("money_mapper.community_flow.create_contribution_branch")
+    @patch("money_mapper.community_flow.subprocess.run")
+    @patch("money_mapper.community_flow.check_gh_cli_available")
+    @patch("money_mapper.community_flow.audit_merchant_name")
+    def test_workflow_creates_feature_branch(
+        self, mock_audit, mock_gh, mock_subproc, mock_branch, mock_pr
+    ):
         """Workflow should create feature branch with proper name."""
         mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
         mock_gh.return_value = True
+        mock_subproc.return_value = MagicMock(returncode=0)
         mock_branch.return_value = True
-        mock_pr.return_value = "https://pr"
+        mock_pr.return_value = ("https://pr", "")
         submit_community_contribution("Test", "Cat", "src")
         mock_branch.assert_called_once()
 
     @patch("money_mapper.community_flow.create_community_pr")
     @patch("money_mapper.community_flow.create_contribution_branch")
+    @patch("money_mapper.community_flow.subprocess.run")
     @patch("money_mapper.community_flow.check_gh_cli_available")
     @patch("money_mapper.community_flow.audit_merchant_name")
-    def test_workflow_generates_proper_pr(self, mock_audit, mock_gh, mock_branch, mock_pr):
+    def test_workflow_generates_proper_pr(
+        self, mock_audit, mock_gh, mock_subproc, mock_branch, mock_pr
+    ):
         """Final PR should have all required information."""
         mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
         mock_gh.return_value = True
+        mock_subproc.return_value = MagicMock(returncode=0)
         mock_branch.return_value = True
-        mock_pr.return_value = "https://github.com/user/repo/pull/1"
+        mock_pr.return_value = ("https://github.com/user/repo/pull/1", "")
         result = submit_community_contribution("TestMerchant", "Category", "source")
         assert result["pr_url"] == "https://github.com/user/repo/pull/1"
+
+    @patch("money_mapper.community_flow.create_community_pr")
+    @patch("money_mapper.community_flow.create_contribution_branch")
+    @patch("money_mapper.community_flow.subprocess.run")
+    @patch("money_mapper.community_flow.check_gh_cli_available")
+    @patch("money_mapper.community_flow.audit_merchant_name")
+    def test_workflow_includes_pr_error_on_failure(
+        self, mock_audit, mock_gh, mock_subproc, mock_branch, mock_pr
+    ):
+        """Error message from PR creation should be surfaced to the caller."""
+        mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
+        mock_gh.return_value = True
+        mock_subproc.return_value = MagicMock(returncode=0)
+        mock_branch.return_value = True
+        mock_pr.return_value = (None, "repository not found")
+        result = submit_community_contribution("TestMerchant", "Category", "source")
+        assert result["success"] is False
+        assert "repository not found" in result["error"]
+
+    @patch("money_mapper.community_flow.check_gh_cli_available")
+    @patch("money_mapper.community_flow.audit_merchant_name")
+    def test_workflow_gh_missing_error_message_multiplatform(self, mock_audit, mock_gh):
+        """Error when gh is missing should cover all three platforms."""
+        mock_audit.return_value = {"score": 0, "findings": [], "risk_level": "low"}
+        mock_gh.return_value = False
+        result = submit_community_contribution("Test", "Cat", "src")
+        assert result["success"] is False
+        assert "winget" in result["error"]
+        assert "brew" in result["error"]
+        assert "linux" in result["error"].lower()

@@ -154,17 +154,18 @@ def create_contribution_branch(branch_name: str) -> bool:
         return False
 
 
-def create_community_pr(template: dict[str, str]) -> str | None:
+def create_community_pr(template: dict[str, str]) -> tuple[str | None, str]:
     """Create a GitHub PR for the merchant mapping contribution.
 
     Args:
         template: PR template from generate_pr_template()
 
     Returns:
-        str: URL of created PR, or None if creation failed
+        tuple: (pr_url, error_output) where pr_url is the URL of the created PR or None
+            if creation failed, and error_output is the captured error text on failure.
     """
     if not check_gh_cli_available():
-        return None
+        return None, "GitHub CLI (gh) is not installed"
 
     try:
         result = subprocess.run(  # nosec B603, B607
@@ -179,21 +180,26 @@ def create_community_pr(template: dict[str, str]) -> str | None:
                 "--label",
                 "community-contribution",
             ],
-            check=True,
             capture_output=True,
             text=True,
             timeout=15,
         )
 
+        if result.returncode != 0:
+            error_output = (result.stderr or result.stdout or "unknown error").strip()
+            return None, error_output
+
         # Extract PR URL from output
         pr_url = result.stdout.strip()
         # Validate URL format before returning
         if pr_url and pr_url.startswith("https://github.com/"):
-            return pr_url
-        return None
+            return pr_url, ""
+        return None, f"Unexpected output from gh pr create: {pr_url!r}"
 
-    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
-        return None
+    except subprocess.TimeoutExpired:
+        return None, "gh pr create timed out after 15 seconds"
+    except (FileNotFoundError, OSError) as exc:
+        return None, str(exc)
 
 
 def submit_community_contribution(merchant: str, category: str, source: str) -> dict[str, Any]:
@@ -226,7 +232,23 @@ def submit_community_contribution(merchant: str, category: str, source: str) -> 
         return {
             "success": False,
             "validation": validation,
-            "error": "GitHub CLI (gh) not available. Install with: brew install gh",
+            "error": (
+                "GitHub CLI (gh) is not installed. Install it:\n"
+                "  Windows: winget install --id GitHub.cli\n"
+                "  macOS:   brew install gh\n"
+                "  Linux:   See https://github.com/cli/cli/blob/trunk/docs/install_linux.md\n"
+                "After installing, run: gh auth login"
+            ),
+        }
+
+    auth_result = subprocess.run(  # nosec B603, B607
+        ["gh", "auth", "status"], capture_output=True, text=True
+    )
+    if auth_result.returncode != 0:
+        return {
+            "success": False,
+            "validation": validation,
+            "error": "GitHub CLI is installed but not authenticated. Run: gh auth login",
         }
 
     template = generate_pr_template(merchant, category, source)
@@ -239,13 +261,13 @@ def submit_community_contribution(merchant: str, category: str, source: str) -> 
             "error": f"Failed to create branch: {template['branch']}",
         }
 
-    pr_url = create_community_pr(template)
+    pr_url, error_output = create_community_pr(template)
 
     if not pr_url:
         return {
             "success": False,
             "validation": validation,
-            "error": "Failed to create GitHub PR",
+            "error": f"Failed to create GitHub PR: {error_output}",
         }
 
     return {
