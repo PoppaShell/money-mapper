@@ -143,6 +143,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         ]
         data = {
             "title": "Dashboard",
+            "active_page": "dashboard",
             "spending": spending,
             "recent_transactions": recent_formatted,
         }
@@ -187,7 +188,8 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 "id": i,
                 "date": t.get("date", ""),
                 "merchant": t.get("merchant_name", t.get("description", "Unknown")),
-                "amount": float(t.get("amount", 0)),
+                "amount": abs(float(t.get("amount", 0))),
+                "amount_type": "credit" if float(t.get("amount", 0)) >= 0 else "debit",
                 "category": t.get("category", "Uncategorized"),
             }
             for i, t in enumerate(filtered)
@@ -195,6 +197,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
 
         data = {
             "title": "Transactions",
+            "active_page": "transactions",
             "transactions": formatted,
             "filters": {"date": date, "category": category, "merchant": merchant},
         }
@@ -247,6 +250,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         template = env.get_template("import.html")
         data = {
             "title": "Import",
+            "active_page": "import",
             "supported_formats": ["CSV", "OFX", "QFX"],
             "instructions": "Select a CSV, OFX, or QFX file to import transactions",
         }
@@ -335,7 +339,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 warnings_html = format_warnings_html(importer.warnings)
                 return HTMLResponse(
                     f'<div class="warning">{safe_msg}</div>{warnings_html}',
-                    status_code=200,
+                    status_code=207,
                 )
 
         except Exception as e:
@@ -370,6 +374,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
 
         data = {
             "title": "Mappings",
+            "active_page": "mappings",
             "public_mappings": [{"merchant": m["name"], "category": m["category"]} for m in public],
             "private_mappings": [
                 {"merchant": m["name"], "category": m["category"]} for m in private
@@ -466,6 +471,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
 
         data = {
             "title": "Settings",
+            "active_page": "settings",
             "options": options if options else [{"name": "No settings found", "value": ""}],
         }
         return HTMLResponse(template.render(**data))

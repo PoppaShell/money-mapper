@@ -32,6 +32,7 @@
             background: #34495e;
             border-radius: 4px;
         }
+        nav a.active { font-weight: bold; text-decoration: underline; }
         .container {
             max-width: 1200px;
             margin: 2rem auto;
@@ -55,6 +56,8 @@
             background: #34495e;
             color: white;
         }
+        .debit { color: #cc0000; }
+        .credit { color: #008800; }
         form {
             background: white;
             padding: 1.5rem;
@@ -108,11 +111,11 @@
 </head>
 <body>
     <nav>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/transactions">Transactions</a>
-        <a href="/import">Import</a>
-        <a href="/mappings">Mappings</a>
-        <a href="/settings">Settings</a>
+        <a href="/dashboard" {% if active_page == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+        <a href="/transactions" {% if active_page == 'transactions' %}class="active"{% endif %}>Transactions</a>
+        <a href="/import" {% if active_page == 'import' %}class="active"{% endif %}>Import</a>
+        <a href="/mappings" {% if active_page == 'mappings' %}class="active"{% endif %}>Mappings</a>
+        <a href="/settings" {% if active_page == 'settings' %}class="active"{% endif %}>Settings</a>
     </nav>
     <div class="container">
         {% block content %}{% endblock %}
