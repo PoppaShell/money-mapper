@@ -183,6 +183,13 @@ def get_pattern_matchers(private_mappings: dict, public_mappings: dict):
     return _private_matcher, _public_matcher
 
 
+def clear_pattern_cache():
+    """Clear cached pattern matchers so new mappings take effect."""
+    global _private_matcher, _public_matcher
+    _private_matcher = None
+    _public_matcher = None
+
+
 def _enrich_transaction_worker(args: tuple) -> dict:
     """
     Worker function for multiprocessing enrichment.

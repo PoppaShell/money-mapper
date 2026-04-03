@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Import Results - Money Mapper{% endblock %}
+
+{% block content %}
+<h1>Import Results</h1>
+
+<div class="info">
+    <p>{{ message }}</p>
+</div>
+
+{% if warnings %}
+<div class="warning">
+    <strong>Warnings:</strong>
+    <ul>
+        {% for w in warnings %}
+            <li>{{ w }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<p>
+    <a href="/transactions">View Transactions</a> |
+    <a href="/import">Import Another File</a>
+</p>
+{% endblock %}

@@ -1395,6 +1395,23 @@ class TestGetPatternMatchers:
         te._public_matcher = None
 
 
+class TestClearPatternCache:
+    """Test pattern matcher cache invalidation."""
+
+    def test_clear_resets_both_matchers(self):
+        """clear_pattern_cache should reset both matchers to None."""
+        import money_mapper.transaction_enricher as te
+
+        # Set them to non-None values
+        te._private_matcher = "fake_private"
+        te._public_matcher = "fake_public"
+
+        te.clear_pattern_cache()
+
+        assert te._private_matcher is None
+        assert te._public_matcher is None
+
+
 class TestEnrichTransactionWorker:
     """Tests for the multiprocessing worker function."""
 
