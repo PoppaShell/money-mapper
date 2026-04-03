@@ -23,7 +23,12 @@
 <h2>Create New Mapping</h2>
 <form method="post">
     <input type="text" name="merchant" placeholder="Merchant name" required>
-    <input type="text" name="category" placeholder="Category" required>
+    <input type="text" name="category" list="pfc-categories" placeholder="Category" required>
+    <datalist id="pfc-categories">
+        {% for cat in pfc_categories %}
+            <option value="{{ cat }}">
+        {% endfor %}
+    </datalist>
     <input type="text" name="source" placeholder="Scope (public/private)" required>
     <button type="submit">Create Mapping</button>
 </form>

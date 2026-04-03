@@ -321,26 +321,28 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                     raw_path, enriched_output, debug=False, use_multiprocessing=False
                 )
                 enriched = _load_enriched_transactions(enriched_output)
-                from money_mapper.api.validation import format_warnings_html
-
+                template = env.get_template("import_result.html")
                 msg = f"Imported {len(transactions)} transactions, {len(enriched)} enriched"
-                safe_msg = html.escape(msg)
-                warnings_html = format_warnings_html(importer.warnings)
-                return HTMLResponse(safe_msg + warnings_html, status_code=200)
+                result_html = template.render(
+                    title="Import Results",
+                    message=msg,
+                    warnings=importer.warnings,
+                    active_page="import",
+                )
+                return HTMLResponse(result_html, status_code=200)
             except Exception:
-                from money_mapper.api.validation import format_warnings_html
-
+                template = env.get_template("import_result.html")
                 count = len(transactions)
-                warning_msg = (
-                    f"Imported {count} transactions. "
-                    f"Warning: enrichment failed -- categories not applied."
+                all_warnings = list(importer.warnings) + [
+                    "Enrichment failed -- categories not applied"
+                ]
+                result_html = template.render(
+                    title="Import Results",
+                    message=f"Imported {count} transactions",
+                    warnings=all_warnings,
+                    active_page="import",
                 )
-                safe_msg = html.escape(warning_msg)
-                warnings_html = format_warnings_html(importer.warnings)
-                return HTMLResponse(
-                    f'<div class="warning">{safe_msg}</div>{warnings_html}',
-                    status_code=207,
-                )
+                return HTMLResponse(result_html, status_code=207)
 
         except Exception as e:
             safe_err = html.escape(str(e))
@@ -372,6 +374,19 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         except Exception:
             pass
 
+        plaid_path = os.path.join(base_dir, "config", "plaid_categories.toml")
+        pfc_categories = []
+        try:
+            with open(plaid_path, "rb") as f:
+                plaid_data = tomllib.load(f)
+            for primary_val in plaid_data.values():
+                if isinstance(primary_val, dict):
+                    for detailed_key in primary_val:
+                        pfc_categories.append(detailed_key)
+            pfc_categories.sort()
+        except (OSError, tomllib.TOMLDecodeError):
+            pass
+
         data = {
             "title": "Mappings",
             "active_page": "mappings",
@@ -380,6 +395,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 {"merchant": m["name"], "category": m["category"]} for m in private
             ],
             "privacy_warnings": warnings if warnings else None,
+            "pfc_categories": pfc_categories,
         }
         return HTMLResponse(template.render(**data))
 

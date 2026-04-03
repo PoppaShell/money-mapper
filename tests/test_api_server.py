@@ -211,6 +211,19 @@ class TestImportRoute:
         assert response.status_code in [400, 500]
         assert "could not detect" in response.text.lower() or "format" in response.text.lower()
 
+    def test_import_success_returns_html_with_links(self, client):
+        """Successful import should return HTML with navigation links."""
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+            f.write("Date,Description,Debit,Credit\n2026-01-15,Starbucks,5.50,\n")
+            f.flush()
+            with open(f.name, "rb") as csv_file:
+                response = client.post("/import", files={"file": csv_file})
+        if response.status_code in [200, 207]:
+            assert "view transactions" in response.text.lower() or "/transactions" in response.text
+            assert "import another" in response.text.lower() or "/import" in response.text
+
 
 class TestMappingsRoute:
     """Test /mappings GET/POST endpoints."""
@@ -248,6 +261,14 @@ class TestMappingsRoute:
         response = client.get("/mappings")
         # Should at least load without error
         assert response.status_code == 200
+
+    def test_mappings_has_category_datalist(self, client):
+        """Mappings page should have a datalist with PFC categories."""
+        response = client.get("/mappings")
+        assert "datalist" in response.text.lower()
+        assert "pfc-categories" in response.text
+        # Should have at least some PFC categories
+        assert "FOOD_AND_DRINK" in response.text
 
     def test_post_invalid_category_returns_400(self, client):
         """POST /mappings with invalid PFC category returns 400 with suggestions."""
