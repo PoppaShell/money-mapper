@@ -15,7 +15,7 @@ import tomllib
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, PackageLoader, select_autoescape
 
@@ -515,6 +515,68 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         from fastapi.responses import RedirectResponse
 
         return RedirectResponse(url="/dashboard", status_code=307)
+
+    # ===== Transactions API Route =====
+    @app.get("/api/transactions")
+    async def transactions_api(
+        offset: int = 0,
+        limit: int = 50,
+        q: str | None = None,
+    ) -> JSONResponse:
+        """Paginated JSON API for transactions with search.
+
+        Args:
+            offset: Number of transactions to skip.
+            limit: Maximum number of transactions to return.
+            q: Optional search query across all fields.
+
+        Returns:
+            JSONResponse: Paginated transaction data with total, offset, limit, has_more.
+        """
+        txns = _load_enriched_transactions(enriched_path)
+
+        # Apply search filter
+        if q:
+            query = q.lower()
+            txns = [
+                t
+                for t in txns
+                if (
+                    query in t.get("merchant_name", "").lower()
+                    or query in t.get("description", "").lower()
+                    or query in t.get("category", "").lower()
+                    or query in t.get("date", "").lower()
+                    or query in str(t.get("amount", ""))
+                )
+            ]
+
+        total = len(txns)
+
+        # Apply pagination
+        paginated = txns[offset : offset + limit]
+
+        # Format for response
+        formatted = [
+            {
+                "id": offset + i,
+                "date": t.get("date", ""),
+                "merchant": t.get("merchant_name", t.get("description", "Unknown")),
+                "amount": abs(float(t.get("amount", 0))),
+                "amount_type": "credit" if float(t.get("amount", 0)) >= 0 else "debit",
+                "category": t.get("category", "Uncategorized"),
+            }
+            for i, t in enumerate(paginated)
+        ]
+
+        return JSONResponse(
+            {
+                "total": total,
+                "offset": offset,
+                "limit": limit,
+                "has_more": total > offset + limit,
+                "transactions": formatted,
+            }
+        )
 
     # Mount static files if they exist
     static_path = Path(__file__).parent / "static"

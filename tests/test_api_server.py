@@ -908,6 +908,103 @@ class TestBrowserRendering:
             response = client.get(path)
             assert response.status_code == 200, f"{path} returned {response.status_code}"
 
+
+class TestTransactionsAPI:
+    """Test /api/transactions JSON endpoint."""
+
+    @pytest.fixture
+    def client(self):
+        """Create test client."""
+        app = create_app()
+        return TestClient(app)
+
+    def test_returns_json_with_correct_structure(self, client):
+        """API should return JSON with total, offset, limit, has_more, transactions."""
+        response = client.get("/api/transactions")
+        assert response.status_code == 200
+        data = response.json()
+        assert "total" in data
+        assert "offset" in data
+        assert "limit" in data
+        assert "has_more" in data
+        assert "transactions" in data
+        assert isinstance(data["transactions"], list)
+
+    def test_respects_limit(self, client):
+        """Should return at most `limit` transactions."""
+        response = client.get("/api/transactions?limit=5")
+        data = response.json()
+        assert len(data["transactions"]) <= 5
+
+    def test_respects_offset(self, client):
+        """Should skip `offset` transactions."""
+        response1 = client.get("/api/transactions?offset=0&limit=5")
+        response2 = client.get("/api/transactions?offset=5&limit=5")
+        data1 = response1.json()
+        data2 = response2.json()
+        if data1["total"] > 5:
+            # Second page should have different transactions
+            merchants1 = [t["merchant"] for t in data1["transactions"]]
+            merchants2 = [t["merchant"] for t in data2["transactions"]]
+            assert merchants1 != merchants2
+
+    def test_has_more_true_when_more_exist(self, client):
+        """has_more should be true when there are more transactions."""
+        response = client.get("/api/transactions?limit=1")
+        data = response.json()
+        if data["total"] > 1:
+            assert data["has_more"] is True
+
+    def test_has_more_false_at_end(self, client):
+        """has_more should be false when all transactions returned."""
+        response = client.get("/api/transactions?limit=10000")
+        data = response.json()
+        assert data["has_more"] is False
+
+    def test_search_filters_results(self, client):
+        """Search query should filter transactions."""
+        response = client.get("/api/transactions?q=ZZZZNOTFOUND")
+        data = response.json()
+        assert data["total"] == 0
+        assert data["transactions"] == []
+
+    def test_search_matches_merchant(self, client):
+        """Search should match merchant names."""
+        # Get all transactions first to find a real merchant
+        all_response = client.get("/api/transactions?limit=1000")
+        all_data = all_response.json()
+        if all_data["total"] > 0:
+            merchant = all_data["transactions"][0]["merchant"]
+            search_response = client.get(f"/api/transactions?q={merchant}")
+            search_data = search_response.json()
+            assert search_data["total"] > 0
+
+    def test_transaction_format(self, client):
+        """Each transaction should have required fields."""
+        response = client.get("/api/transactions?limit=1")
+        data = response.json()
+        if data["transactions"]:
+            txn = data["transactions"][0]
+            assert "id" in txn
+            assert "date" in txn
+            assert "merchant" in txn
+            assert "amount" in txn
+            assert "amount_type" in txn
+            assert "category" in txn
+            assert txn["amount_type"] in ("debit", "credit")
+            assert txn["amount"] >= 0  # Should be absolute value
+
+    def test_offset_beyond_total_returns_empty(self, client):
+        """Offset beyond total should return empty transactions."""
+        response = client.get("/api/transactions?offset=999999")
+        data = response.json()
+        assert data["transactions"] == []
+        assert data["has_more"] is False
+
+
+class TestBrowserRenderingCSVExport:
+    """Test CSV export browser rendering."""
+
     def test_csv_export_returns_csv(self, tmp_path):
         """Export endpoint returns CSV with real data."""
         output_dir = tmp_path / "output"
