@@ -383,3 +383,25 @@ class TestGetConfigManager:
 
         cm = get_config_manager(config_dir=str(config_dir))
         assert str(config_dir) in cm.config_dir
+
+
+class TestResetConfigManager:
+    """Test the reset_config_manager function."""
+
+    def test_reset_clears_global(self):
+        """reset_config_manager should set the global to None."""
+        from money_mapper.config_manager import (
+            get_config_manager,
+            reset_config_manager,
+        )
+
+        # Ensure a config manager exists
+        get_config_manager()
+
+        # Reset it
+        reset_config_manager()
+
+        # Verify it's None by importing the module and checking
+        import money_mapper.config_manager as cm
+
+        assert cm._config_manager is None

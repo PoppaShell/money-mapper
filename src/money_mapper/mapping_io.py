@@ -8,6 +8,7 @@ Handles all file I/O operations for mapping files including:
 """
 
 import json
+import logging
 import shutil
 import tomllib
 from datetime import datetime
@@ -15,6 +16,8 @@ from pathlib import Path
 from typing import Any
 
 import toml
+
+logger = logging.getLogger(__name__)
 
 
 def load_public_mappings(mapping_file: str | None = None) -> dict[str, Any] | None:
@@ -43,7 +46,8 @@ def load_public_mappings(mapping_file: str | None = None) -> dict[str, Any] | No
 
         return mappings
 
-    except Exception:
+    except Exception as e:
+        logger.warning("load_public_mappings failed: %s", e)
         return None
 
 
@@ -79,9 +83,11 @@ def load_private_mappings(mapping_file: str | None = None) -> list[Any] | dict[s
             return mappings
         return None
 
-    except (json.JSONDecodeError, ValueError):
+    except (json.JSONDecodeError, ValueError) as e:
+        logger.warning("load_private_mappings failed (decode error): %s", e)
         return None
-    except Exception:
+    except Exception as e:
+        logger.warning("load_private_mappings failed: %s", e)
         return None
 
 
@@ -119,7 +125,8 @@ def save_mappings(mappings: dict[str, Any] | list[Any], output_file: str) -> str
 
         return str(output_path)
 
-    except Exception:
+    except Exception as e:
+        logger.warning("save_mappings failed: %s", e)
         return None
 
 
@@ -152,5 +159,6 @@ def backup_mappings(mapping_file: str) -> str | None:
 
         return str(backup_path)
 
-    except Exception:
+    except Exception as e:
+        logger.warning("backup_mappings failed: %s", e)
         return None

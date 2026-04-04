@@ -5,7 +5,7 @@ import pickle
 
 import pytest
 
-import money_mapper.config_manager as config_module
+from money_mapper.config_manager import reset_config_manager as _reset_cm
 from money_mapper.ml_categorizer import (
     get_model_stats,
     rebuild_private_model,
@@ -14,15 +14,15 @@ from money_mapper.ml_categorizer import (
 
 
 @pytest.fixture(autouse=True)
-def reset_config_manager():
+def _reset_config():
     """Reset the global config manager singleton before each test.
 
     Prevents test contamination from other tests that set the global
     _config_manager to a different directory.
     """
-    config_module._config_manager = None
+    _reset_cm()
     yield
-    config_module._config_manager = None
+    _reset_cm()
 
 
 class TestRebuildPublicModel:

@@ -322,7 +322,7 @@ class ConfigManager:
             True if private configs are missing, False otherwise
         """
         private_settings_exists = os.path.exists(self.private_settings_file)
-        private_mappings_path = os.path.join(self.config_dir, "private_mappings.toml")
+        private_mappings_path = self.get_file_path("private_mappings")
         private_mappings_exists = os.path.exists(private_mappings_path)
 
         return not (private_settings_exists and private_mappings_exists)
@@ -359,9 +359,10 @@ def get_config_manager(config_dir: str | None = None) -> ConfigManager:
     return _config_manager
 
 
-def get_enrichment_config() -> dict[str, str]:
-    """Convenience function to get enrichment file paths."""
-    return get_config_manager().get_enrichment_files()
+def reset_config_manager():
+    """Reset the global config manager instance. For testing use."""
+    global _config_manager
+    _config_manager = None
 
 
 def validate_config() -> tuple[bool, list[str], list[str]]:
