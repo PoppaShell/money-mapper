@@ -151,37 +151,16 @@ def create_app(data_dir: str | None = None) -> FastAPI:
 
     # ===== Transactions Route =====
     @app.get("/transactions", response_class=HTMLResponse)
-    async def transactions_list(
-        date: str | None = None,
-        category: str | None = None,
-        merchant: str | None = None,
-    ) -> HTMLResponse:
-        """List transactions with optional filtering.
-
-        Args:
-            date: Filter by date prefix (e.g. YYYY-MM)
-            category: Filter by category substring
-            merchant: Filter by merchant or description substring
+    async def transactions_list() -> HTMLResponse:
+        """List transactions with infinite scroll.
 
         Returns:
-            HTMLResponse: Rendered HTML transaction list
+            HTMLResponse: Rendered HTML transaction list (first 50, rest via API)
         """
         template = env.get_template("transactions.html")
         transactions = _load_enriched_transactions(enriched_path)
 
-        # Apply filters
-        filtered = transactions
-        if date:
-            filtered = [t for t in filtered if t.get("date", "").startswith(date)]
-        if category:
-            filtered = [t for t in filtered if category.lower() in t.get("category", "").lower()]
-        if merchant:
-            filtered = [
-                t
-                for t in filtered
-                if merchant.lower() in t.get("merchant_name", "").lower()
-                or merchant.lower() in t.get("description", "").lower()
-            ]
+        total = len(transactions)
 
         formatted = [
             {
@@ -192,14 +171,17 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 "amount_type": "credit" if float(t.get("amount", 0)) >= 0 else "debit",
                 "category": t.get("category", "Uncategorized"),
             }
-            for i, t in enumerate(filtered)
+            for i, t in enumerate(transactions)
         ]
+
+        # Initial page renders first 50, JS loads the rest via /api/transactions
+        initial_batch = formatted[:50]
 
         data = {
             "title": "Transactions",
+            "transactions": initial_batch,
+            "total": total,
             "active_page": "transactions",
-            "transactions": formatted,
-            "filters": {"date": date, "category": category, "merchant": merchant},
         }
         return HTMLResponse(template.render(**data))
 

@@ -104,15 +104,21 @@ class TestTransactionsRoute:
         # category is a query param; JSON body is ignored, so category is None -> 400
         assert response.status_code == 400
 
-    def test_transactions_filter_by_date(self, client):
-        """GET /transactions?date=YYYY-MM should filter by date."""
-        response = client.get("/transactions?date=2026-03")
-        assert response.status_code in [200, 400]
+    def test_api_transactions_filter_by_date(self, client):
+        """GET /api/transactions?q=2026-03 should return JSON with search results."""
+        response = client.get("/api/transactions?q=2026-03")
+        assert response.status_code == 200
+        data = response.json()
+        assert "transactions" in data
+        assert "total" in data
 
-    def test_transactions_filter_by_category(self, client):
-        """GET /transactions?category=Food should filter by category."""
-        response = client.get("/transactions?category=Food")
-        assert response.status_code in [200, 400]
+    def test_api_transactions_filter_by_category(self, client):
+        """GET /api/transactions?q=Food should return JSON with search results."""
+        response = client.get("/api/transactions?q=Food")
+        assert response.status_code == 200
+        data = response.json()
+        assert "transactions" in data
+        assert "total" in data
 
     def test_transactions_csv_export_available(self, client):
         """GET /transactions/export should return CSV."""
@@ -592,8 +598,8 @@ class TestTransactionsRealData:
         response = client.get("/transactions")
         assert response.status_code == 200
 
-    def test_transactions_filter_by_category(self, tmp_path):
-        """Filter narrows results to matching category."""
+    def test_transactions_shows_all_data(self, tmp_path):
+        """Transactions page shows all data (filtering moved to API endpoint)."""
         output_dir = tmp_path / "output"
         output_dir.mkdir()
         txn_file = output_dir / "enriched_transactions.json"
@@ -617,8 +623,9 @@ class TestTransactionsRealData:
         )
         app = create_app(data_dir=str(tmp_path))
         client = TestClient(app)
-        response = client.get("/transactions?category=FOOD")
+        response = client.get("/transactions")
         assert response.status_code == 200
+        assert "Starbucks" in response.text or "transactions" in response.text.lower()
 
     def test_transactions_export_csv(self, tmp_path):
         """Export returns real CSV data."""

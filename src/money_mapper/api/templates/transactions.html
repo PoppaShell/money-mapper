@@ -6,20 +6,18 @@
 <h1>{{ title }}</h1>
 
 <div class="info">
-    <strong>Transactions:</strong> View, filter, and categorize your transactions
+    <strong>Transactions:</strong> View and categorize your transactions
 </div>
 
-<h2>Filters</h2>
-<form method="get">
-    <input type="month" name="date" placeholder="Filter by month" value="{{ filters.date or '' }}">
-    <input type="text" name="category" placeholder="Filter by category" value="{{ filters.category or '' }}">
-    <input type="text" name="merchant" placeholder="Filter by merchant" value="{{ filters.merchant or '' }}">
-    <button type="submit">Filter</button>
-    <a href="/transactions">Clear filters</a>
-</form>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+    <input type="text" id="transaction-search" placeholder="Search transactions..." style="flex:1">
+    <button id="search-clear" type="button">Clear</button>
+</div>
+<div id="transaction-count" style="color:#666;font-size:0.9em;margin-bottom:12px">
+    Showing {{ transactions|length }} of {{ total }} transactions
+</div>
 
-<h2>Transaction List</h2>
-<table>
+<table id="transactions-table" data-total="{{ total }}">
     <thead>
         <tr>
             <th>Date</th>
@@ -46,8 +44,13 @@
                 <td colspan="4">No transactions found</td>
             </tr>
         {% endfor %}
+        <tr id="loading-row" style="display:none">
+            <td colspan="4" style="text-align:center;padding:12px;color:#888">Loading more transactions...</td>
+        </tr>
     </tbody>
 </table>
 
-<p><a href="/transactions/export">Export as CSV →</a></p>
+<p><a href="/transactions/export">Export as CSV</a></p>
+
+<script src="/static/js/transactions.js"></script>
 {% endblock %}
