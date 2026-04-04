@@ -22,6 +22,8 @@
     var clearButton = document.querySelector("#search-clear");
     var countDisplay = document.querySelector("#transaction-count");
     var loadingRow = document.querySelector("#loading-row");
+    var exportLink = document.querySelector("#export-link");
+    var exportAnchor = exportLink ? exportLink.querySelector("a") : null;
 
     if (!tbody || !searchInput) {
         return; // Not on the transactions page
@@ -84,6 +86,7 @@
                 currentOffset += data.transactions.length;
                 hasMore = data.has_more;
                 updateCount();
+                updateExportLink();
                 loading = false;
                 showLoading(false);
             })
@@ -167,6 +170,24 @@
     function showLoading(show) {
         if (loadingRow) {
             loadingRow.style.display = show ? "" : "none";
+        }
+    }
+
+    function updateExportLink() {
+        if (!exportLink) return;
+        if (currentTotal === 0) {
+            exportLink.style.display = "none";
+            return;
+        }
+        exportLink.style.display = "";
+        if (exportAnchor) {
+            if (searchQuery) {
+                exportAnchor.href = "/transactions/export?q=" + encodeURIComponent(searchQuery);
+                exportAnchor.textContent = "Export filtered results (CSV)";
+            } else {
+                exportAnchor.href = "/transactions/export";
+                exportAnchor.textContent = "Export all transactions (CSV)";
+            }
         }
     }
 })();

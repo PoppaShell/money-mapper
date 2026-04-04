@@ -50,7 +50,9 @@
     </tbody>
 </table>
 
-<p><a href="/transactions/export">Export as CSV</a></p>
+{% if total > 0 %}
+<p id="export-link"><a href="/transactions/export">Export all transactions (CSV)</a></p>
+{% endif %}
 
 <script src="/static/js/transactions.js"></script>
 {% endblock %}
