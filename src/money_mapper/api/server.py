@@ -204,8 +204,11 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         return HTMLResponse(f"Updated transaction {safe_id} to {safe_category}", status_code=200)
 
     @app.get("/transactions/export", response_class=HTMLResponse)
-    async def export_transactions() -> HTMLResponse:
-        """Export transactions as CSV.
+    async def export_transactions(q: str | None = None) -> HTMLResponse:
+        """Export transactions as CSV, optionally filtered by search query.
+
+        Args:
+            q: Optional search query to filter transactions across all fields.
 
         Returns:
             HTMLResponse: CSV data with Content-Disposition header for download.
@@ -213,6 +216,21 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         from money_mapper.api.validation import build_csv_export
 
         transactions = _load_enriched_transactions(enriched_path)
+
+        if q:
+            query = q.lower()
+            transactions = [
+                t
+                for t in transactions
+                if (
+                    query in t.get("merchant_name", "").lower()
+                    or query in t.get("description", "").lower()
+                    or query in t.get("category", "").lower()
+                    or query in t.get("date", "").lower()
+                    or query in str(t.get("amount", ""))
+                )
+            ]
+
         csv_data = build_csv_export(transactions)
         return HTMLResponse(
             csv_data,

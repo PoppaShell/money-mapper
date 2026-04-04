@@ -1034,3 +1034,81 @@ class TestBrowserRenderingCSVExport:
         assert response.status_code == 200
         assert "text/csv" in response.headers.get("content-type", "")
         assert "Store" in response.text
+
+
+class TestTransactionsExport:
+    """Test /transactions/export with search filtering."""
+
+    @pytest.fixture
+    def client(self, tmp_path):
+        """Create test client with sample transaction data."""
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2024-01-15",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK",
+                    },
+                    {
+                        "date": "2024-01-16",
+                        "merchant_name": "Amazon",
+                        "amount": -25.00,
+                        "category": "SHOPPING",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        return TestClient(app)
+
+    def test_export_without_query_returns_all(self, client):
+        """Export without q param returns all transactions."""
+        import csv
+        import io
+
+        response = client.get("/transactions/export")
+        assert response.status_code == 200
+        reader = csv.reader(io.StringIO(response.text))
+        rows = list(reader)
+        # Should have header + data rows
+        assert len(rows) >= 1
+        assert rows[0] == ["date", "merchant", "amount", "category"]
+
+    def test_export_with_query_filters_results(self, client):
+        """Export with q param returns only matching transactions."""
+        import csv
+        import io
+
+        # First check what's available
+        all_response = client.get("/transactions/export")
+        all_reader = csv.reader(io.StringIO(all_response.text))
+        all_rows = list(all_reader)
+
+        if len(all_rows) > 1:
+            # Search for something specific
+            merchant = all_rows[1][1]  # First data row's merchant
+            filtered_response = client.get(f"/transactions/export?q={merchant}")
+            filtered_reader = csv.reader(io.StringIO(filtered_response.text))
+            filtered_rows = list(filtered_reader)
+            # Should have fewer or equal rows (header + matching)
+            assert len(filtered_rows) <= len(all_rows)
+            # All data rows should contain the search term
+            for row in filtered_rows[1:]:
+                row_text = " ".join(row).lower()
+                assert merchant.lower() in row_text
+
+    def test_export_nonexistent_query_returns_header_only(self, client):
+        """Export with non-matching query returns CSV with header only."""
+        import csv
+        import io
+
+        response = client.get("/transactions/export?q=ZZZZNOTFOUND")
+        assert response.status_code == 200
+        reader = csv.reader(io.StringIO(response.text))
+        rows = list(reader)
+        assert len(rows) == 1  # Header only
+        assert rows[0] == ["date", "merchant", "amount", "category"]
