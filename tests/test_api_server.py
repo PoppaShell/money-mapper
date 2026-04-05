@@ -1009,6 +1009,99 @@ class TestTransactionsAPI:
         assert data["has_more"] is False
 
 
+class TestTransactionsAPIAdvancedFilters:
+    """Test new advanced filter params on /api/transactions."""
+
+    @pytest.fixture
+    def client(self, tmp_path):
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-01-15",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK_COFFEE",
+                    },
+                    {
+                        "date": "2026-01-16",
+                        "merchant_name": "Shell Gas",
+                        "amount": -42.00,
+                        "category": "TRANSPORTATION_GAS",
+                    },
+                    {
+                        "date": "2026-01-01",
+                        "merchant_name": "Paycheck",
+                        "amount": 2500.00,
+                        "category": "INCOME_WAGES",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        return TestClient(app)
+
+    def test_min_amount_param(self, client):
+        response = client.get("/api/transactions?min_amount=10")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 2
+
+    def test_max_amount_param(self, client):
+        response = client.get("/api/transactions?max_amount=50")
+        data = response.json()
+        assert data["total"] == 2
+
+    def test_categories_param_single(self, client):
+        response = client.get("/api/transactions?categories=FOOD_AND_DRINK_COFFEE")
+        data = response.json()
+        assert data["total"] == 1
+        assert data["transactions"][0]["merchant"] == "Starbucks"
+
+    def test_categories_param_multiple(self, client):
+        response = client.get(
+            "/api/transactions?categories=FOOD_AND_DRINK_COFFEE,TRANSPORTATION_GAS"
+        )
+        data = response.json()
+        assert data["total"] == 2
+
+    def test_sort_by_amount_desc(self, client):
+        response = client.get("/api/transactions?sort=amount&order=desc")
+        data = response.json()
+        merchants = [t["merchant"] for t in data["transactions"]]
+        assert merchants == ["Paycheck", "Shell Gas", "Starbucks"]
+
+    def test_sort_by_date_asc(self, client):
+        response = client.get("/api/transactions?sort=date&order=asc")
+        data = response.json()
+        dates = [t["date"] for t in data["transactions"]]
+        assert dates == ["2026-01-01", "2026-01-15", "2026-01-16"]
+
+    def test_invalid_min_amount_ignored(self, client):
+        response = client.get("/api/transactions?min_amount=notanumber")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 3
+
+    def test_unknown_sort_column_ignored(self, client):
+        response = client.get("/api/transactions?sort=bogus")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 3
+
+    def test_all_params_combined(self, client):
+        response = client.get(
+            "/api/transactions?categories=FOOD_AND_DRINK_COFFEE,TRANSPORTATION_GAS"
+            "&max_amount=50&sort=amount&order=desc"
+        )
+        data = response.json()
+        assert data["total"] == 2
+        merchants = [t["merchant"] for t in data["transactions"]]
+        assert merchants == ["Shell Gas", "Starbucks"]
+
+
 class TestBrowserRenderingCSVExport:
     """Test CSV export browser rendering."""
 

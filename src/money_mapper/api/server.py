@@ -95,6 +95,16 @@ def _compute_spending_by_category(transactions: list[dict]) -> dict:
     }
 
 
+def _parse_float_param(val: str | None) -> float | None:
+    """Parse a query-string param as float. Return None if invalid or missing."""
+    if val is None or val == "":
+        return None
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return None
+
+
 def _filter_transactions(
     txns: list,
     q: str | None = None,
@@ -574,28 +584,48 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         offset: int = 0,
         limit: int = 50,
         q: str | None = None,
+        sort: str | None = None,
+        order: str | None = None,
+        min_amount: str | None = None,
+        max_amount: str | None = None,
+        categories: str | None = None,
     ) -> JSONResponse:
-        """Paginated JSON API for transactions with search.
+        """Paginated JSON API for transactions with search, filter, and sort.
 
         Args:
             offset: Number of transactions to skip.
             limit: Maximum number of transactions to return.
             q: Optional search query across all fields.
+            sort: Column to sort by (date, merchant, amount, category).
+            order: Sort order (asc, desc).
+            min_amount: Minimum absolute amount filter.
+            max_amount: Maximum absolute amount filter.
+            categories: Comma-separated list of categories to filter by.
 
         Returns:
             JSONResponse: Paginated transaction data with total, offset, limit, has_more.
         """
         txns = _load_enriched_transactions(enriched_path)
 
-        # Apply search filter
-        txns = _filter_transactions(txns, q=q)
+        min_val = _parse_float_param(min_amount)
+        max_val = _parse_float_param(max_amount)
+        category_list = (
+            [c.strip() for c in categories.split(",") if c.strip()] if categories else None
+        )
+
+        txns = _filter_transactions(
+            txns,
+            q=q,
+            categories=category_list,
+            min_amount=min_val,
+            max_amount=max_val,
+            sort=sort,
+            order=order,
+        )
 
         total = len(txns)
-
-        # Apply pagination
         paginated = txns[offset : offset + limit]
 
-        # Format for response
         formatted = [
             {
                 "id": offset + i,
