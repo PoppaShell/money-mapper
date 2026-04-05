@@ -1205,3 +1205,41 @@ class TestFilterTransactionsHelper:
         result = _filter_transactions(txns, min_amount=5.50, max_amount=5.50)
         assert len(result) == 1
         assert result[0]["merchant_name"] == "Starbucks"
+
+    def test_single_category(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, categories=["FOOD_AND_DRINK_COFFEE"])
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "Starbucks"
+
+    def test_multiple_categories_any_match(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(
+            txns, categories=["FOOD_AND_DRINK_COFFEE", "TRANSPORTATION_GAS"]
+        )
+        assert len(result) == 2
+
+    def test_category_case_insensitive(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, categories=["food_and_drink_coffee"])
+        assert len(result) == 1
+
+    def test_unknown_category_returns_empty(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, categories=["NONEXISTENT"])
+        assert result == []
+
+    def test_empty_categories_list_returns_all(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, categories=[])
+        assert len(result) == 3

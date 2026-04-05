@@ -134,6 +134,10 @@ def _filter_transactions(
             )
         ]
 
+    if categories:
+        category_set = {c.lower() for c in categories}
+        result = [t for t in result if t.get("category", "").lower() in category_set]
+
     if min_amount is not None:
         result = [t for t in result if abs(float(t.get("amount", 0))) >= min_amount]
 
