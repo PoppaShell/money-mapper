@@ -278,11 +278,23 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         return HTMLResponse(f"Updated transaction {safe_id} to {safe_category}", status_code=200)
 
     @app.get("/transactions/export", response_class=HTMLResponse)
-    async def export_transactions(q: str | None = None) -> HTMLResponse:
-        """Export transactions as CSV, optionally filtered by search query.
+    async def export_transactions(
+        q: str | None = None,
+        sort: str | None = None,
+        order: str | None = None,
+        min_amount: str | None = None,
+        max_amount: str | None = None,
+        categories: str | None = None,
+    ) -> HTMLResponse:
+        """Export transactions as CSV, honoring the same filters as /api/transactions.
 
         Args:
             q: Optional search query to filter transactions across all fields.
+            sort: Column to sort by. One of: "date", "merchant", "amount", "category".
+            order: "asc" or "desc". Defaults to "asc" when sort is set.
+            min_amount: Include only transactions where abs(amount) >= min_amount.
+            max_amount: Include only transactions where abs(amount) <= max_amount.
+            categories: Comma-separated list of categories to include.
 
         Returns:
             HTMLResponse: CSV data with Content-Disposition header for download.
@@ -291,7 +303,21 @@ def create_app(data_dir: str | None = None) -> FastAPI:
 
         transactions = _load_enriched_transactions(enriched_path)
 
-        transactions = _filter_transactions(transactions, q=q)
+        min_val = _parse_float_param(min_amount)
+        max_val = _parse_float_param(max_amount)
+        category_list = (
+            [c.strip() for c in categories.split(",") if c.strip()] if categories else None
+        )
+
+        transactions = _filter_transactions(
+            transactions,
+            q=q,
+            categories=category_list,
+            min_amount=min_val,
+            max_amount=max_val,
+            sort=sort,
+            order=order,
+        )
 
         csv_data = build_csv_export(transactions)
         return HTMLResponse(

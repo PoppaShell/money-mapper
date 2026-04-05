@@ -1448,3 +1448,66 @@ class TestFilterTransactionsHelper:
         assert len(result) == 2
         assert result[0]["date"] == "2026-01-15"
         assert result[1]["date"] == "2026-01-10"
+
+
+class TestExportAdvancedFilters:
+    """Test /transactions/export honors advanced filter params."""
+
+    @pytest.fixture
+    def client(self, tmp_path):
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-01-15",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK_COFFEE",
+                    },
+                    {
+                        "date": "2026-01-16",
+                        "merchant_name": "Shell Gas",
+                        "amount": -42.00,
+                        "category": "TRANSPORTATION_GAS",
+                    },
+                    {
+                        "date": "2026-01-01",
+                        "merchant_name": "Paycheck",
+                        "amount": 2500.00,
+                        "category": "INCOME_WAGES",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        return TestClient(app)
+
+    def test_export_respects_min_amount(self, client):
+        response = client.get("/transactions/export?min_amount=10")
+        assert response.status_code == 200
+        text = response.text
+        assert "Shell Gas" in text
+        assert "Paycheck" in text
+        assert "Starbucks" not in text
+
+    def test_export_respects_category(self, client):
+        response = client.get("/transactions/export?categories=FOOD_AND_DRINK_COFFEE")
+        text = response.text
+        assert "Starbucks" in text
+        assert "Shell Gas" not in text
+
+    def test_export_respects_sort(self, client):
+        response = client.get("/transactions/export?sort=amount&order=desc")
+        text = response.text
+        assert text.index("Paycheck") < text.index("Starbucks")
+
+    def test_export_combines_filters(self, client):
+        response = client.get(
+            "/transactions/export?categories=FOOD_AND_DRINK_COFFEE,TRANSPORTATION_GAS&max_amount=50"
+        )
+        text = response.text
+        assert "Starbucks" in text
+        assert "Shell Gas" in text
+        assert "Paycheck" not in text
