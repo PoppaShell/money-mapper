@@ -1511,3 +1511,30 @@ class TestExportAdvancedFilters:
         assert "Starbucks" in text
         assert "Shell Gas" in text
         assert "Paycheck" not in text
+
+
+class TestCategoriesAPI:
+    """Test /api/categories JSON endpoint."""
+
+    @pytest.fixture
+    def client(self):
+        app = create_app()
+        return TestClient(app)
+
+    def test_returns_json_with_categories(self, client):
+        response = client.get("/api/categories")
+        assert response.status_code == 200
+        data = response.json()
+        assert "categories" in data
+        assert isinstance(data["categories"], list)
+
+    def test_returns_sorted_list(self, client):
+        response = client.get("/api/categories")
+        data = response.json()
+        if len(data["categories"]) > 1:
+            assert data["categories"] == sorted(data["categories"])
+
+    def test_contains_known_pfc_category(self, client):
+        response = client.get("/api/categories")
+        data = response.json()
+        assert any("FOOD_AND_DRINK" in c for c in data["categories"])

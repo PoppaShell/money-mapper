@@ -19,6 +19,31 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, PackageLoader, select_autoescape
 
+_pfc_categories_cache: list | None = None
+
+
+def _load_pfc_categories(base_dir: str) -> list:
+    """Load and cache PFC detailed categories from plaid_categories.toml."""
+    global _pfc_categories_cache
+    if _pfc_categories_cache is not None:
+        return _pfc_categories_cache
+
+    plaid_path = os.path.join(base_dir, "config", "plaid_categories.toml")
+    categories: list = []
+    try:
+        with open(plaid_path, "rb") as f:
+            plaid_data = tomllib.load(f)
+        for primary_val in plaid_data.values():
+            if isinstance(primary_val, dict):
+                for detailed_key in primary_val:
+                    categories.append(detailed_key)
+        categories.sort()
+    except (OSError, tomllib.TOMLDecodeError):
+        pass
+
+    _pfc_categories_cache = categories
+    return categories
+
 
 def _load_enriched_transactions(file_path: str) -> list[dict]:
     """Load enriched transactions from JSON file.
@@ -673,6 +698,12 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 "transactions": formatted,
             }
         )
+
+    # ===== Categories API Route =====
+    @app.get("/api/categories")
+    async def categories_api() -> JSONResponse:
+        """Return the list of PFC detailed categories."""
+        return JSONResponse({"categories": _load_pfc_categories(base_dir)})
 
     # Mount static files if they exist
     static_path = Path(__file__).parent / "static"
