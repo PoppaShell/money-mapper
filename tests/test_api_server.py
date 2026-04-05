@@ -1112,3 +1112,66 @@ class TestTransactionsExport:
         rows = list(reader)
         assert len(rows) == 1  # Header only
         assert rows[0] == ["date", "merchant", "amount", "category"]
+
+
+class TestFilterTransactionsHelper:
+    """Test the shared _filter_transactions helper."""
+
+    def _sample_txns(self):
+        return [
+            {
+                "merchant_name": "Starbucks",
+                "description": "STARBUCKS 123",
+                "category": "FOOD_AND_DRINK_COFFEE",
+                "date": "2026-01-15",
+                "amount": -5.50,
+            },
+            {
+                "merchant_name": "Shell Gas",
+                "description": "SHELL OIL",
+                "category": "TRANSPORTATION_GAS",
+                "date": "2026-01-16",
+                "amount": -42.00,
+            },
+            {
+                "merchant_name": "Paycheck",
+                "description": "DIRECT DEPOSIT",
+                "category": "INCOME_WAGES",
+                "date": "2026-01-01",
+                "amount": 2500.00,
+            },
+        ]
+
+    def test_no_filters_returns_all(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(
+            txns, q=None, categories=None, min_amount=None, max_amount=None, sort=None, order=None
+        )
+        assert len(result) == 3
+
+    def test_text_search_matches_merchant(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(
+            txns,
+            q="starbucks",
+            categories=None,
+            min_amount=None,
+            max_amount=None,
+            sort=None,
+            order=None,
+        )
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "Starbucks"
+
+    def test_text_search_matches_amount_string(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(
+            txns, q="42.0", categories=None, min_amount=None, max_amount=None, sort=None, order=None
+        )
+        assert len(result) == 1

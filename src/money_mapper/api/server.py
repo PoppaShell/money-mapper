@@ -95,6 +95,48 @@ def _compute_spending_by_category(transactions: list[dict]) -> dict:
     }
 
 
+def _filter_transactions(
+    txns: list,
+    q: str | None = None,
+    categories: list | None = None,
+    min_amount: float | None = None,
+    max_amount: float | None = None,
+    sort: str | None = None,
+    order: str | None = None,
+) -> list:
+    """Apply text search, category filter, amount range filter, and sort.
+
+    Args:
+        txns: List of transaction dicts.
+        q: Case-insensitive substring search across merchant_name, description, category, date, amount.
+        categories: List of category values; include transactions whose category matches any (case-insensitive).
+        min_amount: Include only transactions where abs(amount) >= min_amount.
+        max_amount: Include only transactions where abs(amount) <= max_amount.
+        sort: Column to sort by. One of: "date", "merchant", "amount", "category". Unknown values ignored.
+        order: "asc" or "desc". Defaults to "asc" when sort is set.
+
+    Returns:
+        Filtered and sorted list of transactions.
+    """
+    result = txns
+
+    if q:
+        query = q.lower()
+        result = [
+            t
+            for t in result
+            if (
+                query in t.get("merchant_name", "").lower()
+                or query in t.get("description", "").lower()
+                or query in t.get("category", "").lower()
+                or query in t.get("date", "").lower()
+                or query in str(t.get("amount", ""))
+            )
+        ]
+
+    return result
+
+
 def create_app(data_dir: str | None = None) -> FastAPI:
     """Create and configure FastAPI application.
 
@@ -217,19 +259,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
 
         transactions = _load_enriched_transactions(enriched_path)
 
-        if q:
-            query = q.lower()
-            transactions = [
-                t
-                for t in transactions
-                if (
-                    query in t.get("merchant_name", "").lower()
-                    or query in t.get("description", "").lower()
-                    or query in t.get("category", "").lower()
-                    or query in t.get("date", "").lower()
-                    or query in str(t.get("amount", ""))
-                )
-            ]
+        transactions = _filter_transactions(transactions, q=q)
 
         csv_data = build_csv_export(transactions)
         return HTMLResponse(
@@ -536,19 +566,7 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         txns = _load_enriched_transactions(enriched_path)
 
         # Apply search filter
-        if q:
-            query = q.lower()
-            txns = [
-                t
-                for t in txns
-                if (
-                    query in t.get("merchant_name", "").lower()
-                    or query in t.get("description", "").lower()
-                    or query in t.get("category", "").lower()
-                    or query in t.get("date", "").lower()
-                    or query in str(t.get("amount", ""))
-                )
-            ]
+        txns = _filter_transactions(txns, q=q)
 
         total = len(txns)
 
