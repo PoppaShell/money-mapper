@@ -1243,3 +1243,70 @@ class TestFilterTransactionsHelper:
         txns = self._sample_txns()
         result = _filter_transactions(txns, categories=[])
         assert len(result) == 3
+
+    def test_sort_by_date_asc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="date", order="asc")
+        assert [t["date"] for t in result] == ["2026-01-01", "2026-01-15", "2026-01-16"]
+
+    def test_sort_by_date_desc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="date", order="desc")
+        assert [t["date"] for t in result] == ["2026-01-16", "2026-01-15", "2026-01-01"]
+
+    def test_sort_by_amount_asc_uses_absolute_value(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="amount", order="asc")
+        assert [t["merchant_name"] for t in result] == ["Starbucks", "Shell Gas", "Paycheck"]
+
+    def test_sort_by_amount_desc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="amount", order="desc")
+        assert [t["merchant_name"] for t in result] == ["Paycheck", "Shell Gas", "Starbucks"]
+
+    def test_sort_by_merchant_asc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="merchant", order="asc")
+        assert [t["merchant_name"] for t in result] == ["Paycheck", "Shell Gas", "Starbucks"]
+
+    def test_sort_by_category_asc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="category", order="asc")
+        assert [t["category"] for t in result] == [
+            "FOOD_AND_DRINK_COFFEE",
+            "INCOME_WAGES",
+            "TRANSPORTATION_GAS",
+        ]
+
+    def test_sort_defaults_to_asc_when_order_missing(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="date")
+        assert [t["date"] for t in result] == ["2026-01-01", "2026-01-15", "2026-01-16"]
+
+    def test_unknown_sort_column_preserves_order(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="nonexistent", order="asc")
+        assert [t["merchant_name"] for t in result] == ["Starbucks", "Shell Gas", "Paycheck"]
+
+    def test_no_sort_preserves_order(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort=None)
+        assert [t["merchant_name"] for t in result] == ["Starbucks", "Shell Gas", "Paycheck"]

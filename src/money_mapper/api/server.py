@@ -144,6 +144,18 @@ def _filter_transactions(
     if max_amount is not None:
         result = [t for t in result if abs(float(t.get("amount", 0))) <= max_amount]
 
+    if sort:
+        sort_key_funcs = {
+            "date": lambda t: t.get("date", ""),
+            "merchant": lambda t: t.get("merchant_name", ""),
+            "amount": lambda t: abs(float(t.get("amount", 0))),
+            "category": lambda t: t.get("category", ""),
+        }
+        key_func = sort_key_funcs.get(sort)
+        if key_func is not None:
+            reverse = order == "desc"
+            result = sorted(result, key=key_func, reverse=reverse)
+
     return result
 
 
