@@ -1310,3 +1310,48 @@ class TestFilterTransactionsHelper:
         txns = self._sample_txns()
         result = _filter_transactions(txns, sort=None)
         assert [t["merchant_name"] for t in result] == ["Starbucks", "Shell Gas", "Paycheck"]
+
+    def test_all_filters_combined(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = [
+            {
+                "merchant_name": "Starbucks",
+                "description": "COFFEE A",
+                "category": "FOOD_AND_DRINK_COFFEE",
+                "date": "2026-01-15",
+                "amount": -5.50,
+            },
+            {
+                "merchant_name": "Starbucks",
+                "description": "COFFEE B",
+                "category": "FOOD_AND_DRINK_COFFEE",
+                "date": "2026-01-10",
+                "amount": -8.00,
+            },
+            {
+                "merchant_name": "Shell Gas",
+                "description": "GAS",
+                "category": "TRANSPORTATION_GAS",
+                "date": "2026-01-16",
+                "amount": -42.00,
+            },
+            {
+                "merchant_name": "Starbucks",
+                "description": "COFFEE C",
+                "category": "FOOD_AND_DRINK_COFFEE",
+                "date": "2026-01-20",
+                "amount": -100.00,
+            },
+        ]
+        result = _filter_transactions(
+            txns,
+            q="starbucks",
+            categories=["FOOD_AND_DRINK_COFFEE"],
+            max_amount=50.0,
+            sort="date",
+            order="desc",
+        )
+        assert len(result) == 2
+        assert result[0]["date"] == "2026-01-15"
+        assert result[1]["date"] == "2026-01-10"
