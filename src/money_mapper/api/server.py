@@ -134,6 +134,12 @@ def _filter_transactions(
             )
         ]
 
+    if min_amount is not None:
+        result = [t for t in result if abs(float(t.get("amount", 0))) >= min_amount]
+
+    if max_amount is not None:
+        result = [t for t in result if abs(float(t.get("amount", 0))) <= max_amount]
+
     return result
 
 

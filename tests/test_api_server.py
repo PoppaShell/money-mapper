@@ -1175,3 +1175,33 @@ class TestFilterTransactionsHelper:
             txns, q="42.0", categories=None, min_amount=None, max_amount=None, sort=None, order=None
         )
         assert len(result) == 1
+
+    def test_min_amount_only(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, min_amount=10.0)
+        assert len(result) == 2
+
+    def test_max_amount_only(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, max_amount=50.0)
+        assert len(result) == 2
+
+    def test_both_amount_bounds(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, min_amount=10.0, max_amount=100.0)
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "Shell Gas"
+
+    def test_amount_bounds_inclusive(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, min_amount=5.50, max_amount=5.50)
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "Starbucks"
