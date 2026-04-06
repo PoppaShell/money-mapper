@@ -12,7 +12,26 @@
 <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
     <input type="text" id="transaction-search" placeholder="Search transactions..." style="flex:1">
     <button id="search-clear" type="button">Clear</button>
+    <button id="filters-toggle" type="button">Show Filters</button>
+    <span id="filters-active-indicator" style="display:none;color:#2c3e50;font-size:0.9em">Filters active</span>
 </div>
+
+<div id="filters-panel" style="display:none;border:1px solid #ddd;padding:12px;margin-bottom:12px;background:#f9f9f9">
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+        <label>Min $ <input type="text" id="filter-min-amount" style="width:80px"></label>
+        <label>Max $ <input type="text" id="filter-max-amount" style="width:80px"></label>
+    </div>
+    <div style="margin-bottom:8px">
+        <label>Category
+            <input type="text" id="filter-category-input" list="category-datalist" placeholder="Type to search...">
+        </label>
+        <datalist id="category-datalist"></datalist>
+        <div id="selected-categories" style="margin-top:6px"></div>
+    </div>
+    <button id="apply-filters" type="button">Apply Filters</button>
+    <button id="clear-filters" type="button">Clear Filters</button>
+</div>
+
 <div id="transaction-count" style="color:#666;font-size:0.9em;margin-bottom:12px">
     Showing {{ transactions|length }} of {{ total }} transactions
 </div>
@@ -20,10 +39,10 @@
 <table id="transactions-table" data-total="{{ total }}">
     <thead>
         <tr>
-            <th>Date</th>
-            <th>Merchant</th>
-            <th>Amount</th>
-            <th>Category</th>
+            <th class="sortable" data-column="date" style="cursor:pointer">Date <span class="sort-indicator"></span></th>
+            <th class="sortable" data-column="merchant" style="cursor:pointer">Merchant <span class="sort-indicator"></span></th>
+            <th class="sortable" data-column="amount" style="cursor:pointer">Amount <span class="sort-indicator"></span></th>
+            <th class="sortable" data-column="category" style="cursor:pointer">Category <span class="sort-indicator"></span></th>
         </tr>
     </thead>
     <tbody>
