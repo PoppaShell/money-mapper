@@ -1009,6 +1009,99 @@ class TestTransactionsAPI:
         assert data["has_more"] is False
 
 
+class TestTransactionsAPIAdvancedFilters:
+    """Test new advanced filter params on /api/transactions."""
+
+    @pytest.fixture
+    def client(self, tmp_path):
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-01-15",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK_COFFEE",
+                    },
+                    {
+                        "date": "2026-01-16",
+                        "merchant_name": "Shell Gas",
+                        "amount": -42.00,
+                        "category": "TRANSPORTATION_GAS",
+                    },
+                    {
+                        "date": "2026-01-01",
+                        "merchant_name": "Paycheck",
+                        "amount": 2500.00,
+                        "category": "INCOME_WAGES",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        return TestClient(app)
+
+    def test_min_amount_param(self, client):
+        response = client.get("/api/transactions?min_amount=10")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 2
+
+    def test_max_amount_param(self, client):
+        response = client.get("/api/transactions?max_amount=50")
+        data = response.json()
+        assert data["total"] == 2
+
+    def test_categories_param_single(self, client):
+        response = client.get("/api/transactions?categories=FOOD_AND_DRINK_COFFEE")
+        data = response.json()
+        assert data["total"] == 1
+        assert data["transactions"][0]["merchant"] == "Starbucks"
+
+    def test_categories_param_multiple(self, client):
+        response = client.get(
+            "/api/transactions?categories=FOOD_AND_DRINK_COFFEE,TRANSPORTATION_GAS"
+        )
+        data = response.json()
+        assert data["total"] == 2
+
+    def test_sort_by_amount_desc(self, client):
+        response = client.get("/api/transactions?sort=amount&order=desc")
+        data = response.json()
+        merchants = [t["merchant"] for t in data["transactions"]]
+        assert merchants == ["Paycheck", "Shell Gas", "Starbucks"]
+
+    def test_sort_by_date_asc(self, client):
+        response = client.get("/api/transactions?sort=date&order=asc")
+        data = response.json()
+        dates = [t["date"] for t in data["transactions"]]
+        assert dates == ["2026-01-01", "2026-01-15", "2026-01-16"]
+
+    def test_invalid_min_amount_ignored(self, client):
+        response = client.get("/api/transactions?min_amount=notanumber")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 3
+
+    def test_unknown_sort_column_ignored(self, client):
+        response = client.get("/api/transactions?sort=bogus")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 3
+
+    def test_all_params_combined(self, client):
+        response = client.get(
+            "/api/transactions?categories=FOOD_AND_DRINK_COFFEE,TRANSPORTATION_GAS"
+            "&max_amount=50&sort=amount&order=desc"
+        )
+        data = response.json()
+        assert data["total"] == 2
+        merchants = [t["merchant"] for t in data["transactions"]]
+        assert merchants == ["Shell Gas", "Starbucks"]
+
+
 class TestBrowserRenderingCSVExport:
     """Test CSV export browser rendering."""
 
@@ -1112,3 +1205,336 @@ class TestTransactionsExport:
         rows = list(reader)
         assert len(rows) == 1  # Header only
         assert rows[0] == ["date", "merchant", "amount", "category"]
+
+
+class TestFilterTransactionsHelper:
+    """Test the shared _filter_transactions helper."""
+
+    def _sample_txns(self):
+        return [
+            {
+                "merchant_name": "Starbucks",
+                "description": "STARBUCKS 123",
+                "category": "FOOD_AND_DRINK_COFFEE",
+                "date": "2026-01-15",
+                "amount": -5.50,
+            },
+            {
+                "merchant_name": "Shell Gas",
+                "description": "SHELL OIL",
+                "category": "TRANSPORTATION_GAS",
+                "date": "2026-01-16",
+                "amount": -42.00,
+            },
+            {
+                "merchant_name": "Paycheck",
+                "description": "DIRECT DEPOSIT",
+                "category": "INCOME_WAGES",
+                "date": "2026-01-01",
+                "amount": 2500.00,
+            },
+        ]
+
+    def test_no_filters_returns_all(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(
+            txns, q=None, categories=None, min_amount=None, max_amount=None, sort=None, order=None
+        )
+        assert len(result) == 3
+
+    def test_text_search_matches_merchant(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(
+            txns,
+            q="starbucks",
+            categories=None,
+            min_amount=None,
+            max_amount=None,
+            sort=None,
+            order=None,
+        )
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "Starbucks"
+
+    def test_text_search_matches_amount_string(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(
+            txns, q="42.0", categories=None, min_amount=None, max_amount=None, sort=None, order=None
+        )
+        assert len(result) == 1
+
+    def test_min_amount_only(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, min_amount=10.0)
+        assert len(result) == 2
+
+    def test_max_amount_only(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, max_amount=50.0)
+        assert len(result) == 2
+
+    def test_both_amount_bounds(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, min_amount=10.0, max_amount=100.0)
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "Shell Gas"
+
+    def test_amount_bounds_inclusive(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, min_amount=5.50, max_amount=5.50)
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "Starbucks"
+
+    def test_single_category(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, categories=["FOOD_AND_DRINK_COFFEE"])
+        assert len(result) == 1
+        assert result[0]["merchant_name"] == "Starbucks"
+
+    def test_multiple_categories_any_match(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(
+            txns, categories=["FOOD_AND_DRINK_COFFEE", "TRANSPORTATION_GAS"]
+        )
+        assert len(result) == 2
+
+    def test_category_case_insensitive(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, categories=["food_and_drink_coffee"])
+        assert len(result) == 1
+
+    def test_unknown_category_returns_empty(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, categories=["NONEXISTENT"])
+        assert result == []
+
+    def test_empty_categories_list_returns_all(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, categories=[])
+        assert len(result) == 3
+
+    def test_sort_by_date_asc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="date", order="asc")
+        assert [t["date"] for t in result] == ["2026-01-01", "2026-01-15", "2026-01-16"]
+
+    def test_sort_by_date_desc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="date", order="desc")
+        assert [t["date"] for t in result] == ["2026-01-16", "2026-01-15", "2026-01-01"]
+
+    def test_sort_by_amount_asc_uses_absolute_value(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="amount", order="asc")
+        assert [t["merchant_name"] for t in result] == ["Starbucks", "Shell Gas", "Paycheck"]
+
+    def test_sort_by_amount_desc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="amount", order="desc")
+        assert [t["merchant_name"] for t in result] == ["Paycheck", "Shell Gas", "Starbucks"]
+
+    def test_sort_by_merchant_asc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="merchant", order="asc")
+        assert [t["merchant_name"] for t in result] == ["Paycheck", "Shell Gas", "Starbucks"]
+
+    def test_sort_by_category_asc(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="category", order="asc")
+        assert [t["category"] for t in result] == [
+            "FOOD_AND_DRINK_COFFEE",
+            "INCOME_WAGES",
+            "TRANSPORTATION_GAS",
+        ]
+
+    def test_sort_defaults_to_asc_when_order_missing(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="date")
+        assert [t["date"] for t in result] == ["2026-01-01", "2026-01-15", "2026-01-16"]
+
+    def test_unknown_sort_column_preserves_order(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort="nonexistent", order="asc")
+        assert [t["merchant_name"] for t in result] == ["Starbucks", "Shell Gas", "Paycheck"]
+
+    def test_no_sort_preserves_order(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = self._sample_txns()
+        result = _filter_transactions(txns, sort=None)
+        assert [t["merchant_name"] for t in result] == ["Starbucks", "Shell Gas", "Paycheck"]
+
+    def test_all_filters_combined(self):
+        from money_mapper.api.server import _filter_transactions
+
+        txns = [
+            {
+                "merchant_name": "Starbucks",
+                "description": "COFFEE A",
+                "category": "FOOD_AND_DRINK_COFFEE",
+                "date": "2026-01-15",
+                "amount": -5.50,
+            },
+            {
+                "merchant_name": "Starbucks",
+                "description": "COFFEE B",
+                "category": "FOOD_AND_DRINK_COFFEE",
+                "date": "2026-01-10",
+                "amount": -8.00,
+            },
+            {
+                "merchant_name": "Shell Gas",
+                "description": "GAS",
+                "category": "TRANSPORTATION_GAS",
+                "date": "2026-01-16",
+                "amount": -42.00,
+            },
+            {
+                "merchant_name": "Starbucks",
+                "description": "COFFEE C",
+                "category": "FOOD_AND_DRINK_COFFEE",
+                "date": "2026-01-20",
+                "amount": -100.00,
+            },
+        ]
+        result = _filter_transactions(
+            txns,
+            q="starbucks",
+            categories=["FOOD_AND_DRINK_COFFEE"],
+            max_amount=50.0,
+            sort="date",
+            order="desc",
+        )
+        assert len(result) == 2
+        assert result[0]["date"] == "2026-01-15"
+        assert result[1]["date"] == "2026-01-10"
+
+
+class TestExportAdvancedFilters:
+    """Test /transactions/export honors advanced filter params."""
+
+    @pytest.fixture
+    def client(self, tmp_path):
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        (output_dir / "enriched_transactions.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "date": "2026-01-15",
+                        "merchant_name": "Starbucks",
+                        "amount": -5.50,
+                        "category": "FOOD_AND_DRINK_COFFEE",
+                    },
+                    {
+                        "date": "2026-01-16",
+                        "merchant_name": "Shell Gas",
+                        "amount": -42.00,
+                        "category": "TRANSPORTATION_GAS",
+                    },
+                    {
+                        "date": "2026-01-01",
+                        "merchant_name": "Paycheck",
+                        "amount": 2500.00,
+                        "category": "INCOME_WAGES",
+                    },
+                ]
+            )
+        )
+        app = create_app(data_dir=str(tmp_path))
+        return TestClient(app)
+
+    def test_export_respects_min_amount(self, client):
+        response = client.get("/transactions/export?min_amount=10")
+        assert response.status_code == 200
+        text = response.text
+        assert "Shell Gas" in text
+        assert "Paycheck" in text
+        assert "Starbucks" not in text
+
+    def test_export_respects_category(self, client):
+        response = client.get("/transactions/export?categories=FOOD_AND_DRINK_COFFEE")
+        text = response.text
+        assert "Starbucks" in text
+        assert "Shell Gas" not in text
+
+    def test_export_respects_sort(self, client):
+        response = client.get("/transactions/export?sort=amount&order=desc")
+        text = response.text
+        assert text.index("Paycheck") < text.index("Starbucks")
+
+    def test_export_combines_filters(self, client):
+        response = client.get(
+            "/transactions/export?categories=FOOD_AND_DRINK_COFFEE,TRANSPORTATION_GAS&max_amount=50"
+        )
+        text = response.text
+        assert "Starbucks" in text
+        assert "Shell Gas" in text
+        assert "Paycheck" not in text
+
+
+class TestCategoriesAPI:
+    """Test /api/categories JSON endpoint."""
+
+    @pytest.fixture
+    def client(self):
+        app = create_app()
+        return TestClient(app)
+
+    def test_returns_json_with_categories(self, client):
+        response = client.get("/api/categories")
+        assert response.status_code == 200
+        data = response.json()
+        assert "categories" in data
+        assert isinstance(data["categories"], list)
+
+    def test_returns_sorted_list(self, client):
+        response = client.get("/api/categories")
+        data = response.json()
+        if len(data["categories"]) > 1:
+            assert data["categories"] == sorted(data["categories"])
+
+    def test_contains_known_pfc_category(self, client):
+        response = client.get("/api/categories")
+        data = response.json()
+        assert any("FOOD_AND_DRINK" in c for c in data["categories"])

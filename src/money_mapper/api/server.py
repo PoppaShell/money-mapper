@@ -19,6 +19,31 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, PackageLoader, select_autoescape
 
+_pfc_categories_cache: list | None = None
+
+
+def _load_pfc_categories(base_dir: str) -> list:
+    """Load and cache PFC detailed categories from plaid_categories.toml."""
+    global _pfc_categories_cache
+    if _pfc_categories_cache is not None:
+        return _pfc_categories_cache
+
+    plaid_path = os.path.join(base_dir, "config", "plaid_categories.toml")
+    categories: list = []
+    try:
+        with open(plaid_path, "rb") as f:
+            plaid_data = tomllib.load(f)
+        for primary_val in plaid_data.values():
+            if isinstance(primary_val, dict):
+                for detailed_key in primary_val:
+                    categories.append(detailed_key)
+        categories.sort()
+    except (OSError, tomllib.TOMLDecodeError):
+        pass
+
+    _pfc_categories_cache = categories
+    return categories
+
 
 def _load_enriched_transactions(file_path: str) -> list[dict]:
     """Load enriched transactions from JSON file.
@@ -93,6 +118,80 @@ def _compute_spending_by_category(transactions: list[dict]) -> dict:
         "categories": [c[0] for c in sorted_cats],
         "amounts": [round(c[1], 2) for c in sorted_cats],
     }
+
+
+def _parse_float_param(val: str | None) -> float | None:
+    """Parse a query-string param as float. Return None if invalid or missing."""
+    if val is None or val == "":
+        return None
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return None
+
+
+def _filter_transactions(
+    txns: list,
+    q: str | None = None,
+    categories: list | None = None,
+    min_amount: float | None = None,
+    max_amount: float | None = None,
+    sort: str | None = None,
+    order: str | None = None,
+) -> list:
+    """Apply text search, category filter, amount range filter, and sort.
+
+    Args:
+        txns: List of transaction dicts.
+        q: Case-insensitive substring search across merchant_name, description, category, date, amount.
+        categories: List of category values; include transactions whose category matches any (case-insensitive).
+        min_amount: Include only transactions where abs(amount) >= min_amount.
+        max_amount: Include only transactions where abs(amount) <= max_amount.
+        sort: Column to sort by. One of: "date", "merchant", "amount", "category". Unknown values ignored.
+        order: "asc" or "desc". Defaults to "asc" when sort is set.
+
+    Returns:
+        Filtered and sorted list of transactions.
+    """
+    result = txns
+
+    if q:
+        query = q.lower()
+        result = [
+            t
+            for t in result
+            if (
+                query in t.get("merchant_name", "").lower()
+                or query in t.get("description", "").lower()
+                or query in t.get("category", "").lower()
+                or query in t.get("date", "").lower()
+                or query in str(t.get("amount", ""))
+            )
+        ]
+
+    if categories:
+        category_set = {c.lower() for c in categories}
+        result = [t for t in result if t.get("category", "").lower() in category_set]
+
+    if min_amount is not None:
+        result = [t for t in result if abs(float(t.get("amount", 0))) >= min_amount]
+
+    if max_amount is not None:
+        result = [t for t in result if abs(float(t.get("amount", 0))) <= max_amount]
+
+    if sort:
+        sort_key_funcs = {
+            "date": lambda t: t.get("date", ""),
+            "merchant": lambda t: t.get("merchant_name", ""),
+            "amount": lambda t: abs(float(t.get("amount", 0))),
+            "category": lambda t: t.get("category", ""),
+        }
+        key_func = sort_key_funcs.get(sort)
+        if key_func is not None:
+            reverse = order == "desc"
+            result = sorted(result, key=key_func, reverse=reverse)
+
+    return result
 
 
 def create_app(data_dir: str | None = None) -> FastAPI:
@@ -204,11 +303,23 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         return HTMLResponse(f"Updated transaction {safe_id} to {safe_category}", status_code=200)
 
     @app.get("/transactions/export", response_class=HTMLResponse)
-    async def export_transactions(q: str | None = None) -> HTMLResponse:
-        """Export transactions as CSV, optionally filtered by search query.
+    async def export_transactions(
+        q: str | None = None,
+        sort: str | None = None,
+        order: str | None = None,
+        min_amount: str | None = None,
+        max_amount: str | None = None,
+        categories: str | None = None,
+    ) -> HTMLResponse:
+        """Export transactions as CSV, honoring the same filters as /api/transactions.
 
         Args:
             q: Optional search query to filter transactions across all fields.
+            sort: Column to sort by. One of: "date", "merchant", "amount", "category".
+            order: "asc" or "desc". Defaults to "asc" when sort is set.
+            min_amount: Include only transactions where abs(amount) >= min_amount.
+            max_amount: Include only transactions where abs(amount) <= max_amount.
+            categories: Comma-separated list of categories to include.
 
         Returns:
             HTMLResponse: CSV data with Content-Disposition header for download.
@@ -217,19 +328,21 @@ def create_app(data_dir: str | None = None) -> FastAPI:
 
         transactions = _load_enriched_transactions(enriched_path)
 
-        if q:
-            query = q.lower()
-            transactions = [
-                t
-                for t in transactions
-                if (
-                    query in t.get("merchant_name", "").lower()
-                    or query in t.get("description", "").lower()
-                    or query in t.get("category", "").lower()
-                    or query in t.get("date", "").lower()
-                    or query in str(t.get("amount", ""))
-                )
-            ]
+        min_val = _parse_float_param(min_amount)
+        max_val = _parse_float_param(max_amount)
+        category_list = (
+            [c.strip() for c in categories.split(",") if c.strip()] if categories else None
+        )
+
+        transactions = _filter_transactions(
+            transactions,
+            q=q,
+            categories=category_list,
+            min_amount=min_val,
+            max_amount=max_val,
+            sort=sort,
+            order=order,
+        )
 
         csv_data = build_csv_export(transactions)
         return HTMLResponse(
@@ -522,40 +635,48 @@ def create_app(data_dir: str | None = None) -> FastAPI:
         offset: int = 0,
         limit: int = 50,
         q: str | None = None,
+        sort: str | None = None,
+        order: str | None = None,
+        min_amount: str | None = None,
+        max_amount: str | None = None,
+        categories: str | None = None,
     ) -> JSONResponse:
-        """Paginated JSON API for transactions with search.
+        """Paginated JSON API for transactions with search, filter, and sort.
 
         Args:
             offset: Number of transactions to skip.
             limit: Maximum number of transactions to return.
             q: Optional search query across all fields.
+            sort: Column to sort by (date, merchant, amount, category).
+            order: Sort order (asc, desc).
+            min_amount: Minimum absolute amount filter.
+            max_amount: Maximum absolute amount filter.
+            categories: Comma-separated list of categories to filter by.
 
         Returns:
             JSONResponse: Paginated transaction data with total, offset, limit, has_more.
         """
         txns = _load_enriched_transactions(enriched_path)
 
-        # Apply search filter
-        if q:
-            query = q.lower()
-            txns = [
-                t
-                for t in txns
-                if (
-                    query in t.get("merchant_name", "").lower()
-                    or query in t.get("description", "").lower()
-                    or query in t.get("category", "").lower()
-                    or query in t.get("date", "").lower()
-                    or query in str(t.get("amount", ""))
-                )
-            ]
+        min_val = _parse_float_param(min_amount)
+        max_val = _parse_float_param(max_amount)
+        category_list = (
+            [c.strip() for c in categories.split(",") if c.strip()] if categories else None
+        )
+
+        txns = _filter_transactions(
+            txns,
+            q=q,
+            categories=category_list,
+            min_amount=min_val,
+            max_amount=max_val,
+            sort=sort,
+            order=order,
+        )
 
         total = len(txns)
-
-        # Apply pagination
         paginated = txns[offset : offset + limit]
 
-        # Format for response
         formatted = [
             {
                 "id": offset + i,
@@ -577,6 +698,12 @@ def create_app(data_dir: str | None = None) -> FastAPI:
                 "transactions": formatted,
             }
         )
+
+    # ===== Categories API Route =====
+    @app.get("/api/categories")
+    async def categories_api() -> JSONResponse:
+        """Return the list of PFC detailed categories."""
+        return JSONResponse({"categories": _load_pfc_categories(base_dir)})
 
     # Mount static files if they exist
     static_path = Path(__file__).parent / "static"

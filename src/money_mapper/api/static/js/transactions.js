@@ -1,8 +1,5 @@
 /**
- * Transactions page: infinite scroll and search.
- *
- * Loads additional transactions as the user scrolls near the bottom of the page.
- * Provides debounced search that queries the /api/transactions endpoint.
+ * Transactions page: infinite scroll, search, sort, and advanced filters.
  */
 
 (function () {
@@ -16,6 +13,13 @@
     var searchQuery = "";
     var debounceTimer = null;
 
+    var sortColumn = null;
+    var sortOrder = null;
+    var minAmount = "";
+    var maxAmount = "";
+    var selectedCategories = [];
+    var filtersVisible = false;
+
     // --- DOM references ---
     var tbody = document.querySelector("#transactions-table tbody");
     var searchInput = document.querySelector("#transaction-search");
@@ -25,25 +29,33 @@
     var exportLink = document.querySelector("#export-link");
     var exportAnchor = exportLink ? exportLink.querySelector("a") : null;
 
+    var filtersToggle = document.querySelector("#filters-toggle");
+    var filtersPanel = document.querySelector("#filters-panel");
+    var filtersActiveIndicator = document.querySelector("#filters-active-indicator");
+    var minAmountInput = document.querySelector("#filter-min-amount");
+    var maxAmountInput = document.querySelector("#filter-max-amount");
+    var categoryInput = document.querySelector("#filter-category-input");
+    var categoryDatalist = document.querySelector("#category-datalist");
+    var selectedCategoriesDiv = document.querySelector("#selected-categories");
+    var applyFiltersBtn = document.querySelector("#apply-filters");
+    var clearFiltersBtn = document.querySelector("#clear-filters");
+    var sortableHeaders = document.querySelectorAll("th.sortable");
+
     if (!tbody || !searchInput) {
-        return; // Not on the transactions page
+        return;
     }
 
-    // Read initial state from the table's data attributes
     var table = document.querySelector("#transactions-table");
     currentTotal = parseInt(table.getAttribute("data-total") || "0", 10);
     currentOffset = tbody.querySelectorAll("tr:not(#loading-row)").length;
     hasMore = currentOffset < currentTotal;
-
     updateCount();
 
     // --- Infinite scroll ---
     window.addEventListener("scroll", function () {
         if (loading || !hasMore) return;
-
         var scrollBottom = window.innerHeight + window.scrollY;
         var pageHeight = document.documentElement.scrollHeight;
-
         if (pageHeight - scrollBottom < 200) {
             loadMore();
         }
@@ -66,17 +78,161 @@
         });
     }
 
+    // --- Filter panel toggle ---
+    if (filtersToggle && filtersPanel) {
+        filtersToggle.addEventListener("click", function () {
+            filtersVisible = !filtersVisible;
+            filtersPanel.style.display = filtersVisible ? "" : "none";
+            filtersToggle.textContent = filtersVisible ? "Hide Filters" : "Show Filters";
+            updateFiltersActiveIndicator();
+        });
+    }
+
+    // --- Load categories for type-ahead ---
+    fetch("/api/categories")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!categoryDatalist || !data.categories) return;
+            for (var i = 0; i < data.categories.length; i++) {
+                var opt = document.createElement("option");
+                opt.value = data.categories[i];
+                categoryDatalist.appendChild(opt);
+            }
+        })
+        .catch(function () { });
+
+    // --- Category selection (type-ahead add) ---
+    if (categoryInput) {
+        categoryInput.addEventListener("change", function () {
+            var val = categoryInput.value.trim();
+            if (!val) return;
+            if (selectedCategories.indexOf(val) === -1) {
+                selectedCategories.push(val);
+                renderSelectedCategories();
+            }
+            categoryInput.value = "";
+        });
+    }
+
+    function renderSelectedCategories() {
+        if (!selectedCategoriesDiv) return;
+        while (selectedCategoriesDiv.firstChild) {
+            selectedCategoriesDiv.removeChild(selectedCategoriesDiv.firstChild);
+        }
+        for (var i = 0; i < selectedCategories.length; i++) {
+            (function (cat) {
+                var tag = document.createElement("span");
+                tag.style.cssText = "display:inline-block;background:#2c3e50;color:#fff;padding:2px 8px;margin:2px;border-radius:3px;font-size:0.85em";
+                tag.textContent = cat + " ";
+                var x = document.createElement("button");
+                x.type = "button";
+                x.textContent = "x";
+                x.style.cssText = "background:none;border:none;color:#fff;cursor:pointer;padding:0 0 0 4px";
+                x.addEventListener("click", function () {
+                    var idx = selectedCategories.indexOf(cat);
+                    if (idx !== -1) {
+                        selectedCategories.splice(idx, 1);
+                        renderSelectedCategories();
+                        resetAndLoad();
+                    }
+                });
+                tag.appendChild(x);
+                selectedCategoriesDiv.appendChild(tag);
+            })(selectedCategories[i]);
+        }
+    }
+
+    // --- Apply / Clear Filters ---
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener("click", function () {
+            var minVal = minAmountInput ? minAmountInput.value.trim() : "";
+            var maxVal = maxAmountInput ? maxAmountInput.value.trim() : "";
+            if (minVal && isNaN(parseFloat(minVal))) {
+                minAmountInput.value = "";
+                minVal = "";
+            }
+            if (maxVal && isNaN(parseFloat(maxVal))) {
+                maxAmountInput.value = "";
+                maxVal = "";
+            }
+            minAmount = minVal;
+            maxAmount = maxVal;
+            resetAndLoad();
+        });
+    }
+
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener("click", function () {
+            minAmount = "";
+            maxAmount = "";
+            selectedCategories = [];
+            if (minAmountInput) minAmountInput.value = "";
+            if (maxAmountInput) maxAmountInput.value = "";
+            if (categoryInput) categoryInput.value = "";
+            renderSelectedCategories();
+            resetAndLoad();
+        });
+    }
+
+    // --- Sort header clicks ---
+    for (var i = 0; i < sortableHeaders.length; i++) {
+        (function (th) {
+            th.addEventListener("click", function () {
+                var col = th.getAttribute("data-column");
+                if (sortColumn !== col) {
+                    sortColumn = col;
+                    sortOrder = "asc";
+                } else if (sortOrder === "asc") {
+                    sortOrder = "desc";
+                } else {
+                    sortColumn = null;
+                    sortOrder = null;
+                }
+                renderSortIndicators();
+                resetAndLoad();
+            });
+        })(sortableHeaders[i]);
+    }
+
+    function renderSortIndicators() {
+        for (var j = 0; j < sortableHeaders.length; j++) {
+            var th = sortableHeaders[j];
+            var ind = th.querySelector(".sort-indicator");
+            if (!ind) continue;
+            if (th.getAttribute("data-column") === sortColumn) {
+                ind.textContent = sortOrder === "asc" ? " [A]" : " [D]";
+            } else {
+                ind.textContent = "";
+            }
+        }
+    }
+
     // --- Core functions ---
+    function buildQueryString(includePagination) {
+        var parts = [];
+        if (includePagination) {
+            parts.push("offset=" + currentOffset);
+            parts.push("limit=50");
+        }
+        if (searchQuery) parts.push("q=" + encodeURIComponent(searchQuery));
+        if (sortColumn) {
+            parts.push("sort=" + encodeURIComponent(sortColumn));
+            parts.push("order=" + encodeURIComponent(sortOrder || "asc"));
+        }
+        if (minAmount) parts.push("min_amount=" + encodeURIComponent(minAmount));
+        if (maxAmount) parts.push("max_amount=" + encodeURIComponent(maxAmount));
+        if (selectedCategories.length > 0) {
+            parts.push("categories=" + encodeURIComponent(selectedCategories.join(",")));
+        }
+        return parts.join("&");
+    }
 
     function loadMore() {
         if (loading || !hasMore) return;
         loading = true;
         showLoading(true);
 
-        var url = "/api/transactions?offset=" + currentOffset + "&limit=50";
-        if (searchQuery) {
-            url += "&q=" + encodeURIComponent(searchQuery);
-        }
+        var url = "/api/transactions?" + buildQueryString(true);
 
         fetch(url)
             .then(function (response) { return response.json(); })
@@ -87,6 +243,7 @@
                 hasMore = data.has_more;
                 updateCount();
                 updateExportLink();
+                updateFiltersActiveIndicator();
                 loading = false;
                 showLoading(false);
             })
@@ -97,12 +254,10 @@
     }
 
     function resetAndLoad() {
-        // Clear existing rows (except loading row)
         var rows = tbody.querySelectorAll("tr:not(#loading-row)");
         for (var i = 0; i < rows.length; i++) {
             rows[i].remove();
         }
-
         currentOffset = 0;
         hasMore = true;
         loading = false;
@@ -125,7 +280,6 @@
             tdAmount.textContent = "$" + txn.amount.toFixed(2);
 
             var tdCategory = document.createElement("td");
-            // Create the inline update form
             var form = document.createElement("form");
             form.method = "post";
             form.action = "/transactions/" + txn.id;
@@ -151,7 +305,6 @@
             tr.appendChild(tdAmount);
             tr.appendChild(tdCategory);
 
-            // Insert before loading row if it exists, otherwise append
             if (loadingRow) {
                 tbody.insertBefore(tr, loadingRow);
             } else {
@@ -173,6 +326,19 @@
         }
     }
 
+    function hasAdvancedFilters() {
+        return minAmount !== "" || maxAmount !== "" || selectedCategories.length > 0;
+    }
+
+    function updateFiltersActiveIndicator() {
+        if (!filtersActiveIndicator) return;
+        if (hasAdvancedFilters() && !filtersVisible) {
+            filtersActiveIndicator.style.display = "";
+        } else {
+            filtersActiveIndicator.style.display = "none";
+        }
+    }
+
     function updateExportLink() {
         if (!exportLink) return;
         if (currentTotal === 0) {
@@ -181,8 +347,9 @@
         }
         exportLink.style.display = "";
         if (exportAnchor) {
-            if (searchQuery) {
-                exportAnchor.href = "/transactions/export?q=" + encodeURIComponent(searchQuery);
+            var qs = buildQueryString(false);
+            if (qs) {
+                exportAnchor.href = "/transactions/export?" + qs;
                 exportAnchor.textContent = "Export filtered results (CSV)";
             } else {
                 exportAnchor.href = "/transactions/export";
